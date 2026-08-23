@@ -93,8 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment-content'])) {
 
 // Helper function to format time
 function time_elapsed_string($datetime, $full = false) {
-    $now = new DateTime;
-    $ago = new DateTime($datetime);
+    $tz = new DateTimeZone('UTC');
+    $now = new DateTime('now', $tz);
+    $ago = new DateTime($datetime, $tz);
     $diff = $now->diff($ago);
 
     $diff->w = floor($diff->d / 7);

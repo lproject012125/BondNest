@@ -123,8 +123,9 @@ if (isset($_GET['mark_read']) && isset($_GET['id'])) {
 
 // Function to get time elapsed string
 function time_elapsed_string($datetime, $full = false) {
-    $now = new DateTime;
-    $ago = new DateTime($datetime);
+    $tz = new DateTimeZone('UTC');
+    $now = new DateTime('now', $tz);
+    $ago = new DateTime($datetime, $tz);
     $diff = $now->diff($ago);
 
     $diff->w = floor($diff->d / 7);

@@ -49,5 +49,11 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
+// Create symlink for uploads if using a different upload directory (Railway volume)
+$local_uploads = __DIR__ . '/uploads';
+if ($upload_dir !== $local_uploads && !is_link($local_uploads)) {
+    @symlink($upload_dir, $local_uploads);
+}
+
 // Backward-compatible alias
 $connection = $pdo;

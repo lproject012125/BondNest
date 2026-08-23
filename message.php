@@ -122,22 +122,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $select
 
 // Helper function to format time
 function formatMessageTime($timestamp) {
-    $now = new DateTime();
-    $time = new DateTime($timestamp);
+    $tz = new DateTimeZone('UTC');
+    $now = new DateTime('now', $tz);
+    $time = new DateTime($timestamp, $tz);
     $diff = $now->diff($time);
     
     if ($diff->d == 0) {
         // Same day, show time
-        return date('g:i A', strtotime($timestamp));
+        return $time->format('g:i A');
     } elseif ($diff->d == 1) {
         // Yesterday
-        return 'Yesterday at ' . date('g:i A', strtotime($timestamp));
+        return 'Yesterday at ' . $time->format('g:i A');
     } elseif ($diff->d < 7) {
         // Within a week
-        return date('l', strtotime($timestamp)) . ' at ' . date('g:i A', strtotime($timestamp));
+        return $time->format('l') . ' at ' . $time->format('g:i A');
     } else {
         // Older than a week
-        return date('M j', strtotime($timestamp)) . ' at ' . date('g:i A', strtotime($timestamp));
+        return $time->format('M j') . ' at ' . $time->format('g:i A');
     }
 }
 ?>

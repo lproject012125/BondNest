@@ -310,8 +310,9 @@ $posts = $stmt->fetchAll();
 
 // Helper function to format time
 function time_elapsed_string($datetime, $full = false) {
-    $now = new DateTime;
-    $ago = new DateTime($datetime);
+    $tz = new DateTimeZone('UTC');
+    $now = new DateTime('now', $tz);
+    $ago = new DateTime($datetime, $tz);
     $diff = $now->diff($ago);
 
     // Calculate weeks separately without modifying the DateInterval object
