@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $target = $dir . $filename;
                     
                     if (move_uploaded_file($_FILES['profilePicture']['tmp_name'], $target)) {
-                        $profile_picture = $target;
+                        $profile_picture = 'uploads/profile_pictures/' . $filename;
                     } else {
                         $errors[] = 'Failed to upload image.';
                     }

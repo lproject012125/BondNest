@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception("Failed to upload profile picture");
                 }
                 
-                $profile_picture = $upload_path;
+                $profile_picture = 'uploads/' . $filename;
             }
             
             // Prepare the SQL statement

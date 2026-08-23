@@ -59,12 +59,12 @@ try {
     }
 
     // Insert post
-    $stmt = $pdo->prepare("INSERT INTO posts (user_id, content, image_path, created_at, status) VALUES (?, ?, ?, NOW(), 'posted')");
+    $stmt = $pdo->prepare("INSERT INTO posts (user_id, content, image_path, created_at, status) VALUES (?, ?, ?, ?, 'posted')");
     if (!$stmt) {
         throw new Exception('Prepare failed');
     }
 
-    $stmt->execute([$_SESSION['user_id'], $content, $image_path]);
+    $stmt->execute([$_SESSION['user_id'], $content, $image_path, gmdate('Y-m-d H:i:s')]);
 
     // Get user info
     $user_stmt = $pdo->prepare("SELECT first_name, last_name, username, profile_picture FROM users WHERE id = ?");

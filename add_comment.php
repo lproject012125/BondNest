@@ -46,13 +46,13 @@ try {
     }
     
     // Insert comment
-    $insert_stmt = $pdo->prepare("INSERT INTO comments (post_id, user_id, content, created_at) VALUES (?, ?, ?, NOW())");
+    $insert_stmt = $pdo->prepare("INSERT INTO comments (post_id, user_id, content, created_at) VALUES (?, ?, ?, ?)");
     if (!$insert_stmt) {
         error_log('Insert prepare failed');
         throw new Exception('Insert prepare failed');
     }
     
-    $insert_stmt->execute([$post_id, $user_id, $content]);
+    $insert_stmt->execute([$post_id, $user_id, $content, gmdate('Y-m-d H:i:s')]);
     
     $comment_id = $pdo->lastInsertId();
     

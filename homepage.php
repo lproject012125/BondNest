@@ -56,9 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment-content'])) {
     $post_id = $_POST['post_id'];
     $user_id = $_SESSION['user_id'];
     
-    $sql = "INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)";
+    $sql = "INSERT INTO comments (post_id, user_id, content, created_at) VALUES (?, ?, ?, ?)";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$post_id, $user_id, $content]);
+    $stmt->execute([$post_id, $user_id, $content, gmdate('Y-m-d H:i:s')]);
     
     // Get the newly inserted comment with user info
     $new_comment_id = $pdo->lastInsertId();

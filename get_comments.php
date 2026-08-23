@@ -20,6 +20,28 @@ if (!isset($_GET['post_id'])) {
 $post_id = intval($_GET['post_id']);
 
 try {
+    // Ensure comments table exists
+    global $db_driver;
+    if ($db_driver === 'pgsql') {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS comments (
+            id SERIAL PRIMARY KEY,
+            post_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )");
+    } else {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS comments (
+            id INT(11) AUTO_INCREMENT PRIMARY KEY,
+            post_id INT(11) NOT NULL,
+            user_id INT(11) NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    }
+
     // Get comments with user info
     $sql = "SELECT c.*, u.first_name, u.last_name, u.profile_picture 
             FROM comments c 

@@ -235,4 +235,12 @@ function runMigration($pdo) {
             error_log("Migration error on table {$name}: " . $e->getMessage());
         }
     }
+
+    // Fix any absolute paths stored in database (convert /data/uploads/ to uploads/)
+    try {
+        $pdo->exec("UPDATE users SET profile_picture = REPLACE(profile_picture, '/data/uploads/', 'uploads/') WHERE profile_picture LIKE '/data/uploads/%'");
+        $pdo->exec("UPDATE posts SET image_path = REPLACE(image_path, '/data/uploads/', 'uploads/') WHERE image_path LIKE '/data/uploads/%'");
+    } catch (PDOException $e) {
+        // Ignore if columns don't exist yet
+    }
 }
