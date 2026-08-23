@@ -210,6 +210,38 @@ border-radius: 4px;
 display: none;
 }
 
+.login-inline-error {
+    display: none;
+    font-size: 0.82rem;
+    color: #c0392b;
+    background: rgba(192, 57, 43, 0.08);
+    border: 1px solid rgba(192, 57, 43, 0.2);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.login-form-group--error {
+    border-color: #c0392b !important;
+}
+
+.login-forgot-link {
+    display: block;
+    text-align: right;
+    font-size: 0.78rem;
+    color: #008080;
+    text-decoration: none;
+    margin-top: 2px;
+    margin-bottom: 14px;
+    transition: color 0.2s;
+}
+.login-forgot-link:hover {
+    color: #006666;
+    text-decoration: underline;
+}
+
 /* Right Section Enhancements */
 .right-section {
 background: linear-gradient(135deg, #008080, #00a0a0);

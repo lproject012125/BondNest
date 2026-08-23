@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 if (!$user) {
-                    echo json_encode(['success' => false, 'error' => 'Username not found']);
+                    echo json_encode(['success' => false, 'error' => 'Incorrect username or password.']);
                     exit;
                 }
                 
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     exit;
                 } else {
-                    echo json_encode(['success' => false, 'error' => 'Incorrect password']);
+                    echo json_encode(['success' => false, 'error' => 'Incorrect username or password.']);
                     exit;
                 }
             } catch (PDOException $e) {
@@ -217,7 +217,6 @@ $loggedIn = isset($_SESSION['user_id']);
 
         <form class="login-form" id="loginForm">
             <div class="form-group">
-                <label for="email">Your username</label> <!-- Changed from email to username -->
                 <div class="login-form-group">
                     <div class="login-icon-container">
                         <i class="fas fa-user"></i>
@@ -229,8 +228,7 @@ $loggedIn = isset($_SESSION['user_id']);
             </div>
         
             <div class="form-group">
-                <label for="password">Your password</label>
-                <div class="login-form-group">
+                <div class="login-form-group" id="loginPasswordGroup">
                     <div class="login-icon-container">
                         <i class="fas fa-lock"></i>
                     </div>
@@ -238,15 +236,12 @@ $loggedIn = isset($_SESSION['user_id']);
                         <input type="password" id="password" name="password" placeholder="Your password" autocomplete="current-password">
                     </div>
                 </div>
+                <div class="login-inline-error" id="loginInlineError"></div>
+                <a href="#" class="login-forgot-link" id="forgotPasswordTrigger">Forgot password?</a>
             </div>
         
             <button type="submit" class="login-button" id="loginSubmit">Sign In</button>
         </form>
-        <div class="login-links">
-            <a href="#">Forgot password?</a>
-        </div>
-
-        <p id="errorMessage" class="error-message" style="display:none;">Invalid email or password.</p>
     </div>
 
     <div class="right-section">
@@ -347,7 +342,8 @@ $loggedIn = isset($_SESSION['user_id']);
     const flyingBirdSecondary = document.querySelector('.flying-bird-secondary');
     const body = document.body;
     const loginForm = document.getElementById('loginForm');
-    const forgotPasswordButton = document.querySelector('.login-links a');
+    const forgotPasswordButton = document.getElementById('forgotPasswordTrigger');
+    const loginInlineError = document.getElementById('loginInlineError');
     const neggyContainer1 = document.querySelector('.neggy-container1');
     const neggyMessages1 = document.getElementById('neggy-messages1');
     const forgotPasswordForm = document.getElementById('forgotPasswordForm');
@@ -453,7 +449,7 @@ $loggedIn = isset($_SESSION['user_id']);
 
         // Click handler to cancel timers when navigating
         document.addEventListener('click', function(e) {
-            if (e.target.closest('#hideForgotPassword, .login-links a')) {
+            if (e.target.closest('#hideForgotPassword, #forgotPasswordTrigger')) {
                 clearAllTimers();
             }
         });
@@ -645,46 +641,40 @@ $loggedIn = isset($_SESSION['user_id']);
             });
         }
 
+        // Inline login error helpers
+        function showLoginError(msg) {
+            if (!loginInlineError) return;
+            loginInlineError.textContent = msg;
+            loginInlineError.style.display = 'block';
+            const pg = document.getElementById('loginPasswordGroup');
+            if (pg) pg.classList.add('login-form-group--error');
+        }
+        function hideLoginError() {
+            if (loginInlineError) {
+                loginInlineError.textContent = '';
+                loginInlineError.style.display = 'none';
+            }
+            const pg = document.getElementById('loginPasswordGroup');
+            if (pg) pg.classList.remove('login-form-group--error');
+        }
+
         // Login form submission - MODIFIED SECTION
         if (loginForm) {
             const loginUsernameInput = document.getElementById('email');
             const loginPasswordInput = document.getElementById('password');
 
-            // Add real-time validation for login fields
-            loginUsernameInput.addEventListener('input', checkLoginCriteria);
-            loginPasswordInput.addEventListener('input', checkLoginCriteria);
+            loginUsernameInput.addEventListener('input', hideLoginError);
+            loginPasswordInput.addEventListener('input', hideLoginError);
 
-            function checkLoginCriteria() {
-                const username = loginUsernameInput.value.trim();
-                const password = loginPasswordInput.value;
-
-                // Clear any existing timer
-                clearTimeout(currentValidationTimer);
-
-                // If criteria are met, hide the message after a short delay
-                if (username.length > 0 && password.length >= 8) {
-                    currentValidationTimer = setTimeout(() => {
-                        neggyContainer1.style.display = 'none';
-                    }, 300); // Hide after 300ms of meeting criteria
-                }
-            }
-
-            // Keep your existing submit handler exactly as is
             loginForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-
-                if (neggyContainer1) {
-                    neggyContainer1.style.display = 'none';
-                    neggyMessages1.innerHTML = '';
-                }
-
-                positionNeggyForLogin();
+                hideLoginError();
 
                 const formData = new FormData(this);
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalBtnText = submitBtn.textContent;
                 submitBtn.disabled = true;
-                
+                submitBtn.textContent = 'Signing In...';
 
                 fetch('index.php', {
                     method: 'POST',
@@ -692,9 +682,7 @@ $loggedIn = isset($_SESSION['user_id']);
                     body: `username=${encodeURIComponent(loginUsernameInput.value)}&password=${encodeURIComponent(loginPasswordInput.value)}`
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
+                    if (!response.ok) throw new Error('Network response was not ok');
                     return response.json();
                 })
                 .then(data => {
@@ -704,12 +692,12 @@ $loggedIn = isset($_SESSION['user_id']);
                             window.location.href = data.redirect || 'homepage.php';
                         }, 1500);
                     } else {
-                        showNeggyMessage1(data.error || 'Login failed. Please check your credentials and try again.');
+                        showLoginError(data.error || 'Incorrect username or password.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showNeggyMessage1('An error occurred. Please try again.');
+                    showLoginError('An error occurred. Please try again.');
                 })
                 .finally(() => {
                     submitBtn.textContent = originalBtnText;
@@ -729,6 +717,7 @@ $loggedIn = isset($_SESSION['user_id']);
                 forgotPasswordContainer.style.display = 'flex';
                 resetForgotPasswordForm();
                 positionNeggyForForgotPassword();
+                hideLoginError();
                 neggyContainer1.style.display = 'none';
             });
 
