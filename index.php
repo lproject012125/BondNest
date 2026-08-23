@@ -388,16 +388,26 @@ $loggedIn = isset($_SESSION['user_id']);
  .forgot-password-subtitle{line-height:1.5}
  .forgot-password-wrapper form{width:100%}
  .forgot-password-wrapper .form-group{width:100%;margin-bottom:18px}
- .forgot-password-wrapper .input-container{width:100%;height:44px;min-height:44px;border:1px solid #D5DFD9;border-radius:8px;overflow:hidden;box-sizing:border-box;transition:border-color .2s,box-shadow .2s}
+ .forgot-password-wrapper .input-container{width:100%;height:52px;min-height:52px;border:1px solid #D5DFD9;border-radius:8px;overflow:hidden;box-sizing:border-box;transition:border-color .2s,box-shadow .2s}
  .forgot-password-wrapper .input-container:focus-within{border-color:#2B9E9E;box-shadow:0 0 0 3px rgba(43,158,158,.11)}
  .forgot-password-wrapper .input-container.error,.forgot-password-wrapper .input-container:has(input.error){border-color:#f59ca8;box-shadow:0 0 0 3px rgba(245,156,168,.16)}
  .forgot-password-wrapper .input-container .icon-container{width:46px;padding:0;justify-content:center;flex-shrink:0}
- .forgot-password-wrapper .input-container input{min-width:0;height:42px;padding:0 14px;font-size:.92rem}
+ .forgot-password-wrapper .input-container input{min-width:0;height:50px;padding:0 14px;font-size:.95rem}
  .forgot-password-wrapper .input-container input[type=password]{padding-right:40px}
  .forgot-password-wrapper .input-icon{right:14px}
  .forgot-password-wrapper .custom-error{background:#fef2f2;border:1px solid #f8b4bf;color:#b84252;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;line-height:1.25;opacity:0;max-height:0;transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease,max-height .22s ease,margin .22s ease;pointer-events:none;overflow:hidden;margin:0}
  .forgot-password-wrapper .custom-error.show{opacity:1;max-height:80px;transform:translateY(0);margin:6px 0 0}
- .forgot-password-wrapper .create-account-button{height:52px;margin-top:4px;border-radius:26px;padding:0 18px;justify-content:center;text-align:center;text-transform:uppercase;font-size:.9rem;letter-spacing:.3px}
+ .forgot-password-wrapper .create-account-button{height:52px;margin-top:0;border-radius:26px;padding:0 18px;justify-content:center;text-align:center;text-transform:uppercase;font-size:.9rem;letter-spacing:.3px}
+ #forgotRequestForm .form-group{margin-bottom:10px}
+ #forgotResetForm{width:100%}
+ #forgotResetForm .form-group{width:100%;display:block;margin-bottom:18px}
+ #forgotResetForm .input-container{width:100%}
+ #forgotResetForm .form-group--pwd-full{margin-top:2px;margin-bottom:14px}
+ #forgotResetForm .pwd-live{width:100%;margin:0}
+ #forgotResetForm .pwd-strength{display:flex;align-items:center;gap:.55rem;margin:0;width:100%}
+ #forgotResetForm .pwd-strength__track{flex:1;min-width:0;height:6px;border-radius:6px;background:rgba(0,128,128,.12);overflow:hidden}
+ #forgotResetForm .pwd-strength__fill{height:100%;width:0;border-radius:6px;transition:width .22s ease,background-color .25s ease}
+ #forgotResetForm .pwd-strength__label{flex-shrink:0;font-size:11px;font-weight:600;min-width:2.75rem;text-align:right}
  .forgot-otp-label{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:#58756f;text-align:center;margin:0 0 16px;font-weight:600}
  .forgot-otp-digits{display:flex;gap:10px;justify-content:center;margin-bottom:24px}
  .forgot-otp-digit{width:46px;height:52px;text-align:center;font-size:1.25rem;font-weight:600;border:2px solid #D5DFD9;border-radius:12px;background:#fff;color:#2F3E36;box-shadow:0 3px 0 rgba(32,80,71,.08);transition:border-color .2s,box-shadow .2s;outline:none}
@@ -425,8 +435,6 @@ $loggedIn = isset($_SESSION['user_id']);
             <h2 class="forgot-password-title" id="forgotTitle">Forgot Your Password?</h2>
             <p class="forgot-password-subtitle" id="forgotSubtitle">Enter the email associated with your account to reset your password.</p>
         </div>
-        <div class="forgot-alert" id="forgotAlert" hidden role="alert"></div>
-
         <!-- Phase 1: Email -->
         <form id="forgotRequestForm" class="forgot-password-form" novalidate>
             <div class="form-group">
@@ -435,6 +443,7 @@ $loggedIn = isset($_SESSION['user_id']);
                     <input type="text" id="forgotEmail" name="email" placeholder="Email Address" autocomplete="off">
                 </div>
                 <div class="custom-error" id="forgotEmail-error"></div>
+                <div class="forgot-alert" id="forgotAlert" hidden role="alert"></div>
             </div>
             <button type="submit" class="create-account-button" id="forgotRequestBtn">Send Reset Code</button>
         </form>
@@ -775,9 +784,17 @@ $loggedIn = isset($_SESSION['user_id']);
             const fe=document.getElementById('forgotEmail');
             if(fe) fe.addEventListener('input', function(){
                 const errEl=document.getElementById('forgotEmail-error');
-                if(errEl) errEl.classList.remove('show');
-                fe.classList.remove('error');
-                const cc=fe.closest('.input-container'); if(cc) cc.classList.remove('error');
+                const cc=fe.closest('.input-container');
+                const value=fe.value.trim();
+                if(value && !isValidEmailBond(value)){
+                    if(errEl){ errEl.textContent='Please enter a valid email.'; errEl.classList.add('show'); }
+                    fe.classList.add('error');
+                    if(cc) cc.classList.add('error');
+                } else {
+                    if(errEl) errEl.classList.remove('show');
+                    fe.classList.remove('error');
+                    if(cc) cc.classList.remove('error');
+                }
                 showForgotAlert('','');
             });
         }
@@ -1075,6 +1092,8 @@ $loggedIn = isset($_SESSION['user_id']);
         passwordContainers.forEach(container => {
             const passwordInput = container.querySelector('input[type="password"]');
             if (!passwordInput) return;
+            // Reset forms already provide their own in-container eye toggles.
+            if (container.querySelector('.toggle-password')) return;
 
             // Create toggle element
             const toggle = document.createElement('div');
