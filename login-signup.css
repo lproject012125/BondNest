@@ -103,7 +103,7 @@ text-align: left;
 .login-subtitle {
 font-size: 1rem;
 color: #666;
-margin-bottom: 0;
+margin-bottom: 10px;
 text-align: left;
 }
 
@@ -120,6 +120,11 @@ overflow: hidden;
 transition: all 0.3s ease;
 height: 50px;
 margin-bottom: 20px;
+}
+
+/* Keep a small gap under the subtitle while tightening the two login fields. */
+.login-form .form-group:first-child .login-form-group {
+margin-bottom: 10px;
 }
 
 .login-form-group:hover {
