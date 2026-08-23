@@ -65,18 +65,11 @@ try {
         'comments' => $comments
     ]));
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
     ob_end_clean();
     http_response_code(500);
     die(json_encode([
         'error' => 'Database error',
-        'message' => $e->getMessage()
-    ]]));
-} catch (Error $e) {
-    ob_end_clean();
-    http_response_code(500);
-    die(json_encode([
-        'error' => 'Server error',
         'message' => $e->getMessage()
     ]));
 }

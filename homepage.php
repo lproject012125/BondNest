@@ -1853,7 +1853,13 @@ function updateAllTimeAgo() {
 }
 
 function formatTimeAgo(dateString) {
-    const date = new Date(dateString); // Parse ISO string
+    // DB stores UTC "2026-08-23 10:07:00" — JS would treat it as local time, causing 8h offset
+    let dateStr = dateString;
+    if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/T.*[+-]/)) {
+        // No timezone info: treat as UTC
+        dateStr = dateStr.replace(' ', 'T') + 'Z';
+    }
+    const date = new Date(dateStr);
     const now = new Date();
     const secondsPast = (now - date) / 1000;
 
@@ -2575,7 +2581,12 @@ function createCommentElement(comment) {
 
 // Helper function to format time
 function formatTimeAgo(dateString) {
-    const date = new Date(dateString); // Parse ISO string
+    // DB stores UTC without timezone — force UTC parsing to avoid 8h Manila offset
+    let dStr = dateString;
+    if (dStr && !dStr.includes('Z') && !dStr.includes('+') && !dStr.match(/T.*[+-]/)) {
+        dStr = dStr.replace(' ', 'T') + 'Z';
+    }
+    const date = new Date(dStr);
     const now = new Date();
     const secondsPast = (now - date) / 1000;
 
