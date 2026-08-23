@@ -252,13 +252,6 @@ $loggedIn = isset($_SESSION['user_id']);
         </div>
     </div>
 </div>
-<div class="neggy-container1">
-    <div class="header">
-        <div class="neg-icon">N</div>
-        <h4>Neggy Says...</h4>
-    </div>
-    <div id="neggy-messages1"></div>
-</div>
 
 <div class="forgot-password-container" id="forgotPasswordContainer">
     <div class="forgot-password-wrapper">
@@ -344,37 +337,34 @@ $loggedIn = isset($_SESSION['user_id']);
     const loginForm = document.getElementById('loginForm');
     const forgotPasswordButton = document.getElementById('forgotPasswordTrigger');
     const loginInlineError = document.getElementById('loginInlineError');
-    const neggyContainer1 = document.querySelector('.neggy-container1');
-    const neggyMessages1 = document.getElementById('neggy-messages1');
     const forgotPasswordForm = document.getElementById('forgotPasswordForm');
     const newPasswordFields = document.getElementById('newPasswordFields');
     const submitForgot = document.getElementById('submitForgot');
 
-    // Timer variables
-    let registrationTimer;
-    let countdownInterval;
-    let validationTimer;
     let currentValidationTimer;
 
-
-    // Initialize Neggy containers as hidden
-    if (neggyContainer1) {
-        neggyContainer1.style.display = 'none';
+    function showBondToast(message, type, durationMs) {
+        var existing = document.querySelector('.bond-toast');
+        if (existing) existing.remove();
+        var kind = type || 'info';
+        var duration = typeof durationMs === 'number' ? durationMs : 3500;
+        var toast = document.createElement('div');
+        toast.className = 'bond-toast bond-toast--' + kind;
+        toast.setAttribute('role', 'status');
+        var icon = kind === 'success' ? 'fa-check-circle' : kind === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+        toast.innerHTML = '<i class="fas ' + icon + '" aria-hidden="true"></i><span></span>';
+        var span = toast.querySelector('span');
+        if (span) span.textContent = String(message || '');
+        toast.style.cssText = 'position:fixed;top:24px;right:24px;padding:14px 20px;border-radius:10px;display:flex;align-items:center;gap:10px;font-weight:500;font-size:.88rem;z-index:13000;box-shadow:0 4px 20px rgba(0,0,0,0.15);transform:translateX(calc(100% + 28px));transition:transform .3s ease,opacity .3s ease;max-width:400px;word-wrap:break-word;opacity:0;font-family:Poppins,sans-serif;';
+        if (kind === 'success') { toast.style.backgroundColor = '#2B9E9E'; toast.style.color = '#fff'; }
+        else if (kind === 'error') { toast.style.backgroundColor = '#e74c3c'; toast.style.color = '#fff'; }
+        else { toast.style.backgroundColor = '#5a9068'; toast.style.color = '#fff'; }
+        document.body.appendChild(toast);
+        requestAnimationFrame(function() { requestAnimationFrame(function() { toast.style.opacity = '1'; toast.style.transform = 'translateX(0)'; }); });
+        setTimeout(function() { toast.style.opacity = '0'; toast.style.transform = 'translateX(calc(100% + 28px))'; setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300); }, duration);
     }
 
     function clearAllTimers() {
-        if (registrationTimer) {
-            clearTimeout(registrationTimer);
-            registrationTimer = null;
-        }
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-            countdownInterval = null;
-        }
-        if (validationTimer) {
-            clearTimeout(validationTimer);
-            validationTimer = null;
-        }
         if (currentValidationTimer) {
             clearTimeout(currentValidationTimer);
             currentValidationTimer = null;
@@ -387,64 +377,11 @@ $loggedIn = isset($_SESSION['user_id']);
             if (loginFormElement) {
                 const emailInput = loginFormElement.querySelector('#email');
                 const passwordInput = loginFormElement.querySelector('#password');
-                if (emailInput) {
-                    emailInput.value = '';
-                }
-                if (passwordInput) {
-                    passwordInput.value = '';
-                }
+                if (emailInput) emailInput.value = '';
+                if (passwordInput) passwordInput.value = '';
             }
-            if (neggyContainer1) {
-                neggyContainer1.style.display = 'none';
-                neggyMessages1.innerHTML = '';
-                neggyContainer1.classList.remove('login-position', 'forgot-position');
-            }
+            hideLoginError();
             clearAllTimers();
-        }
-
-        function positionNeggyForLogin() {
-            if (neggyContainer1) {
-                neggyContainer1.classList.add('login-position');
-                neggyContainer1.classList.remove('forgot-position');
-            }
-        }
-
-        function positionNeggyForForgotPassword() {
-            if (neggyContainer1) {
-                neggyContainer1.classList.add('forgot-position');
-                neggyContainer1.classList.remove('login-position');
-            }
-        }
-
-        function showNeggyMessage1(message, isSuccess = false, autoRedirect = true) {
-            if (!neggyContainer1 || !neggyMessages1) return;
-
-            // Clear any existing timers first
-            clearAllTimers();
-
-            neggyContainer1.classList.remove('success', 'error');
-            neggyContainer1.style.display = 'block';
-            neggyMessages1.innerHTML = '<p>' + message + '</p>';
-
-            if (isSuccess) {
-                neggyContainer1.classList.add('success');
-                if (autoRedirect) {
-                    setTimeout(() => {
-                        neggyContainer1.style.display = 'none';
-                        if (window.location.pathname.includes('forgot-password')) {
-                            window.location.href = 'index.php';
-                        } else {
-                            window.location.href = 'index.php';
-                        }
-                    }, 5000);
-                }
-            } else {
-                neggyContainer1.classList.add('error');
-                // For error messages, keep it visible for 10 seconds
-                registrationTimer = setTimeout(() => {
-                    neggyContainer1.style.display = 'none';
-                }, 10000);
-            }
         }
 
         // Click handler to cancel timers when navigating
@@ -474,33 +411,17 @@ $loggedIn = isset($_SESSION['user_id']);
             function validateForgotPasswordFields() {
                 const username = forgotUsernameInput.value.trim();
                 const recoveryCode = recoveryCodeInput.value.trim();
-
                 clearTimeout(currentValidationTimer);
-
-                if (username && recoveryCode) {
-                    currentValidationTimer = setTimeout(() => {
-                        neggyContainer1.style.display = 'none';
-                    }, 500);
-                }
             }
 
             function validateNewPassword() {
                 const newPassword = newPasswordInput.value;
                 const confirmPassword = confirmNewPasswordInput.value;
-
                 clearTimeout(currentValidationTimer);
-
-                if (newPassword.length >= 8 && newPassword === confirmPassword) {
-                    currentValidationTimer = setTimeout(() => {
-                        neggyContainer1.style.display = 'none';
-                    }, 500);
-                }
             }
 
             forgotPasswordForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-
-                positionNeggyForForgotPassword();
 
                 const username = document.getElementById('forgotUsername').value.trim();
                 const recoveryCode = document.getElementById('recoveryCode').value.trim();
@@ -508,15 +429,15 @@ $loggedIn = isset($_SESSION['user_id']);
                 if (!newPasswordFields.style.display || newPasswordFields.style.display === 'none') {
                     // First step: verify username and recovery code
                     if (!username && !recoveryCode) {
-                        showNeggyMessage1('Please enter both your username and recovery code');
+                        showBondToast('Please enter both your username and recovery code');
                         return;
                     }
                     if (!username) {
-                        showNeggyMessage1('Please enter your username');
+                        showBondToast('Please enter your username');
                         return;
                     }
                     if (!recoveryCode) {
-                        showNeggyMessage1('Please enter your recovery code');
+                        showBondToast('Please enter your recovery code');
                         return;
                     }
 
@@ -537,14 +458,14 @@ $loggedIn = isset($_SESSION['user_id']);
                             newPasswordFields.style.display = 'block';
                             submitForgot.textContent = 'Reset Password';
                             submitForgot.setAttribute('data-user-id', data.user_id);
-                            showNeggyMessage1('Verification successful. Please enter your new password.', true, false);
+                            showBondToast('Verification successful. Please enter your new password.', 'success');
                         } else {
-                            showNeggyMessage1(data.error || 'Verification failed. Please check your recovery code and try again.');
+                            showBondToast(data.error || 'Verification failed. Please check your recovery code and try again.');
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        showNeggyMessage1('An error occurred during verification. Please try again.');
+                        showBondToast('An error occurred during verification. Please try again.');
                     })
                     .finally(() => {
                         submitForgot.disabled = false;
@@ -559,23 +480,23 @@ $loggedIn = isset($_SESSION['user_id']);
                     const userId = submitForgot.getAttribute('data-user-id');
 
                     if (!newPassword && !confirmNewPassword) {
-                        showNeggyMessage1('Please enter your new password and confirm your new password');
+                        showBondToast('Please enter your new password and confirm your new password');
                         return;
                     }
                     if (!newPassword) {
-                        showNeggyMessage1('Please enter your new password');
+                        showBondToast('Please enter your new password');
                         return;
                     }
                     if (!confirmNewPassword) {
-                        showNeggyMessage1('Please confirm your new password');
+                        showBondToast('Please confirm your new password');
                         return;
                     }
                     if (newPassword.length < 8) {
-                        showNeggyMessage1('Password must be at least 8 characters long');
+                        showBondToast('Password must be at least 8 characters long');
                         return;
                     }
                     if (newPassword !== confirmNewPassword) {
-                        showNeggyMessage1('Passwords do not match');
+                        showBondToast('Passwords do not match');
                         return;
                     }
 
@@ -594,44 +515,24 @@ $loggedIn = isset($_SESSION['user_id']);
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Create a countdown element
-                            const countdownElement = document.createElement('div');
-                            countdownElement.style.marginTop = '10px';
-                            countdownElement.style.fontWeight = 'bold';
-
-                            // Show the success message with initial countdown
-                            const message = 'Password reset successfully! You will be redirected to login in 5 seconds.';
-                            showNeggyMessage1(message, true);
-
-                            // Add the countdown element to the Neggy container
-                            if (neggyMessages1) {
-                                neggyMessages1.appendChild(countdownElement);
-                            }
-
+                            showBondToast('Password reset successfully! Redirecting to login...', 'success');
                             let secondsLeft = 5;
-                            countdownElement.textContent = `Redirecting in ${secondsLeft}s...`;
-
-                            // Start the countdown
                             const countdownInterval = setInterval(() => {
                                 secondsLeft--;
-                                countdownElement.textContent = `Redirecting in ${secondsLeft}s...`;
-
                                 if (secondsLeft <= 0) {
                                     clearInterval(countdownInterval);
                                     forgotPasswordContainer.style.display = 'none';
                                     loginWrapper.style.display = 'flex';
                                     resetForgotPasswordForm();
-                                    positionNeggyForLogin();
-                                    neggyContainer1.style.display = 'none';
                                 }
                             }, 1000);
                         } else {
-                            showNeggyMessage1(data.error || 'Password reset failed. Please try again.');
+                            showBondToast(data.error || 'Password reset failed. Please try again.');
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        showNeggyMessage1('An error occurred during password reset. Please try again.');
+                        showBondToast('An error occurred during password reset. Please try again.');
                     })
                     .finally(() => {
                         submitForgot.disabled = false;
@@ -687,7 +588,7 @@ $loggedIn = isset($_SESSION['user_id']);
                 })
                 .then(data => {
                     if (data.success) {
-                        showNeggyMessage1('Login successful! Redirecting...', true);
+                        showBondToast('Login successful! Redirecting...', 'success');
                         setTimeout(() => {
                             window.location.href = data.redirect || 'homepage.php';
                         }, 1500);
@@ -716,9 +617,7 @@ $loggedIn = isset($_SESSION['user_id']);
                 loginWrapper.style.display = 'none';
                 forgotPasswordContainer.style.display = 'flex';
                 resetForgotPasswordForm();
-                positionNeggyForForgotPassword();
                 hideLoginError();
-                neggyContainer1.style.display = 'none';
             });
 
             hideForgotPassword.addEventListener('click', function(e) {
@@ -726,8 +625,6 @@ $loggedIn = isset($_SESSION['user_id']);
                 forgotPasswordContainer.style.display = 'none';
                 loginWrapper.style.display = 'flex';
                 resetLoginForm();
-                positionNeggyForLogin();
-                neggyContainer1.style.display = 'none';
             });
 
             function resetForgotPasswordForm() {
@@ -735,150 +632,6 @@ $loggedIn = isset($_SESSION['user_id']);
                 newPasswordFields.style.display = 'none';
                 submitForgot.textContent = 'Continue';
             }
-
-            forgotPasswordForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                positionNeggyForForgotPassword();
-
-                const username = document.getElementById('forgotUsername').value.trim();
-                const recoveryCode = document.getElementById('recoveryCode').value.trim();
-
-                if (!newPasswordFields.style.display || newPasswordFields.style.display === 'none') {
-                    // First step: verify username and recovery code
-                    if (!username && !recoveryCode) {
-                        showNeggyMessage1('Please enter both your username and recovery code');
-                        return;
-                    }
-                    if (!username) {
-                        showNeggyMessage1('Please enter your username');
-                        return;
-                    }
-                    if (!recoveryCode) {
-                        showNeggyMessage1('Please enter your recovery code');
-                        return;
-                    }
-
-                    // Show loading state
-                    const originalText = submitForgot.textContent;
-                    submitForgot.disabled = true;
-                    
-
-                    fetch('index.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `forgot_password=1&username=${encodeURIComponent(username)}&recovery_code=${encodeURIComponent(recoveryCode)}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            newPasswordFields.style.display = 'block';
-                            submitForgot.textContent = 'Reset Password';
-                            submitForgot.setAttribute('data-user-id', data.user_id);
-                            showNeggyMessage1('Verification successful. Please enter your new password.', true, false);
-                        } else {
-                            showNeggyMessage1(data.error || 'Verification failed. Please check your recovery code and try again.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showNeggyMessage1('An error occurred during verification. Please try again.');
-                    })
-                    .finally(() => {
-                        submitForgot.disabled = false;
-                        if (!newPasswordFields.style.display || newPasswordFields.style.display === 'none') {
-                            submitForgot.textContent = originalText;
-                        }
-                    });
-                } else {
-                    // Second step: reset password
-                    const newPassword = document.getElementById('newPassword').value;
-                    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-                    const userId = submitForgot.getAttribute('data-user-id');
-
-                    if (!newPassword && !confirmNewPassword) {
-                        showNeggyMessage1('Please enter your new password and confirm your new password');
-                        return;
-                    }
-                    if (!newPassword) {
-                        showNeggyMessage1('Please enter your new password');
-                        return;
-                    }
-                    if (!confirmNewPassword) {
-                        showNeggyMessage1('Please confirm your new password');
-                        return;
-                    }
-                    if (newPassword.length < 8) {
-                        showNeggyMessage1('Password must be at least 8 characters long');
-                        return;
-                    }
-                    if (newPassword !== confirmNewPassword) {
-                        showNeggyMessage1('Passwords do not match');
-                        return;
-                    }
-
-                    // Show loading state
-                    const originalText = submitForgot.textContent;
-                    submitForgot.disabled = true;
-                   
-
-                    fetch('index.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `reset_password=1&user_id=${encodeURIComponent(userId)}&new_password=${encodeURIComponent(newPassword)}&confirm_password=${encodeURIComponent(confirmNewPassword)}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Create a countdown element
-                            const countdownElement = document.createElement('div');
-                            countdownElement.style.marginTop = '10px';
-                            countdownElement.style.fontWeight = 'bold';
-
-                            // Show the success message with initial countdown
-                            const message = 'Password reset successfully! You will be redirected to login in 5 seconds.';
-                            showNeggyMessage1(message, true);
-
-                            // Add the countdown element to the Neggy container
-                            if (neggyMessages1) {
-                                neggyMessages1.appendChild(countdownElement);
-                            }
-
-                            let secondsLeft = 5;
-                            countdownElement.textContent = `Redirecting in ${secondsLeft}s...`;
-
-                            // Start the countdown
-                            const countdownInterval = setInterval(() => {
-                                secondsLeft--;
-                                countdownElement.textContent = `Redirecting in ${secondsLeft}s...`;
-
-                                if (secondsLeft <= 0) {
-                                    clearInterval(countdownInterval);
-                                    forgotPasswordContainer.style.display = 'none';
-                                    loginWrapper.style.display = 'flex';
-                                    resetForgotPasswordForm();
-                                    positionNeggyForLogin();
-                                    neggyContainer1.style.display = 'none';
-                                }
-                            }, 1000);
-                        } else {
-                            showNeggyMessage1(data.error || 'Password reset failed. Please try again.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showNeggyMessage1('An error occurred during password reset. Please try again.');
-                    })
-                    .finally(() => {
-                        submitForgot.disabled = false;
-                        submitForgot.textContent = originalText;
-                    });
-                }
-            });
         }
     });
 
