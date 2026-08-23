@@ -439,7 +439,29 @@ box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.08);
 }
 
 .signup-form-wrapper .form-input::placeholder {
-color: transparent;
+color: #aaa;
+}
+.signup-form-wrapper .input-container .form-input::placeholder {
+color: #aaa;
+}
+
+.signup-form-wrapper .icon-container {
+border-right: 1px solid #ddd;
+border-radius: 8px 0 0 8px;
+}
+.signup-form-wrapper .input-container.error,
+.signup-form-wrapper .input-container:has(.form-input.error) {
+border-color: #f59ca8 !important;
+box-shadow: 0 0 0 3px rgba(245,156,168,0.16);
+}
+.signup-form-wrapper .input-container.error .icon-container,
+.signup-form-wrapper .input-container:has(.form-input.error) .icon-container {
+background-color: #fef2f2 !important;
+border-right: 1px solid #f8b4bf;
+}
+.signup-form-wrapper .input-container .form-input.error {
+border: none !important;
+box-shadow: none !important;
 }
 
 .signup-form-wrapper .form-select-input {

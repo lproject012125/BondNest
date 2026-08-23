@@ -802,16 +802,22 @@ $loggedIn = isset($_SESSION['user_id']);
 
         function showErrorBond(inputEl, msg){
             inputEl.classList.add('error'); inputEl.classList.remove('success');
+            const container = inputEl.closest('.input-container');
+            if(container) container.classList.add('error');
             const err = document.getElementById(inputEl.id + '-error');
             if(err){ err.textContent = msg; err.classList.add('show'); }
         }
         function showSuccessBond(inputEl){
             inputEl.classList.remove('error'); inputEl.classList.add('success');
+            const container = inputEl.closest('.input-container');
+            if(container) container.classList.remove('error');
             const err = document.getElementById(inputEl.id + '-error');
             if(err) err.classList.remove('show');
         }
         function clearValidationBond(inputEl){
             inputEl.classList.remove('error','success');
+            const container = inputEl.closest('.input-container');
+            if(container) container.classList.remove('error');
             const err = document.getElementById(inputEl.id + '-error');
             if(err) err.classList.remove('show');
         }
