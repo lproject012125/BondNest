@@ -372,13 +372,14 @@ margin-bottom: 0;
 }
 
 .input-container {
-display: flex;
-align-items: center;
-border: 1px solid #ddd;
-border-radius: 8px;
-overflow: hidden;
-transition: all 0.3s ease;
-height: 44px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #E0E6E3;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 44px;
+    box-sizing: border-box;
 }
 
 .input-container:hover {
@@ -418,24 +419,30 @@ align-items: center;
 }
 
 .signup-form-wrapper .form-input {
-width: 100%;
-padding: 0 45px 0 16px;
-border: 2px solid #E0E6E3;
-border-radius: 10px;
-font-size: 14px;
-font-weight: 400;
-color: #2F3E36;
-background-color: #fff;
-transition: all 0.3s ease;
-font-family: 'Poppins', sans-serif;
-height: 44px;
-line-height: 44px;
+    width: 100%;
+    padding: 0 45px 0 16px;
+    border: 1px solid #E0E6E3;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    font-weight: 400;
+    color: #2F3E36;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    height: 44px;
+    line-height: 44px;
+    box-sizing: border-box;
 }
 
 .signup-form-wrapper .form-input:focus {
-outline: none;
-border-color: #008080;
-box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.08);
+    outline: none;
+    border-color: #008080;
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.08);
+}
+
+.signup-form-wrapper .input-container:focus-within .icon-container {
+    border-right: 1px solid #008080;
 }
 
 .signup-form-wrapper .form-input::placeholder {
@@ -446,8 +453,8 @@ color: #aaa;
 }
 
 .signup-form-wrapper .icon-container {
-border-right: 1px solid #ddd;
-border-radius: 8px 0 0 8px;
+    border-right: 1px solid #E0E6E3;
+    border-radius: 8px 0 0 8px;
 }
 .signup-form-wrapper .input-container.error,
 .signup-form-wrapper .input-container:has(.form-input.error) {
@@ -456,8 +463,8 @@ box-shadow: 0 0 0 3px rgba(245,156,168,0.16);
 }
 .signup-form-wrapper .input-container.error .icon-container,
 .signup-form-wrapper .input-container:has(.form-input.error) .icon-container {
-background-color: #fef2f2 !important;
-border-right: 1px solid #f8b4bf;
+    background-color: #fef2f2 !important;
+    border-right: 1px solid #f59ca8;
 }
 .signup-form-wrapper .input-container .form-input.error {
 border: none !important;
@@ -563,7 +570,13 @@ position: relative;
 
 /* Ensure password inputs have room for eye icon */
 .signup-form-wrapper .input-container .form-input[type="password"] {
-padding-right: 40px;
+    padding-right: 40px;
+}
+
+/* Ensure all input containers have consistent sizing */
+.signup-form-wrapper .form-group .input-container {
+    min-height: 44px;
+    max-height: 44px;
 }
 
 .signup-form-wrapper {
