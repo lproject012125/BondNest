@@ -168,37 +168,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .signup-page-wrapper .signup-form-wrapper {
             width: 100%;
         }
-        .back-to-login-link {
-            margin-top: 20px;
-            color: #fff;
-            font-size: 1rem;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-        }
-        .back-to-login-link a {
-            color: #fff;
-            text-decoration: underline;
-            font-weight: 600;
-        }
-        .back-to-login-link a:hover {
-            color: #e0f0f0;
-        }
     </style>
 </head>
 <body>
-    <div class="bondnest-title-container">
-        <img src="./web-images/bn-logo.png" alt="BondNest Icon" class="bondnest-icon-top">
-        <h1 class="bondnest-title-top">
-            <span style="--random-angle: 3;">B</span>
-            <span style="--random-angle: -2;">o</span>
-            <span style="--random-angle: 5;">n</span>
-            <span style="--random-angle: -1;">d</span>
-            <span style="--random-angle: 4;">N</span>
-            <span style="--random-angle: -3;">e</span>
-            <span style="--random-angle: 2;">s</span>
-            <span style="--random-angle: -4;">t</span>
-        </h1>
-    </div>
-
     <div class="flying-bird">
         <img src="./web-images/bird.gif" alt="Flying Bird">
     </div>
@@ -315,11 +287,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </form>
         </div>
-
-        <div class="back-to-login-link">
-            <a href="index.php">&larr; Back to Log In</a>
-        </div>
-    </div>
 
     <div class="neggy-container">
         <div class="header">
