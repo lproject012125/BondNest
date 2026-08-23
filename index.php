@@ -394,15 +394,17 @@ $loggedIn = isset($_SESSION['user_id']);
  .forgot-password-wrapper .input-container .icon-container{width:46px;padding:0;justify-content:center;flex-shrink:0}
  .forgot-password-wrapper .input-container input{min-width:0;height:50px;padding:0 14px;font-size:.95rem}
  .forgot-password-wrapper .input-container input[type=password]{padding-right:56px}
- .forgot-password-wrapper .input-icon{right:22px}
+ .forgot-password-wrapper .input-icon{right:30px}
  .forgot-password-wrapper .custom-error{background:#fef2f2;border:1px solid #f8b4bf;color:#b84252;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;line-height:1.25;opacity:0;max-height:0;transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease,max-height .22s ease,margin .22s ease;pointer-events:none;overflow:hidden;margin:0}
  .forgot-password-wrapper .custom-error.show{opacity:1;max-height:80px;transform:translateY(0);margin:6px 0 0}
  .forgot-password-wrapper .create-account-button{height:52px;margin-top:0;border-radius:26px;padding:0 18px;justify-content:center;text-align:center;text-transform:uppercase;font-size:.9rem;letter-spacing:.3px}
  #forgotRequestForm .form-group{margin-bottom:10px}
  #forgotResetForm{width:100%}
- #forgotResetForm .form-group{width:100%;display:block;margin-bottom:10px}
+ #forgotResetForm .form-group{width:100%;display:block;margin-bottom:6px}
  #forgotResetForm .input-container{width:100%}
- #forgotResetForm .form-group--pwd-full{margin-top:0;margin-bottom:10px}
+ #forgotResetForm .form-group--pwd-full{margin-top:0;margin-bottom:8px}
+ #forgotResetForm .form-group--pwd-full:has(.pwd-live[hidden]){display:none}
+ #forgotResetForm .pwd-live[hidden]{display:none !important}
  #forgotResetForm .pwd-live{width:100%;margin:0}
  #forgotResetForm .pwd-strength{display:flex;align-items:center;gap:.55rem;margin:0;width:100%}
  #forgotResetForm .pwd-strength__track{flex:1;min-width:0;height:6px;border-radius:6px;background:rgba(0,128,128,.12);overflow:hidden}
