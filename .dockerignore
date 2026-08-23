@@ -1,0 +1,16 @@
+/vendor/
+.git
+.gitignore
+uploads/
+*.log
+*.txt
+*.bak
+*.new
+*.ps1
+*.sql
+test_*.php
+debug*.php
+db_check.html
+tables.json
+profile-page-modified.php
+profile-page-backup.php
