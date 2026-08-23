@@ -18,7 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['forgot_password'])) $action = 'forgot_password';
     if (isset($_POST['reset_password'])) $action = 'reset_password';
     if (isset($_POST['check_username'])) $action = 'check_username';
-    if (isset($_FILES['profilePicture'])) $action = 'signup';
+    if (isset($_POST['email']) || isset($_POST['firstName'])) $action = 'signup';
+    else if (isset($_FILES['profilePicture'])) $action = 'signup';
     if (isset($_POST['username']) && isset($_POST['password']) && $action === '') $action = 'login';
     
     switch ($action) {
@@ -547,16 +548,8 @@ $loggedIn = isset($_SESSION['user_id']);
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="profilePicture">
-                    <i class="fas fa-camera"></i>
-                    <span>Upload Profile Picture</span>
-                    <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
-                </label>
-            </div>
-
             <button type="submit" class="create-account-button">
-                <span class="button-text">Create Account</span>
+                <span class="button-text">Sign Up</span>
                 <i class="fas fa-arrow-right"></i>
             </button>
 
