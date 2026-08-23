@@ -302,7 +302,7 @@ $sql = "SELECT p.*,
         JOIN users u ON p.user_id = u.id 
         LEFT JOIN comments c ON p.id = c.post_id
         WHERE p.user_id = ? $status_condition
-        GROUP BY p.id
+        GROUP BY p.id, u.first_name, u.last_name, u.profile_picture
         ORDER BY p.created_at DESC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id, $profile_user_id]);

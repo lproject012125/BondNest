@@ -36,7 +36,7 @@ $posts_query = "
     FROM posts p
     JOIN users u ON p.user_id = u.id
     LEFT JOIN comments c ON p.id = c.post_id
-    GROUP BY p.id
+    GROUP BY p.id, u.username, u.first_name, u.last_name, u.profile_picture
     ORDER BY p.created_at DESC
     LIMIT ? OFFSET ?
 ";

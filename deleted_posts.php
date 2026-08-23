@@ -17,15 +17,17 @@ $user_id = $_SESSION['user_id'];
 
 // Add a test notification function for debugging
 function createTestNotification($pdo, $user_id) {
+    global $db_driver;
     // Only create test if we have a special parameter
     if (isset($_GET['create_test']) && $_GET['create_test'] == 1) {
         // First, insert a test entry into deleted_posts
+        $date_expr = ($db_driver === 'pgsql') ? "NOW() - INTERVAL '2 day'" : "DATE_SUB(NOW(), INTERVAL 2 DAY)";
         $query = "INSERT INTO deleted_posts 
             (original_post_id, user_id, admin_id, content, image_path, likes, comment_count, 
             profile_picture, first_name, last_name, deletion_reason, created_at, deleted_at) 
             VALUES (999, ?, 1, 'This is a sample post content that was deleted. It can include multiple lines and special characters.', 
             './uploads/sample_image.jpg', 24, 5, './web-images/default_profile.png', 'Test', 'User', 
-            'This is a test deletion reason.', DATE_SUB(NOW(), INTERVAL 2 DAY), NOW())";
+            'This is a test deletion reason.', " . $date_expr . ", NOW())";
         
         $stmt = $pdo->prepare($query);
         $stmt->execute([$user_id]);

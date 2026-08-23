@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     JOIN users u ON p.user_id = u.id 
                     LEFT JOIN comments c ON p.id = c.post_id 
                     WHERE p.id = ? 
-                    GROUP BY p.id");
+                    GROUP BY p.id, u.first_name, u.last_name, u.profile_picture");
                 $get_owner_stmt->execute([$post_id]);
                 
                 if ($owner_row = $get_owner_stmt->fetch()) {
@@ -162,14 +162,14 @@ $total_pages = ceil($total_posts / $posts_per_page);
 // Get all posts with user info and status with pagination
 $posts_query = "
     SELECT p.*, u.username, u.first_name, u.last_name, u.profile_picture,
-           IFNULL(p.status, 'posted') as status,
+           COALESCE(p.status, 'posted') as status,
            COUNT(DISTINCT c.id) AS comment_count,
            p.likes,
            EXISTS(SELECT 1 FROM likes l WHERE l.user_id = ? AND l.post_id = p.id) AS user_has_liked
     FROM posts p
     JOIN users u ON p.user_id = u.id
     LEFT JOIN comments c ON p.id = c.post_id
-    GROUP BY p.id
+    GROUP BY p.id, u.username, u.first_name, u.last_name, u.profile_picture
     ORDER BY p.created_at DESC
     LIMIT ? OFFSET ?
 ";

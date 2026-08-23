@@ -40,7 +40,7 @@ $sql = "SELECT p.*,
         JOIN users u ON p.user_id = u.id 
         LEFT JOIN comments c ON p.id = c.post_id
         WHERE p.status = 'approved' OR p.status = 'posted' OR p.status IS NULL
-        GROUP BY p.id
+        GROUP BY p.id, u.first_name, u.last_name, u.profile_picture
         ORDER BY p.created_at DESC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id]);
