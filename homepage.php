@@ -158,6 +158,17 @@ $username = htmlspecialchars($user['username']);
         border: none !important;
     }
 
+    .initials-avatar {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+        border: none !important;
+    }
+
     .post .post-avatar img, .feed .post-avatar img, .post-header .post-avatar img {
         border: none !important;
     }
@@ -1486,7 +1497,11 @@ if (menuTrigger) {
                 <div class="create-post">
                     <div class="input-area">
                     <div class="profile_picture">
-                        <img src="<?php echo !empty($user['profile_picture']) ? $user['profile_picture'] : './web-images/default_profile.png'; ?>">
+                        <?php if (!empty($user['profile_picture'])): ?>
+                            <img src="<?php echo $user['profile_picture']; ?>">
+                        <?php else: ?>
+                            <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 44); ?>
+                        <?php endif; ?>
             </div>
             <input type="text" placeholder="What's on your mind, <?php echo htmlspecialchars($user['first_name']); ?>?" name="create-post">
 
@@ -1513,7 +1528,11 @@ if (menuTrigger) {
                     <div class="modal-body">
                         <div class="user-info">
                             <div class="profile-picture">
-                                <img src="<?php echo (!empty($user['profile_picture'])) ? $user['profile_picture'] : './web-images/default_profile.png'; ?>" alt="Profile Picture">
+                                <?php if (!empty($user['profile_picture'])): ?>
+                                    <img src="<?php echo $user['profile_picture']; ?>" alt="Profile Picture">
+                                <?php else: ?>
+                                    <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 44); ?>
+                                <?php endif; ?>
                             </div>
                             <div class="user-details">
                                 <span><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></span>
@@ -1553,7 +1572,11 @@ if (menuTrigger) {
         <?php endif; ?>
         <div class="post-header">
     <div class="post-avatar" style="border: none !important;">
-        <img src="<?php echo !empty($post['profile_picture']) ? $post['profile_picture'] : './web-images/default_profile.png'; ?>" style="border: none !important;">
+        <?php if (!empty($post['profile_picture'])): ?>
+            <img src="<?php echo $post['profile_picture']; ?>" style="border: none !important;">
+        <?php else: ?>
+            <?php echo getInitialsHtml($post['first_name'], $post['last_name'], 44); ?>
+        <?php endif; ?>
     </div>
     <div>
         <div class="post-user"><?php echo htmlspecialchars($post['first_name'] . ' ' . $post['last_name']); ?></div>
@@ -2420,8 +2443,10 @@ function createCommentElement(comment) {
     
     div.innerHTML = `
         <div class="comment-content">
-            <img src="${comment.profile_picture || './web-images/default_profile.png'}" 
-                class="comment-avatar" alt="User avatar">
+            ${comment.profile_picture 
+                ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
+                : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
+            }
             <div class="comment-body">
                 <div style="display: flex; width: 100%; background: transparent;">
                     <h4 class="comment-author" style="background: transparent; margin: 0; padding: 0;">${comment.first_name} ${comment.last_name}</h4>
@@ -3772,4 +3797,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Include post status checker for real-time updates from admin actions -->
 <script src="post_status_checker.js?v=<?php echo time(); ?>"></script>
 </body>
-</html>s
+</html>
