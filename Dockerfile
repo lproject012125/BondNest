@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 8080
 
-CMD php -S 0.0.0.0:$PORT -t .
+CMD ["sh", "-c", "php -S 0.0.0.0:$PORT -t ."]
