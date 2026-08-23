@@ -2,6 +2,8 @@
 
 
 require_once 'db_connection.php';
+require_once 'migrate.php';
+runMigration($pdo);
 
 function generateRecoveryCode() {
     return bin2hex(random_bytes(5)); // 10-character code
