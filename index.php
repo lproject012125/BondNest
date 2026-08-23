@@ -41,8 +41,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Passwords do not match.';
             }
 
-            if (strlen($_POST['createPassword']) < 8) {
-                $errors[] = 'Password must be at least 8 characters.';
+            if (strlen($_POST['createPassword']) < 12) {
+                $errors[] = 'Password must be at least 12 characters.';
+            } elseif (strlen($_POST['createPassword']) > 64) {
+                $errors[] = 'Password must not exceed 64 characters.';
+            } elseif (strpos($_POST['createPassword'], ' ') !== false) {
+                $errors[] = 'Password must not contain spaces.';
+            } elseif (!preg_match('/[A-Z]/', $_POST['createPassword'])) {
+                $errors[] = 'Password must include at least one uppercase letter (A–Z).';
+            } elseif (!preg_match('/[a-z]/', $_POST['createPassword'])) {
+                $errors[] = 'Password must include at least one lowercase letter (a–z).';
+            } elseif (!preg_match('/[0-9]/', $_POST['createPassword'])) {
+                $errors[] = 'Password must include at least one digit (0–9).';
+            } elseif (!preg_match('/[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>?\/`~\\\\]/', $_POST['createPassword'])) {
+                $errors[] = 'Password must include at least one special character (!@#$…).';
+            } else {
+                $common = ['password','12345678','123456789','qwerty','qwerty123','111111','iloveyou','admin','welcome','monkey','dragon','letmein','abc123','password1'];
+                if (in_array(strtolower($_POST['createPassword']), $common)) {
+                    $errors[] = 'This password is too common. Choose a less predictable password.';
+                } else {
+                    $pl = strtolower($_POST['createPassword']);
+                    $personal = [strtolower($_POST['username']??''), strtolower($_POST['email']??''), strtolower($_POST['firstName']??''), strtolower($_POST['lastName']??'')];
+                    foreach ($personal as $idx=>$tok) {
+                        $t = trim($tok);
+                        if (strlen($t) >= 2 && strpos($pl, $t) !== false) {
+                            $labels = ['username','email address','first name','last name'];
+                            $errors[] = 'Password must not contain your ' . $labels[$idx] . '.';
+                            break;
+                        }
+                    }
+                }
             }
 
             $profile_picture = null;
@@ -539,6 +567,12 @@ $loggedIn = isset($_SESSION['user_id']);
                     <div class="custom-error" id="confirmPassword-error">Password confirmation is required.</div>
                 </div>
             </div>
+            <div class="form-row">
+                <div class="form-group form-group--pwd-full">
+                    <div class="pwd-live" id="signUpPwLive" hidden></div>
+                    <div class="custom-error" id="signUpPassword-common-error"></div>
+                </div>
+            </div>
 
             <button type="submit" class="create-account-button" id="signUpSubmitBtn" disabled>Sign Up</button>
 
@@ -594,6 +628,76 @@ $loggedIn = isset($_SESSION['user_id']);
             if(bWrapper) bWrapper.addEventListener('click', (e)=>{
                 if(e.target.closest('#birthdayIcon') || e.target.closest('.icon-container')) openBirthdayPicker(e);
             });
+        })();
+        </script>
+        <script>
+        // ——— DiariCore password policy (BondNest adapted) ———
+        (function(global){
+            var COMMON_PASSWORDS=['password','12345678','123456789','qwerty','qwerty123','111111','iloveyou','admin','welcome','monkey','dragon','letmein','abc123','password1'];
+            var COMMON_SET={}; for(var i=0;i<COMMON_PASSWORDS.length;i++) COMMON_SET[COMMON_PASSWORDS[i].toLowerCase()]=true;
+            var SPECIAL_CHARS="!@#$%^&*()_+-=[]{}|;:'\",.<>?/`~\\";
+            function hasSpecialChar(p){ for(var i=0;i<SPECIAL_CHARS.length;i++) if(p.indexOf(SPECIAL_CHARS.charAt(i))!==-1) return true; return false; }
+            var MIN_LEN=12, MAX_LEN=64;
+            function norm(s){ return String(s||'').trim(); }
+            function containsPersonal(pl, token){ var t=norm(token).toLowerCase(); if(t.length<2) return false; return pl.indexOf(t)!==-1; }
+            function isCommonPassword(password){ var l=String(password||'').trim().toLowerCase(); return !!COMMON_SET[l]; }
+            function getChecklistState(password, personal){
+                var p=password!=null?String(password):''; var pl=p.toLowerCase(); var per=personal||{};
+                return { len12:p.length>=MIN_LEN, upper:/[A-Z]/.test(p), lower:/[a-z]/.test(p), digit:/[0-9]/.test(p), special:hasSpecialChar(p), noSpace:p.indexOf(' ') === -1, noPersonal:!(containsPersonal(pl,per.nickname)||containsPersonal(pl,per.email)||containsPersonal(pl,per.firstName)||containsPersonal(pl,per.lastName)) };
+            }
+            function countChecklistPassed(state){ var n=0; if(state.len12)n++; if(state.upper)n++; if(state.lower)n++; if(state.digit)n++; if(state.special)n++; if(state.noSpace)n++; if(state.noPersonal)n++; return n; }
+            function passwordsMatch(p,c){ return String(c||'')===String(p||'') && String(c||'').length>0; }
+            function getStrengthScoreMeterOnly(p,c){
+                var pp=p!=null?String(p):''; var state={ len12:pp.length>=MIN_LEN, upper:/[A-Z]/.test(pp), lower:/[a-z]/.test(pp), digit:/[0-9]/.test(pp), special:hasSpecialChar(pp), noSpace:pp.indexOf(' ') === -1 };
+                var cc=0; if(state.len12)cc++; if(state.upper)cc++; if(state.lower)cc++; if(state.digit)cc++; if(state.special)cc++; if(state.noSpace)cc++; if(passwordsMatch(pp,c))cc+=1; return cc;
+            }
+            function getStrengthBandMeter(score){ if(score<=2) return {key:'weak',label:'Weak',color:'#c75c5c'}; if(score<=4) return {key:'fair',label:'Fair',color:'#d4a017'}; if(score<=5) return {key:'good',label:'Good',color:'#9db85a'}; return {key:'strong',label:'Strong',color:'#4a7c59'}; }
+            function getPasswordBlockMessage(password, confirm, personal){
+                var p=String(password||''); var c=String(confirm||''); if(!p.trim()) return 'Enter a password to continue.'; if(p.length>MAX_LEN) return 'Password must be '+MAX_LEN+' characters or fewer.'; if(isCommonPassword(p)) return 'This password is too common. Choose a less predictable password.'; var state=getChecklistState(p,personal); if(!state.len12) return 'Password must be at least '+MIN_LEN+' characters.'; if(!state.upper) return 'Password must include at least one uppercase letter (A–Z).'; if(!state.lower) return 'Password must include at least one lowercase letter (a–z).'; if(!state.digit) return 'Password must include at least one number.'; if(!state.special) return 'Password must include at least one special character (!@#$…).'; if(!state.noSpace) return 'Password must not contain spaces.'; if(!state.noPersonal){ var per=personal||{}; var hits=[]; if(containsPersonal(p.toLowerCase(),per.nickname)) hits.push('username'); if(containsPersonal(p.toLowerCase(),per.firstName)) hits.push('first name'); if(containsPersonal(p.toLowerCase(),per.lastName)) hits.push('last name'); if(containsPersonal(p.toLowerCase(),per.email)) hits.push('email'); var hint=hits.length>0?' (matched your '+hits.join(', ')+')':''; return 'Password must not contain your username, first name, last name, or email'+hint+'. Use a different password that does not include those words.'; } if(!passwordsMatch(p,c)) return 'Passwords do not match. Check confirm password.'; return '';
+            }
+            function isPasswordSubmitReady(p,c,personal){ var pp=String(p||''); if(pp.length>MAX_LEN) return false; var st=getChecklistState(pp,personal); var cnt=countChecklistPassed(st); if(cnt!==7) return false; if(!passwordsMatch(pp,c)) return false; if(isCommonPassword(pp)) return false; return true; }
+            global.DiariPasswordPolicy={MIN_LEN:MIN_LEN, MAX_LEN:MAX_LEN, getChecklistState:getChecklistState, getStrengthScoreMeterOnly:getStrengthScoreMeterOnly, getStrengthBandMeter:getStrengthBandMeter, isCommonPassword:isCommonPassword, getPasswordBlockMessage:getPasswordBlockMessage, isPasswordSubmitReady:isPasswordSubmitReady};
+        })(window);
+        </script>
+        <script>
+        // Live strength meter for BondNest signup (DiariCore-style)
+        (function(){
+            const pwdEl=document.getElementById('createPassword');
+            const confirmEl=document.getElementById('confirmPassword');
+            const liveWrap=document.getElementById('signUpPwLive');
+            const commonErr=document.getElementById('signUpPassword-common-error');
+            if(!pwdEl||!confirmEl||!liveWrap) return;
+            if(!liveWrap.querySelector('.pwd-strength')){
+                liveWrap.innerHTML='<div class="pwd-strength"><div class="pwd-strength__track" role="progressbar" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"><div class="pwd-strength__fill"></div></div><span class="pwd-strength__label">Weak</span></div>';
+            }
+            const fillEl=liveWrap.querySelector('.pwd-strength__fill');
+            const labelEl=liveWrap.querySelector('.pwd-strength__label');
+            const trackEl=liveWrap.querySelector('.pwd-strength__track');
+            function getPersonal(){ return { nickname: document.getElementById('username')?.value||'', email: document.getElementById('signupEmail')?.value||'', firstName: document.getElementById('firstName')?.value||'', lastName: document.getElementById('lastName')?.value||'' }; }
+            function refresh(){
+                const p=pwdEl.value; const c=confirmEl.value;
+                if(p.length===0){ liveWrap.hidden=true; if(commonErr) commonErr.classList.remove('show'); return; }
+                liveWrap.hidden=false;
+                const score=window.DiariPasswordPolicy.getStrengthScoreMeterOnly(p,c);
+                const band=window.DiariPasswordPolicy.getStrengthBandMeter(score);
+                if(fillEl){ fillEl.style.width=Math.min(100,(score/7)*100)+'%'; fillEl.style.backgroundColor=band.color; }
+                if(labelEl){ labelEl.textContent=band.label; labelEl.style.color=band.color; }
+                if(trackEl){ trackEl.setAttribute('aria-valuenow',String(score)); trackEl.setAttribute('aria-valuetext',band.label); }
+                const personal=getPersonal();
+                const ready=window.DiariPasswordPolicy.isPasswordSubmitReady(p,c,personal);
+                if(commonErr){
+                    if(!ready && p.length>0){
+                        const msg=window.DiariPasswordPolicy.getPasswordBlockMessage(p,c,personal);
+                        if(msg){ commonErr.textContent=msg; commonErr.classList.add('show'); } else commonErr.classList.remove('show');
+                    } else commonErr.classList.remove('show');
+                }
+                if(typeof updateSignupButton==='function') updateSignupButton();
+            }
+            pwdEl.addEventListener('input', refresh);
+            confirmEl.addEventListener('input', refresh);
+            ['username','signupEmail','firstName','lastName'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', refresh); });
+            refresh();
+            window._bondRefreshPwd = refresh;
         })();
         </script>
     </div>
@@ -882,9 +986,10 @@ $loggedIn = isset($_SESSION['user_id']);
             if(fieldId==='gender'){ if(!v){ showErrorBond(el,'Gender is required.'); return false; } showSuccessBond(el); return true; }
             if(fieldId==='birthday'){ if(!v){ showErrorBond(el,'Date of birth is required.'); return false; } showSuccessBond(el); return true; }
             if(fieldId==='createPassword'){
-                if(!v){ showErrorBond(el,'Password is required.'); return false; }
-                if(v.length<8){ showErrorBond(el,'Password must be at least 8 characters.'); return false; }
+                if(!v){ showErrorBond(el,'Password is required.'); if(window._bondRefreshPwd) window._bondRefreshPwd(); return false; }
+                // Delegate detailed policy to live meter (common-error); per-field just marks success if not empty
                 showSuccessBond(el);
+                if(window._bondRefreshPwd) window._bondRefreshPwd();
                 const c=document.getElementById('confirmPassword');
                 if(c && c.value.trim()) validateSignupField('confirmPassword');
                 return true;
@@ -901,15 +1006,17 @@ $loggedIn = isset($_SESSION['user_id']);
         // Attach listeners + button enable/disable
         const signupSubmitBtn = document.getElementById('signUpSubmitBtn');
         function updateSignupButton(){
-            const allValid = signupIds.every(id=>{
+            const otherIds = ['username','signupEmail','firstName','lastName','gender','birthday'];
+            const otherValid = otherIds.every(id=>{
                 const el=document.getElementById(id);
                 return el && el.value.trim()!=='' && !el.classList.contains('error');
-            }) && !document.querySelector('#createAccountForm .custom-error.show');
-            // also check password match explicitly
+            });
             const pw=document.getElementById('createPassword')?.value||'';
             const cpw=document.getElementById('confirmPassword')?.value||'';
-            const pwOk = pw.length>=8 && pw===cpw;
-            if(signupSubmitBtn) signupSubmitBtn.disabled = !(allValid && pwOk);
+            const personal={ nickname: document.getElementById('username')?.value||'', email: document.getElementById('signupEmail')?.value||'', firstName: document.getElementById('firstName')?.value||'', lastName: document.getElementById('lastName')?.value||'' };
+            const pwReady = window.DiariPasswordPolicy ? window.DiariPasswordPolicy.isPasswordSubmitReady(pw, cpw, personal) : (pw.length>=12 && pw===cpw);
+            const noInlineErrors = !document.querySelector('#createAccountForm .custom-error.show');
+            if(signupSubmitBtn) signupSubmitBtn.disabled = !(otherValid && pwReady && noInlineErrors);
         }
 
         signupIds.forEach(fid=>{
