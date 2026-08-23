@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/railwayapp/nixpacks/main/nixpacks.schema.json",
+  "phases": {
+    "setup": {
+      "nixPkgs": ["php83", "php83Extensions.pdo_pgsql", "php83Extensions.pdo_mysql"]
+    }
+  },
+  "start": "php -S 0.0.0.0:$PORT -t ."
+}
