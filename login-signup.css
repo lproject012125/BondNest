@@ -1,0 +1,905 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    
+
+    /* ... other body styles ... */
+    background: linear-gradient(to top left, #4397d3, transparent 50%), /* Slightly stronger blue */
+        linear-gradient(to bottom right, #7cc6c0, transparent 50%); /* Slightly stronger light blue/teal */
+    background-size: 200% 200%;
+    animation: flow 8s ease-in-out infinite alternate;
+    overflow: hidden; 
+}
+@keyframes flow {
+0% { background-position: 0% 0%; }
+100% { background-position: 100% 100%; }
+}
+
+.flying-bird {
+position: absolute;
+width: 100px;
+height: auto;
+z-index: 20; /* Increased z-index */
+animation: fly-right-to-left-top 12s linear infinite;
+  }
+
+.flying-bird img {
+    width: 100%;
+    height: auto;
+    display: block; /* Prevent extra space below the image */
+}
+
+@keyframes fly-right-to-left-top {
+    0% { top: 15%; left: calc(100% + 100px); transform: scaleX(-1); opacity: 1; } /* Start top-right, facing left */
+    49% { top: 15%; left: -100px; transform: scaleX(-1); opacity: 1; } /* End top-left, facing left */
+    50% { top: 90%; left: -100px; transform: scaleX(1); opacity: 1; } /* Reappear bottom-left, facing right */
+    100% { top: 90%; left: calc(100% + 100px); transform: scaleX(1); opacity: 1; } /* End bottom-right, facing right */
+}
+
+.flying-bird-secondary {
+position: absolute;
+width: 70px;
+z-index: 25; /* Higher z-index to be on top */
+animation: fly-right-to-left-top-secondary 12.5s linear infinite; /* Faster pace (6s), no delay (0s) */
+left: calc(100% + 100px);
+opacity: 0.7;
+}
+
+@keyframes fly-right-to-left-top-secondary {
+    0% { top: -10%; left: calc(100% + 100px); transform: scaleX(-1); opacity: 0.7; }
+    49% { top: 15%; left: -50px; transform: scaleX(-1); opacity: 0.7; }
+    50% { top: 80%; left: -50px; transform: scaleX(1); opacity: 0.7; }
+    100% { top: 80%; left: calc(100% + 100px); transform: scaleX(1); opacity: 0.7; }
+}
+
+/* Updated Login Form Styles */
+.login-wrapper {
+display: flex;
+width: 90%;
+max-width: 960px;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+border-radius: 16px;
+overflow: hidden;
+background: white;
+animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+from {
+opacity: 0;
+transform: translateY(20px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.form-container {
+background-color: #fff;
+padding: 50px;
+width: 40%;
+display: flex;
+flex-direction: column;
+justify-content: center;
+}
+
+.login-header {
+margin-bottom: 30px;
+}
+
+.login-title {
+font-size: 2.2rem;
+color: #008080;
+margin-bottom: 8px;
+font-weight: 600;
+text-align: left;
+}
+
+.login-subtitle {
+font-size: 1rem;
+color: #666;
+margin-bottom: 0;
+text-align: left;
+}
+
+.login-form {
+width: 100%;
+}
+
+.login-form-group {
+display: flex;
+align-items: center;
+border: 1px solid #ddd;
+border-radius: 8px;
+overflow: hidden;
+transition: all 0.3s ease;
+height: 50px;
+margin-bottom: 20px;
+}
+
+.login-form-group:hover {
+border-color: #008080;
+}
+
+.login-icon-container {
+background-color: #f0f8f8;
+padding: 0 15px;
+height: 100%;
+display: flex;
+align-items: center;
+color: #008080;
+}
+
+.login-icon-container i {
+font-size: 1.1rem;
+}
+
+.login-input-wrapper {
+flex: 1;
+}
+
+.login-input-wrapper input {
+padding: 12px;
+border: none;
+font-size: 1rem;
+width: 100%;
+outline: none;
+background: white;
+color: #333;
+height: 100%;
+}
+
+.login-input-wrapper input::placeholder {
+color: #aaa;
+}
+
+.login-button {
+background: linear-gradient(135deg, #008080, #00a0a0);
+color: white;
+border: none;
+border-radius: 8px;
+padding: 15px;
+width: 100%;
+font-size: 1.1rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.3s ease;
+margin-top: 10px;
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 10px;
+}
+
+.login-button:hover {
+background: linear-gradient(135deg, #006666, #008080);
+transform: translateY(-2px);
+box-shadow: 0 5px 15px rgba(0, 128, 128, 0.3);
+}
+
+.login-links {
+margin-top: 20px;
+text-align: center;
+}
+
+.login-links a {
+color: #008080;
+text-decoration: none;
+font-weight: 500;
+transition: all 0.3s ease;
+}
+
+.login-links a:hover {
+text-decoration: underline;
+color: #006666;
+}
+
+.error-message {
+color: #dc3545;
+font-size: 0.9rem;
+margin-top: 15px;
+text-align: center;
+padding: 10px;
+background-color: rgba(220, 53, 69, 0.1);
+border-radius: 4px;
+display: none;
+}
+
+/* Right Section Enhancements */
+.right-section {
+background: linear-gradient(135deg, #008080, #00a0a0);
+padding: 50px;
+width: 60%;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+text-align: center;
+position: relative;
+overflow: hidden;
+}
+
+.right-section::before {
+content: '';
+position: absolute;
+top: -50%;
+right: -50%;
+width: 100%;
+height: 200%;
+background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+transform: rotate(30deg);
+}
+
+.right-section h2 {
+font-size: 2.2rem;
+margin-bottom: 15px;
+position: relative;
+z-index: 1;
+color: #ffffff; /* Pure white for maximum contrast */
+text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.right-section p {
+font-size: 1rem;
+line-height: 1.6;
+margin-bottom: 30px;
+position: relative;
+z-index: 1;
+max-width: 80%;
+color: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+font-weight: 300; /* Lighter font weight for subtitle */
+}
+
+.signup-button-section {
+position: relative;
+z-index: 1;
+}
+
+.signup-button {
+background-color: #fff;
+color: #008080;
+padding: 12px 30px;
+border: none;
+border-radius: 8px;
+font-size: 1.1rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.3s ease;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.signup-button:hover {
+background-color: #f0f8f8;
+transform: translateY(-2px);
+box-shadow: 0 7px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+.login-wrapper {
+flex-direction: column;
+}
+
+.form-container, 
+.right-section {
+width: 100%;
+padding: 30px;
+}
+
+.right-section {
+order: -1;
+padding-bottom: 40px;
+}
+
+.login-title,
+.right-section h2 {
+font-size: 1.8rem;
+}
+}
+
+/* Signup Container Styles */
+.signup-container {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.7);
+display: none;
+justify-content: center;
+align-items: center;
+z-index: 100;
+backdrop-filter: blur(5px);
+animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+
+.signup-form-wrapper {
+background: white;
+border-radius: 16px;
+width: 90%;
+max-width: 960px;
+padding: 40px;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+position: relative;
+overflow-y: auto;
+max-height: 90vh;
+}
+
+.signup-header {
+text-align: center;
+margin-bottom: 30px;
+}
+
+.create-account-title {
+font-size: 2.2rem;
+color: #008080;
+margin-bottom: 8px;
+font-weight: 600;
+}
+
+.create-account-subtitle {
+font-size: 1rem;
+color: #666;
+margin-bottom: 0;
+}
+
+.form-row {
+display: flex;
+gap: 15px;
+margin-bottom: 15px;
+}
+
+.form-group {
+flex: 1;
+margin-bottom: 0;
+}
+
+.input-container {
+display: flex;
+align-items: center;
+border: 1px solid #ddd;
+border-radius: 8px;
+overflow: hidden;
+transition: all 0.3s ease;
+height: 50px;
+}
+
+.input-container:hover {
+border-color: #008080;
+}
+
+.icon-container {
+background-color: #f0f8f8;
+padding: 0 15px;
+height: 100%;
+display: flex;
+align-items: center;
+color: #008080;
+}
+
+.input-container input,
+.input-container select {
+flex: 1;
+padding: 12px;
+border: none;
+font-size: 1rem;
+outline: none;
+background: white;
+color: #333;
+height: 100%;
+}
+
+.input-container input::placeholder {
+color: #aaa;
+}
+
+.profile-picture-group {
+margin: 20px 0;
+}
+
+.profile-picture-label {
+display: flex;
+align-items: center;
+gap: 10px;
+cursor: pointer;
+color: #008080;
+font-weight: 500;
+}
+
+.profile-picture-label i {
+font-size: 1.2rem;
+}
+
+.profile-picture-label input {
+display: none;
+}
+
+.create-account-button {
+background: linear-gradient(135deg, #008080, #00a0a0);
+color: white;
+border: none;
+border-radius: 8px;
+padding: 15px;
+width: 100%;
+font-size: 1.1rem;
+font-weight: 600;
+cursor: pointer;
+display: flex;
+justify-content: space-between;
+align-items: center;
+transition: all 0.3s ease;
+margin-top: 20px;
+}
+
+.create-account-button:hover {
+background: linear-gradient(135deg, #006666, #008080);
+transform: translateY(-2px);
+box-shadow: 0 5px 15px rgba(0, 128, 128, 0.3);
+}
+
+.form-footer {
+margin-top: 25px;
+text-align: center;
+}
+
+.terms-policy {
+font-size: 0.85rem;
+color: #666;
+margin-bottom: 15px;
+}
+
+.back-to-login {
+font-size: 0.95rem;
+color: #666;
+}
+
+.link {
+color: #008080;
+text-decoration: none;
+font-weight: 500;
+}
+
+.link:hover {
+text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+.form-row {
+flex-direction: column;
+gap: 15px;
+}
+
+.signup-form-wrapper {
+padding: 30px 20px;
+width: 95%;
+}
+
+.create-account-title {
+font-size: 1.8rem;
+}
+}
+.bondnest-title-container {
+position: absolute;
+top: 30px;
+left: 50%;
+transform: translateX(-50%);
+display: flex;
+align-items: center;
+z-index: 15; /* Increased z-index */
+white-space: nowrap;
+ }
+.bondnest-icon-top {
+    height: 6rem; /* Match the font-size of the text */
+    margin-right: 20px; /* Add some space between the image and text */
+    /* You might need to adjust width depending on your image's aspect ratio */
+}
+
+.bondnest-title-top {
+    color: #fff; /* Adjust text color for visibility */
+    font-size: 6rem; /* Make the text bigger */
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Optional: add a text shadow */
+}
+
+.bondnest-title-top span {
+    display: inline-block; /* Allows individual letter transformation */
+    margin-right: 20px; /* Adjust spacing between letters */
+    transform: rotate(calc(var(--random-angle) * 1deg)); /* Rotate each letter */
+}
+
+.message.success {
+background-color: #d4edda;
+color: #155724;
+border: 1px solid #c3e6cb;
+padding: 10px;
+margin-bottom: 20px;
+border-radius: 4px;
+text-align: center;
+}
+.neggy-container{
+    display: none;
+}
+.neggy-container1{
+    display: none;
+}
+
+/* Updated Neggy Container Styles */
+.neggy-container{
+position: absolute;
+width: 380px;
+margin-top: 133px;
+margin-right: -70px;
+max-height: 300pxpx;
+background-color: rgba(255, 255, 255, 0.95);
+border-radius: 12px;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+padding: 20px;
+overflow-y: auto;
+font-family: 'Poppins', sans-serif;
+font-size: 0.95rem;
+z-index: 100;
+border: none;
+backdrop-filter: blur(5px);
+transition: all 0.3s ease;
+}
+/* Updated Neggy Container Styles for Forgot Password */
+.neggy-container1 {
+position: fixed; /* Changed from absolute to fixed */
+top: 20px; /* Adjust as needed */
+right: 20px; /* Adjust as needed */
+width: 380px;
+max-height: 200px;
+margin-right: 1400px; /* Remove this */
+background-color: rgba(255, 255, 255, 0.95);
+border-radius: 12px;
+box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+padding: 20px;
+overflow-y: auto;
+font-family: 'Poppins', sans-serif;
+font-size: 0.95rem;
+z-index: 110; /* Higher than forgot-password-container's 100 */
+border: none;
+backdrop-filter: none; /* Remove if you want it fully opaque */
+transition: all 0.3s ease;
+display: none; /* Keep this, it will be shown via JavaScript */
+}
+.neggy-container {
+top: 10px;
+right: 160px;
+}
+
+.neggy-container1 {
+top: 230px;
+right: 50px;
+}
+
+.neggy-container .header, .neggy-container1 .header {
+display: flex;
+align-items: center;
+margin-bottom: 15px;
+}
+
+.neggy-container .neg-icon, .neggy-container1 .neg-icon {
+width: 36px;
+height: 36px;
+border-radius: 50%;
+background: linear-gradient(135deg, #4397d3, #7cc6c0);
+color: white;
+display: flex;
+justify-content: center;
+align-items: center;
+font-size: 1.1em;
+font-weight: bold;
+margin-right: 12px;
+}
+
+.neggy-container h4, .neggy-container1 h4 {
+color: #2c3e50;
+margin: 0;
+font-size: 1.1em;
+font-weight: 600;
+}
+
+#neggy-messages, #neggy-messages1 {
+line-height: 1.6;
+padding: 0 5px;
+}
+
+/* Success State */
+.neggy-container.success, .neggy-container1.success {
+background-color: rgba(212, 237, 218, 0.95);
+border-left: 4px solid #28a745;
+}
+
+.neggy-container.success .neg-icon, 
+.neggy-container1.success .neg-icon {
+background: linear-gradient(135deg, #28a745, #5cb85c);
+}
+
+.neggy-container.success h4, 
+.neggy-container1.success h4 {
+color: #28a745;
+}
+
+.neggy-container.success #neggy-messages, 
+.neggy-container1.success #neggy-messages1 {
+color: #155724;
+}
+
+/* Error State */
+.neggy-container.error, .neggy-container1.error {
+background-color: rgba(248, 215, 218, 0.95);
+border-left: 4px solid #dc3545;
+}
+
+.neggy-container.error .neg-icon, 
+.neggy-container1.error .neg-icon {
+background: linear-gradient(135deg, #dc3545, #e74c3c);
+}
+
+.neggy-container.error h4, 
+.neggy-container1.error h4 {
+color: #dc3545;
+}
+
+.neggy-container.error #neggy-messages, 
+.neggy-container1.error #neggy-messages1 {
+color: #721c24;
+}
+
+/* Scrollbar styling */
+.neggy-container::-webkit-scrollbar, 
+.neggy-container1::-webkit-scrollbar {
+width: 6px;
+}
+
+.neggy-container::-webkit-scrollbar-track, 
+.neggy-container1::-webkit-scrollbar-track {
+background: rgba(0,0,0,0.05);
+border-radius: 10px;
+}
+
+.neggy-container::-webkit-scrollbar-thumb, 
+.neggy-container1::-webkit-scrollbar-thumb {
+background: rgba(0,0,0,0.15);
+border-radius: 10px;
+}
+
+/* Forgot Password Container Styles */
+.forgot-password-container {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.7);
+display: none;
+justify-content: center;
+align-items: center;
+z-index: 100;
+backdrop-filter: blur(5px);
+animation: fadeIn 0.3s ease;
+}
+
+.forgot-password-wrapper {
+background: white;
+border-radius: 16px;
+width: 90%;
+max-width: 500px;
+padding: 40px;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+position: relative;
+overflow-y: auto;
+max-height: 90vh;
+}
+
+.forgot-password-header {
+text-align: center;
+margin-bottom: 30px;
+}
+
+.forgot-password-title {
+font-size: 2.2rem;
+color: #008080;
+margin-bottom: 8px;
+font-weight: 600;
+}
+
+.forgot-password-subtitle {
+font-size: 1rem;
+color: #666;
+margin-bottom: 0;
+}
+
+/* Reusing the existing form styles from signup */
+.forgot-password-form .form-row {
+margin-bottom: 15px;
+}
+
+.forgot-password-form .input-container {
+display: flex;
+align-items: center;
+border: 1px solid #ddd;
+border-radius: 8px;
+overflow: hidden;
+transition: all 0.3s ease;
+height: 50px;
+}
+
+.forgot-password-form .input-container:hover {
+border-color: #008080;
+}
+
+.forgot-password-form .icon-container {
+background-color: #f0f8f8;
+padding: 0 15px;
+height: 100%;
+display: flex;
+align-items: center;
+color: #008080;
+}
+
+.forgot-password-form input {
+flex: 1;
+padding: 12px;
+border: none;
+font-size: 1rem;
+outline: none;
+background: white;
+color: #333;
+height: 100%;
+}
+
+.forgot-password-form input::placeholder {
+color: #aaa;
+}
+
+/* Reusing the existing button styles */
+.forgot-password-form .create-account-button {
+background: linear-gradient(135deg, #008080, #00a0a0);
+color: white;
+border: none;
+border-radius: 8px;
+padding: 15px;
+width: 100%;
+font-size: 1.1rem;
+font-weight: 600;
+cursor: pointer;
+display: flex;
+justify-content: space-between;
+align-items: center;
+transition: all 0.3s ease;
+margin-top: 20px;
+}
+
+.forgot-password-form .create-account-button:hover {
+background: linear-gradient(135deg, #006666, #008080);
+transform: translateY(-2px);
+box-shadow: 0 5px 15px rgba(0, 128, 128, 0.3);
+}
+
+.forgot-password-form .form-footer {
+margin-top: 25px;
+text-align: center;
+}
+
+.forgot-password-form .back-to-login {
+font-size: 0.95rem;
+color: #666;
+}
+
+.forgot-password-form .link {
+color: #008080;
+text-decoration: none;
+font-weight: 500;
+}
+
+.forgot-password-form .link:hover {
+text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+.forgot-password-wrapper {
+padding: 30px 20px;
+width: 95%;
+}
+
+.forgot-password-title {
+font-size: 1.8rem;
+}
+}
+
+.neggy-container1.login-position {
+top: 230px;
+right: 50px;
+}
+
+.neggy-container1.forgot-position {
+top: 400px;
+right: -120px;
+transform: translate(calc(-50% + 250px), -50%);
+margin-top: -100px;
+}
+
+@media (max-width: 768px) {
+.neggy-container1.login-position,
+.neggy-container1.forgot-position {
+width: 90%;
+max-width: 300px;
+top: 20px;
+left: 50%;
+transform: translateX(-50%);
+right: auto;
+}
+}
+
+.neggy-container1.success {
+background-color: rgba(212, 237, 218, 0.95);
+border-left: 4px solid #28a745;
+}
+
+.neggy-container1.error {
+background-color: rgba(248, 215, 218, 0.95);
+border-left: 4px solid #dc3545;
+}
+
+/* Password toggle icon styles */
+.password-toggle {
+padding: 0 15px;
+cursor: pointer;
+color: #aaa;
+transition: all 0.3s ease;
+display: flex;
+align-items: center;
+height: 100%;
+opacity: 0;
+visibility: hidden;
+transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.password-toggle.visible {
+opacity: 1;
+visibility: visible;
+}
+
+.password-toggle:hover {
+color: #008080;
+}
+
+.password-input-container {
+display: flex;
+align-items: center;
+flex: 1;
+position: relative;
+}
+
+.password-input-wrapper {
+flex: 1;
+}
+
+*, *::before, *::after{
+    margin: 0;
+    padding: 0;
+    outline: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    list-style: none;
+    border: none;
+}
+
+img{
+    display: block;
+    width: 100%;
+}

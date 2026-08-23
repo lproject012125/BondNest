@@ -1,0 +1,18 @@
+/* Post Pending Notice */
+.post-pending-notice {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    padding: 12px 15px;
+    border-radius: 8px 8px 0 0;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: -1px;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    border-bottom: none;
+}
+
+.post-pending-notice i {
+    font-size: 1.1rem;
+} 

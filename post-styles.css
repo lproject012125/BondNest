@@ -1,0 +1,45 @@
+/* Post Styles */
+.post-meta {
+    font-size: 0.85rem;
+    color: var(--text-medium);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.post-meta i {
+    color: var(--primary);
+    margin-right: 5px;
+    font-size: 0.85rem;
+}
+
+/* Post header styles */
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.post-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.post-user {
+    flex: 1;
+}
+
+.post-user h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 3px;
+} 

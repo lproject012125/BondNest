@@ -1,0 +1,44 @@
+# Dependencies
+/vendor/
+
+# Environment variables (secrets)
+.env
+
+# Debug files
+*.log
+*.txt
+!README.txt
+
+# Backup files
+*.bak
+*.new
+
+# Test files
+test_*.php
+
+# Debug/utility files
+debug*.php
+debug*.log
+db_check.html
+tables.json
+
+# PowerShell scripts
+*.ps1
+
+# SQL migration files
+*.sql
+
+# Uploads (user-generated content)
+uploads/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Profile page variants (backups)
+profile-page-modified.php
+profile-page-backup.php

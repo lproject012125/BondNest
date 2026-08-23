@@ -1,0 +1,29 @@
+/* Remove ALL teal borders from profile pictures */
+.post-avatar, .profile_picture, [class*="avatar"], [class*="profile"] {
+    border: none !important;
+}
+
+.post .post-avatar img, .feed .post-avatar img, .post-header .post-avatar img {
+    border: none !important;
+}
+
+/* Target parent elements that might have the border */
+.post-avatar, .post-avatar *, .profile_picture, .profile_picture * {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Force remove teal color */
+:is(.post-avatar, .profile_picture, .avatar, .post-avatar img, .profile_picture img) {
+    border-color: transparent !important;
+}
+
+/* Fix any overrides from inline styles */
+[style*="border"] {
+    border-color: transparent !important;
+}
+
+/* !important override for any elements with teal borders */
+*[style*="border"] {
+    border: none !important;
+} 

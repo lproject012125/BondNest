@@ -1,0 +1,419 @@
+/* Post Status Notification Styles */
+.post-status-notification {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    margin: 0 0 15px 0;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.3s ease-in;
+    background-color: rgba(255, 193, 7, 0.15);
+    font-weight: 500;
+    position: relative;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.post-status-notification.on-hold {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #d17705;
+    border-left: 4px solid #d17705;
+}
+
+.post-status-notification.approved {
+    background-color: rgba(76, 201, 240, 0.15);
+    color: #3a96b8;
+    border-left: 4px solid #3a96b8;
+}
+
+.post-status-notification.deleted {
+    background-color: rgba(239, 35, 60, 0.15);
+    color: #d62839;
+    border-left: 4px solid #d62839;
+}
+
+.post-status-notification .notification-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 193, 7, 0.2);
+    border-radius: 50%;
+    flex-shrink: 0;
+    color: #d17705;
+}
+
+.post-status-notification.approved .notification-icon {
+    background-color: rgba(76, 201, 240, 0.2);
+    color: #3a96b8;
+}
+
+.post-status-notification.deleted .notification-icon {
+    background-color: rgba(239, 35, 60, 0.2);
+    color: #d62839;
+}
+
+.post-status-notification .notification-content {
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+}
+
+.post-status-notification.approved .notification-content i {
+    font-size: 1.1rem;
+    margin-right: 5px;
+    color: #3a96b8;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+}
+
+/* On-hold post styling */
+.post-on-hold {
+    border-color: #ffc107 !important;
+    box-shadow: 0 2px 15px rgba(255, 193, 7, 0.1) !important;
+    position: relative;
+    animation: pulseWarning 2s ease-in-out 1;
+}
+
+/* Approved post styling */
+.post-approved {
+    border-color: #4cc9f0 !important;
+    box-shadow: 0 2px 15px rgba(76, 201, 240, 0.1) !important;
+    animation: pulseSuccess 2s ease-in-out 1;
+}
+
+/* Deleted post styling (for reference) */
+.post-deleted {
+    opacity: 0.6;
+    pointer-events: none;
+    filter: grayscale(100%);
+    transition: all 0.5s ease;
+}
+
+/* Status indicator dot */
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.status-indicator.on-hold {
+    background-color: #ffc107;
+    box-shadow: 0 0 5px #ffc107;
+}
+
+.status-indicator.approved {
+    background-color: #4cc9f0;
+    box-shadow: 0 0 5px #4cc9f0;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseWarning {
+    0% { box-shadow: 0 0 0 rgba(255, 193, 7, 0.1); }
+    50% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); }
+    100% { box-shadow: 0 0 0 rgba(255, 193, 7, 0.1); }
+}
+
+@keyframes pulseSuccess {
+    0% { box-shadow: 0 0 0 rgba(76, 201, 240, 0.1); }
+    50% { box-shadow: 0 0 20px rgba(76, 201, 240, 0.4); }
+    100% { box-shadow: 0 0 0 rgba(76, 201, 240, 0.1); }
+}
+
+/* Fade out animation for removing posts */
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+        max-height: 1000px;
+    }
+    10% { /* Stay visible for a bit */
+        opacity: 1;
+        max-height: 1000px;
+    }
+    100% {
+        opacity: 0;
+        max-height: 0;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+.post-fade-out {
+    animation: fadeOut 2s ease forwards;
+    overflow: hidden;
+}
+
+/* Toast notification styles - shared across pages */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 300px;
+    max-width: 450px;
+    z-index: 10000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    border-left: 4px solid #4361ee;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast.toast-success {
+    border-left-color: #4cc9f0;
+}
+
+.toast.toast-error {
+    border-left-color: #ef233c;
+}
+
+.toast.toast-warning {
+    border-left-color: #f8961e;
+}
+
+.toast.toast-info {
+    border-left-color: #4895ef;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toast-content i {
+    font-size: 1.2rem;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.toast-close:hover {
+    color: #1a1a2e;
+}
+
+/* Make sure toast notifications are more visible */
+.toast.toast-warning i {
+    color: #f8961e;
+}
+
+.toast.toast-success i {
+    color: #4cc9f0;
+}
+
+.toast.toast-error i {
+    color: #ef233c;
+}
+
+.toast.toast-info i {
+    color: #4895ef;
+}
+
+/* New status badge styles for better visibility */
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    line-height: 1;
+    font-weight: 600;
+    margin-left: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.status-badge.on-hold {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #d17705;
+}
+
+.status-badge.approved {
+    background-color: rgba(76, 201, 240, 0.2);
+    color: #3a96b8;
+}
+
+/* Status transitions */
+.status-transition {
+    animation: highlightTransition 2s ease-out;
+}
+
+@keyframes highlightTransition {
+    0% { background-color: rgba(76, 201, 240, 0.3); }
+    100% { background-color: transparent; }
+}
+
+/* Admin action border highlight */
+.admin-reviewed {
+    position: relative;
+}
+
+.admin-reviewed::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid rgba(76, 201, 240, 0.3);
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Post Deleted Notification Styles */
+.post-deleted-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    max-width: 400px;
+    transform: translateY(50px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border-left: 5px solid #d62839;
+}
+
+.post-deleted-notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.post-deleted-notification .notification-icon {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(239, 35, 60, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.post-deleted-notification .notification-icon i {
+    font-size: 1.2rem;
+    color: #d62839;
+}
+
+.post-deleted-notification .notification-content {
+    flex-grow: 1;
+}
+
+.post-deleted-notification .notification-message {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.post-deleted-notification .notification-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-deleted-notification .view-details-btn {
+    background-color: #f8f9fa;
+    color: #2b2d42;
+    border: 1px solid #dee2e6;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.post-deleted-notification .view-details-btn:hover {
+    background-color: #e9ecef;
+}
+
+.post-deleted-notification .dismiss-btn {
+    background-color: transparent;
+    color: #6c757d;
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.post-deleted-notification .dismiss-btn:hover {
+    text-decoration: underline;
+}
+
+.post-deleted-notification .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #adb5bd;
+    cursor: pointer;
+}
+
+.post-deleted-notification .close-btn:hover {
+    color: #6c757d;
+}
+
+/* Fade-out animation for approval notifications */
+@keyframes notificationFadeOut {
+    0% {
+        opacity: 1;
+        max-height: 200px;
+        margin-bottom: 15px;
+        padding: 15px;
+    }
+    100% {
+        opacity: 0;
+        max-height: 0;
+        margin-bottom: 0;
+        padding: 0;
+        border: 0;
+    }
+}
+
+.notification-fade-out {
+    animation: notificationFadeOut 0.5s ease forwards;
+    overflow: hidden;
+} 
