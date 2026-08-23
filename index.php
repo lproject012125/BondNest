@@ -378,26 +378,46 @@ $loggedIn = isset($_SESSION['user_id']);
 </div>
 
 <style>
-.forgot-alert{padding:10px 12px;border-radius:8px;font-size:.84rem;margin-bottom:14px;text-align:center;line-height:1.4}
-.forgot-alert[hidden]{display:none !important}
-.forgot-alert--error{background:#fef2f2;border:1px solid #f8b4bf;color:#b84252}
-.forgot-alert--success{background:#e9f4f0;border:1px solid rgba(43,158,158,0.22);color:#1a6b5a}
-.forgot-otp-label{font-size:.82rem;color:#5a706d;text-align:center;margin:0 0 10px;font-weight:500}
-.forgot-otp-digits{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
-.forgot-otp-digit{width:44px;height:48px;text-align:center;font-size:1.25rem;font-weight:600;border:1.6px solid #D5DFD9;border-radius:10px;background:#fff;color:#2F3E36;transition:border-color .2s,box-shadow .2s;outline:none}
+ .forgot-alert{padding:10px 12px;border-radius:8px;font-size:.84rem;margin-bottom:14px;text-align:center;line-height:1.4}
+ .forgot-alert[hidden]{display:none !important}
+ .forgot-alert--error{background:#fef2f2;border:1px solid #f8b4bf;color:#b84252}
+ .forgot-alert--success{background:#e9f4f0;border:1px solid rgba(43,158,158,0.22);color:#1a6b5a}
+ .forgot-password-wrapper{max-width:500px;padding:40px}
+ .forgot-password-header{text-align:left;margin-bottom:26px}
+ .forgot-password-title{font-size:2rem;line-height:1.2;margin-bottom:8px}
+ .forgot-password-subtitle{line-height:1.5}
+ .forgot-password-wrapper form{width:100%}
+ .forgot-password-wrapper .form-group{width:100%;margin-bottom:18px}
+ .forgot-password-wrapper .input-container{width:100%;height:44px;min-height:44px;border:1px solid #D5DFD9;border-radius:8px;overflow:hidden;box-sizing:border-box;transition:border-color .2s,box-shadow .2s}
+ .forgot-password-wrapper .input-container:focus-within{border-color:#2B9E9E;box-shadow:0 0 0 3px rgba(43,158,158,.11)}
+ .forgot-password-wrapper .input-container.error,.forgot-password-wrapper .input-container:has(input.error){border-color:#f59ca8;box-shadow:0 0 0 3px rgba(245,156,168,.16)}
+ .forgot-password-wrapper .input-container .icon-container{width:46px;padding:0;justify-content:center;flex-shrink:0}
+ .forgot-password-wrapper .input-container input{min-width:0;height:42px;padding:0 14px;font-size:.92rem}
+ .forgot-password-wrapper .input-container input[type=password]{padding-right:40px}
+ .forgot-password-wrapper .input-icon{right:14px}
+ .forgot-password-wrapper .custom-error{background:#fef2f2;border:1px solid #f8b4bf;color:#b84252;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;line-height:1.25;opacity:0;max-height:0;transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease,max-height .22s ease,margin .22s ease;pointer-events:none;overflow:hidden;margin:0}
+ .forgot-password-wrapper .custom-error.show{opacity:1;max-height:80px;transform:translateY(0);margin:6px 0 0}
+ .forgot-password-wrapper .create-account-button{height:52px;margin-top:4px;border-radius:26px;padding:0 18px;justify-content:center;text-align:center;text-transform:uppercase;font-size:.9rem;letter-spacing:.3px}
+ .forgot-otp-label{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:#58756f;text-align:center;margin:0 0 16px;font-weight:600}
+ .forgot-otp-digits{display:flex;gap:10px;justify-content:center;margin-bottom:24px}
+ .forgot-otp-digit{width:46px;height:52px;text-align:center;font-size:1.25rem;font-weight:600;border:2px solid #D5DFD9;border-radius:12px;background:#fff;color:#2F3E36;box-shadow:0 3px 0 rgba(32,80,71,.08);transition:border-color .2s,box-shadow .2s;outline:none}
 .forgot-otp-digit:focus{border-color:#2B9E9E;box-shadow:0 0 0 3px rgba(43,158,158,0.12)}
 .forgot-otp-feedback{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fef2f2;border:1px solid #f8b4bf;color:#b84252;border-radius:8px;padding:8px 10px;font-size:.82rem;margin-bottom:10px}
 .forgot-otp-feedback[hidden]{display:none !important}
 .forgot-otp-feedback--success{background:#e9f4f0;border-color:rgba(43,158,158,0.22);color:#1a6b5a}
 .forgot-otp-feedback__left{display:flex;align-items:center;gap:6px}
 .forgot-otp-feedback__close{background:none;border:none;font-size:18px;cursor:pointer;color:inherit;line-height:1;padding:0 2px}
-.forgot-meta{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-size:.82rem;margin-top:12px;color:#5a706d}
+ #forgotVerifyBtn{width:312px;max-width:100%;margin:0 auto;display:flex}
+ .forgot-meta{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font-size:.82rem;margin-top:22px;color:#5a706d}
 .forgot-resend-btn{background:none;border:none;color:#008080;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;font-size:.82rem}
 .forgot-resend-btn:disabled{opacity:.5;cursor:not-allowed;text-decoration:none}
 .forgot-timer{font-weight:600;color:#5a706d}
-.forgot-verified-banner{background:rgba(43,158,158,0.08);border:1px solid rgba(43,158,158,0.18);color:#1a6b5a;border-radius:8px;padding:10px 12px;font-size:.82rem;text-align:center;margin-bottom:12px}
+ .forgot-verified-banner{width:100%;box-sizing:border-box;background:rgba(43,158,158,0.08);border:1px solid rgba(43,158,158,0.28);color:#1a6b5a;border-radius:8px;padding:10px 12px;font-size:.82rem;text-align:left;margin-bottom:14px}
 .forgot-verified-banner[hidden]{display:none !important}
-#forgotRequestForm .custom-error.show,#forgotResetForm .custom-error.show{display:block}
+ .forgot-password-wrapper .form-footer{margin-top:18px}
+ .forgot-password-wrapper .back-to-login{font-size:.9rem}
+ .forgot-password-wrapper .back-to-login .link{display:inline-flex;gap:7px;align-items:center}
+ @media(max-width:480px){.forgot-password-wrapper{padding:30px 22px}.forgot-otp-digits{gap:6px}.forgot-otp-digit{width:40px;height:48px}}
 </style>
 <div class="forgot-password-container" id="forgotPasswordContainer">
     <div class="forgot-password-wrapper">
@@ -414,7 +434,7 @@ $loggedIn = isset($_SESSION['user_id']);
                     <div class="icon-container"><i class="fas fa-envelope"></i></div>
                     <input type="text" id="forgotEmail" name="email" placeholder="Email Address" autocomplete="off">
                 </div>
-                <div class="custom-error" id="forgotEmail-error">Please enter a valid email.</div>
+                <div class="custom-error" id="forgotEmail-error"></div>
             </div>
             <button type="submit" class="create-account-button" id="forgotRequestBtn">Send Reset Code</button>
         </form>
@@ -453,7 +473,7 @@ $loggedIn = isset($_SESSION['user_id']);
                     <input type="password" id="forgotNewPassword" name="new_password" placeholder="New Password" autocomplete="new-password" maxlength="64">
                     <i class="fas fa-eye-slash input-icon toggle-password" id="forgotToggleNew" style="cursor:pointer;color:#9AA9A1;"></i>
                 </div>
-                <div class="custom-error" id="forgotNewPassword-error">New password is required.</div>
+                <div class="custom-error" id="forgotNewPassword-error"></div>
             </div>
             <div class="form-group">
                 <div class="input-container">
@@ -472,7 +492,7 @@ $loggedIn = isset($_SESSION['user_id']);
 
         <div class="form-footer">
             <div class="back-to-login">
-                <a href="#" id="hideForgotPassword" class="link">Back to Log In</a>
+                <a href="#" id="hideForgotPassword" class="link"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back to Log In</a>
             </div>
         </div>
     </div>
