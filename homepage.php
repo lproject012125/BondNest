@@ -91,11 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment-content'])) {
 
 }
 
-// Helper function to format time
+date_default_timezone_set('Asia/Manila');
+
+// Helper function to format time (uses UTC to match PostgreSQL timestamps)
 function time_elapsed_string($datetime, $full = false) {
-    $tz = new DateTimeZone('UTC');
-    $now = new DateTime('now', $tz);
-    $ago = new DateTime($datetime, $tz);
+    $now = new DateTime('now', new DateTimeZone('UTC'));
+    $ago = new DateTime($datetime, new DateTimeZone('UTC'));
     $diff = $now->diff($ago);
 
     $diff->w = floor($diff->d / 7);

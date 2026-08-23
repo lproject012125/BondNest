@@ -44,6 +44,10 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
+    // Ensure PostgreSQL uses UTC for consistent timestamps
+    if ($db_driver === 'pgsql') {
+        $pdo->exec("SET timezone = 'UTC'");
+    }
 } catch (PDOException $e) {
     http_response_code(500);
     die("Connection failed: " . $e->getMessage());
