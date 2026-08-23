@@ -259,6 +259,23 @@ function runMigration($pdo) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
     }
 
+    // ── password_resets ──
+    if ($isPg) {
+        $tables['password_resets'] = "CREATE TABLE IF NOT EXISTS password_resets (
+            email VARCHAR(255) PRIMARY KEY,
+            reset_code VARCHAR(6) NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )";
+    } else {
+        $tables['password_resets'] = "CREATE TABLE IF NOT EXISTS password_resets (
+            email VARCHAR(255) PRIMARY KEY,
+            reset_code VARCHAR(6) NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+    }
+
     foreach ($tables as $name => $sql) {
         try {
             $pdo->exec($sql);
