@@ -420,7 +420,7 @@ align-items: center;
 
 .signup-form-wrapper .form-input {
     width: 100%;
-    padding: 0 45px 0 16px;
+    padding: 0 16px;
     border: 1px solid #E0E6E3;
     border-left: none;
     border-radius: 0;
