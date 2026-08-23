@@ -3,8 +3,54 @@ require_once 'db_connection.php';
 require_once 'migrate.php';
 runMigration($pdo);
 
-function generateRecoveryCode() {
-    return bin2hex(random_bytes(5));
+function generateOtp() {
+    return str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+}
+
+function sendOtpEmail($email, $otpCode, $username) {
+    $apiKey = getenv('BREVO_API_KEY');
+    $senderEmail = getenv('BREVO_SENDER_EMAIL');
+    $senderName = getenv('BREVO_SENDER_NAME') ?: 'BondNest';
+
+    if (!$apiKey || !$senderEmail) {
+        error_log("[OTP DEV MODE] $email -> $otpCode");
+        return true;
+    }
+
+    $payload = [
+        'sender' => ['name' => $senderName, 'email' => $senderEmail],
+        'to' => [['email' => $email, 'name' => $username ?: $email]],
+        'subject' => 'BondNest verification code',
+        'htmlContent' => "<html><body style='font-family: Arial, sans-serif; color: #2F3E36;'>
+            <h2>Verify your BondNest account</h2>
+            <p>Hello " . htmlspecialchars($username) . ",</p>
+            <p>Your verification code is:</p>
+            <p style='font-size: 28px; font-weight: bold; letter-spacing: 6px;'>$otpCode</p>
+            <p>This code expires in 10 minutes.</p>
+        </body></html>",
+        'textContent' => "Your BondNest verification code is $otpCode. It expires in 10 minutes.",
+    ];
+
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'api-key: ' . $apiKey,
+        ],
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 15,
+    ]);
+    $result = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode >= 200 && $httpCode < 300) {
+        return true;
+    }
+    error_log("[OTP SEND FAILED] $email HTTP $httpCode: $result");
+    return false;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -39,30 +85,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Invalid email format.';
     }
 
-    if ($_POST['createPassword'] !== $_POST['confirmPassword']) {
+    if (($_POST['createPassword'] ?? '') !== ($_POST['confirmPassword'] ?? '')) {
         $errors[] = 'Passwords do not match.';
     }
 
-    if (strlen($_POST['createPassword']) < 12) {
+    $pw = $_POST['createPassword'] ?? '';
+    if (strlen($pw) < 12) {
         $errors[] = 'Password must be at least 12 characters.';
-    } elseif (strlen($_POST['createPassword']) > 64) {
+    } elseif (strlen($pw) > 64) {
         $errors[] = 'Password must not exceed 64 characters.';
-    } elseif (strpos($_POST['createPassword'], ' ') !== false) {
+    } elseif (strpos($pw, ' ') !== false) {
         $errors[] = 'Password must not contain spaces.';
-    } elseif (!preg_match('/[A-Z]/', $_POST['createPassword'])) {
+    } elseif (!preg_match('/[A-Z]/', $pw)) {
         $errors[] = 'Password must include at least one uppercase letter (A-Z).';
-    } elseif (!preg_match('/[a-z]/', $_POST['createPassword'])) {
+    } elseif (!preg_match('/[a-z]/', $pw)) {
         $errors[] = 'Password must include at least one lowercase letter (a-z).';
-    } elseif (!preg_match('/[0-9]/', $_POST['createPassword'])) {
+    } elseif (!preg_match('/[0-9]/', $pw)) {
         $errors[] = 'Password must include at least one digit (0-9).';
-    } elseif (!preg_match('/[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>?\/`~\\\\]/', $_POST['createPassword'])) {
+    } elseif (!preg_match('/[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>?\/`~\\\\]/', $pw)) {
         $errors[] = 'Password must include at least one special character (!@#$...).';
     } else {
         $common = ['password','12345678','123456789','qwerty','qwerty123','111111','iloveyou','admin','welcome','monkey','dragon','letmein','abc123','password1'];
-        if (in_array(strtolower($_POST['createPassword']), $common)) {
+        if (in_array(strtolower($pw), $common)) {
             $errors[] = 'This password is too common. Choose a less predictable password.';
         } else {
-            $pl = strtolower($_POST['createPassword']);
+            $pl = strtolower($pw);
             $personal = [strtolower($_POST['username']??''), strtolower($_POST['email']??''), strtolower($_POST['firstName']??''), strtolower($_POST['lastName']??'')];
             foreach ($personal as $idx=>$tok) {
                 $t = trim($tok);
@@ -93,39 +140,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $recovery_code = generateRecoveryCode();
-        $hashed_pw = password_hash($_POST['createPassword'], PASSWORD_DEFAULT);
-        $computedAge = null;
-        if (!empty($_POST['birthday'])) {
-            try {
-                $b = new DateTime($_POST['birthday']);
-                $computedAge = (new DateTime())->diff($b)->y;
-            } catch (Exception $e) { $computedAge = null; }
-        }
+        $otpCode = generateOtp();
+        $otpExpires = gmdate('Y-m-d H:i:s', time() + 600);
+        $hashedPw = password_hash($pw, PASSWORD_DEFAULT);
+        $email = $_POST['email'];
+        $username = $_POST['username'];
 
         try {
-            $pdo->beginTransaction();
-            $stmt = $pdo->prepare("INSERT INTO users 
-                (first_name, last_name, username, email, age, birthday, gender, password, profile_picture, recovery_code) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO pending_registrations 
+                (email, username, password_hash, first_name, last_name, gender, birthday, otp_code, otp_expires_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (email) DO UPDATE SET 
+                    username = EXCLUDED.username,
+                    password_hash = EXCLUDED.password_hash,
+                    first_name = EXCLUDED.first_name,
+                    last_name = EXCLUDED.last_name,
+                    gender = EXCLUDED.gender,
+                    birthday = EXCLUDED.birthday,
+                    otp_code = EXCLUDED.otp_code,
+                    otp_expires_at = EXCLUDED.otp_expires_at,
+                    created_at = CURRENT_TIMESTAMP");
             $stmt->execute([
+                $email,
+                $username,
+                $hashedPw,
                 htmlspecialchars($_POST['firstName']),
                 htmlspecialchars($_POST['lastName']),
-                htmlspecialchars($_POST['username']),
-                $_POST['email'],
-                $computedAge,
-                $_POST['birthday'],
                 $_POST['gender'],
-                $hashed_pw,
-                null,
-                $recovery_code
+                $_POST['birthday'],
+                $otpCode,
+                $otpExpires
             ]);
-            $pdo->commit();
-            echo json_encode(['success' => true, 'recovery_code' => $recovery_code]);
+
+            if (!sendOtpEmail($email, $otpCode, $username)) {
+                echo json_encode(['success' => false, 'errors' => ['Failed to send verification code. Please try again.']]);
+                exit;
+            }
+
+            echo json_encode(['success' => true, 'email' => $email]);
             exit;
         } catch (PDOException $e) {
-            $pdo->rollBack();
-            echo json_encode(['success' => false, 'errors' => ["Database error. Please try again."]]);
+            error_log("Pending registration error: " . $e->getMessage());
+            echo json_encode(['success' => false, 'errors' => ['Database error. Please try again.']]);
             exit;
         }
     } else {
@@ -595,26 +651,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             })
             .then(data => {
                 if (data.success) {
-                    let successEl = document.getElementById('signupSuccessMsg');
-                    if(!successEl){
-                        successEl = document.createElement('div');
-                        successEl.id='signupSuccessMsg';
-                        successEl.style.cssText='background:#e6f4ea;border:1px solid #b7d8c2;color:#1e5a3a;padding:14px;border-radius:10px;text-align:center;margin-bottom:14px;font-size:0.95rem;line-height:1.5;';
-                        signupForm.prepend(successEl);
-                    }
-                    successEl.innerHTML = `Registration successful! Your recovery code is: <strong>${data.recovery_code}</strong><br><span style="font-size:0.85em;opacity:0.9;">Save this code securely. Redirecting in 60s...</span>`;
-                    successEl.style.display='block';
-                    signupForm.reset();
-                    document.querySelectorAll('#createAccountForm .form-input').forEach(i=>i.classList.remove('error','success'));
-                    let sec=60;
-                    const orig = successEl.innerHTML;
-                    const iv=setInterval(()=>{
-                        sec--;
-                        successEl.innerHTML = orig + `<br><span style="font-weight:700;">Auto-redirect in ${sec}s...</span>`;
-                        if(sec<=0){ clearInterval(iv); window.location.href='index.php'; }
-                    },1000);
-                    successEl.style.cursor='pointer'; successEl.title='Click to go to login';
-                    successEl.onclick=()=>{ clearInterval(iv); window.location.href='index.php'; };
+                    sessionStorage.setItem('pendingRegistrationEmail', data.email);
+                    window.location.href = 'verify-registration.php?email=' + encodeURIComponent(data.email);
                 } else {
                     if (data.errors && data.errors.length > 0) {
                         let mapped=false;

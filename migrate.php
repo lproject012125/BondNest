@@ -230,6 +230,35 @@ function runMigration($pdo) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
     }
 
+    // ── pending_registrations ──
+    if ($isPg) {
+        $tables['pending_registrations'] = "CREATE TABLE IF NOT EXISTS pending_registrations (
+            email VARCHAR(255) PRIMARY KEY,
+            username VARCHAR(64) NOT NULL,
+            password_hash VARCHAR(256) NOT NULL,
+            first_name VARCHAR(64),
+            last_name VARCHAR(64),
+            gender VARCHAR(32),
+            birthday DATE,
+            otp_code VARCHAR(6) NOT NULL,
+            otp_expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )";
+    } else {
+        $tables['pending_registrations'] = "CREATE TABLE IF NOT EXISTS pending_registrations (
+            email VARCHAR(255) PRIMARY KEY,
+            username VARCHAR(64) NOT NULL,
+            password_hash VARCHAR(256) NOT NULL,
+            first_name VARCHAR(64),
+            last_name VARCHAR(64),
+            gender VARCHAR(32),
+            birthday DATE,
+            otp_code VARCHAR(6) NOT NULL,
+            otp_expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+    }
+
     foreach ($tables as $name => $sql) {
         try {
             $pdo->exec($sql);
