@@ -463,19 +463,17 @@ $loggedIn = isset($_SESSION['user_id']);
         <form class="create-account-form" id="createAccountForm" novalidate>
             <div class="form-row">
                 <div class="form-group">
-                    <div class="input-wrapper" data-label="Username">
-                        <input type="text" id="username" name="username" class="form-input" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
-                        <span class="floating-label">Username</span>
-                        <i class="fas fa-at input-icon"></i>
+                    <div class="input-container">
+                        <div class="icon-container"><i class="fas fa-at"></i></div>
+                        <input type="text" id="username" name="username" class="form-input" placeholder="Username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
                     </div>
                     <div class="custom-error" id="username-error">Username is required.</div>
                 </div>
 
                 <div class="form-group">
-                    <div class="input-wrapper" data-label="E-mail">
-                        <input type="email" id="signupEmail" name="email" class="form-input" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
-                        <span class="floating-label">E-mail</span>
-                        <i class="fas fa-envelope input-icon"></i>
+                    <div class="input-container">
+                        <div class="icon-container"><i class="fas fa-envelope"></i></div>
+                        <input type="email" id="signupEmail" name="email" class="form-input" placeholder="Email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
                     </div>
                     <div class="custom-error" id="signupEmail-error">Email is required.</div>
                 </div>
@@ -483,19 +481,17 @@ $loggedIn = isset($_SESSION['user_id']);
 
             <div class="form-row">
                 <div class="form-group">
-                    <div class="input-wrapper" data-label="First name">
-                        <input type="text" id="firstName" name="firstName" class="form-input" placeholder=" " autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" required>
-                        <span class="floating-label">First name</span>
-                        <i class="fas fa-user input-icon"></i>
+                    <div class="input-container">
+                        <div class="icon-container"><i class="fas fa-user"></i></div>
+                        <input type="text" id="firstName" name="firstName" class="form-input" placeholder="First Name" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" required>
                     </div>
                     <div class="custom-error" id="firstName-error">First name is required.</div>
                 </div>
 
                 <div class="form-group">
-                    <div class="input-wrapper" data-label="Last name">
-                        <input type="text" id="lastName" name="lastName" class="form-input" placeholder=" " autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" required>
-                        <span class="floating-label">Last name</span>
-                        <i class="fas fa-user input-icon"></i>
+                    <div class="input-container">
+                        <div class="icon-container"><i class="fas fa-user"></i></div>
+                        <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Last Name" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" required>
                     </div>
                     <div class="custom-error" id="lastName-error">Last name is required.</div>
                 </div>
@@ -503,24 +499,22 @@ $loggedIn = isset($_SESSION['user_id']);
 
             <div class="form-row">
                 <div class="form-group">
-                    <div class="input-wrapper input-wrapper--static-label" data-label="Birthday">
-                        <input type="date" id="birthday" name="birthday" class="form-input form-date-input" placeholder=" " autocomplete="off" required>
-                        <span class="floating-label">Birthday</span>
-                        <i class="fas fa-calendar-alt input-icon" id="birthdayIcon"></i>
+                    <div class="input-container" id="birthdayWrapper">
+                        <div class="icon-container" id="birthdayIcon" style="cursor:pointer;"><i class="fas fa-calendar-alt"></i></div>
+                        <input type="date" id="birthday" name="birthday" class="form-input form-date-input" placeholder="Birthday" autocomplete="off" required>
                     </div>
                     <div class="custom-error" id="birthday-error">Date of birth is required.</div>
                 </div>
 
                 <div class="form-group">
-                    <div class="input-wrapper" data-label="Gender">
+                    <div class="input-container">
+                        <div class="icon-container"><i class="fas fa-venus-mars"></i></div>
                         <select id="gender" name="gender" class="form-input form-select-input" required>
-                            <option value="" selected disabled hidden></option>
+                            <option value="" disabled selected>Gender</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                             <option value="Prefer not to say">Prefer not to say</option>
                         </select>
-                        <span class="floating-label">Gender</span>
-                        <i class="fas fa-chevron-down input-icon"></i>
                     </div>
                     <div class="custom-error" id="gender-error">Gender is required.</div>
                 </div>
@@ -528,19 +522,19 @@ $loggedIn = isset($_SESSION['user_id']);
 
             <div class="form-row">
                 <div class="form-group">
-                    <div class="input-wrapper" data-label="Password">
-                        <input type="password" id="createPassword" name="createPassword" class="form-input" placeholder=" " autocomplete="new-password" required maxlength="64">
-                        <span class="floating-label">Password</span>
-                        <i class="fas fa-eye-slash input-icon toggle-password" id="toggleCreatePassword"></i>
+                    <div class="input-container" style="position:relative;">
+                        <div class="icon-container"><i class="fas fa-lock"></i></div>
+                        <input type="password" id="createPassword" name="createPassword" class="form-input" placeholder="Password" autocomplete="new-password" required maxlength="64">
+                        <i class="fas fa-eye-slash input-icon toggle-password" id="toggleCreatePassword" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#9AA9A1;"></i>
                     </div>
                     <div class="custom-error" id="createPassword-error">Password is required.</div>
                 </div>
 
                 <div class="form-group">
-                    <div class="input-wrapper" data-label="Confirm password">
-                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" placeholder=" " autocomplete="new-password" required maxlength="64">
-                        <span class="floating-label">Confirm password</span>
-                        <i class="fas fa-eye-slash input-icon toggle-password" id="toggleConfirmPassword"></i>
+                    <div class="input-container" style="position:relative;">
+                        <div class="icon-container"><i class="fas fa-lock"></i></div>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" placeholder="Confirm Password" autocomplete="new-password" required maxlength="64">
+                        <i class="fas fa-eye-slash input-icon toggle-password" id="toggleConfirmPassword" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#9AA9A1;"></i>
                     </div>
                     <div class="custom-error" id="confirmPassword-error">Password confirmation is required.</div>
                 </div>
@@ -574,14 +568,31 @@ $loggedIn = isset($_SESSION['user_id']);
             });
             document.querySelectorAll('#createAccountForm .toggle-password').forEach(icon=>{
                 icon.addEventListener('click', ()=>{
-                    const w = icon.closest('.input-wrapper');
-                    const inp = w ? w.querySelector('.form-input') : null;
+                    const w = icon.closest('.input-wrapper, .input-container');
+                    const inp = w ? w.querySelector('.form-input') : document.getElementById(icon.id==='toggleCreatePassword'?'createPassword':'confirmPassword');
                     if (!inp) return;
                     const isPwd = inp.type==='password';
                     inp.type = isPwd ? 'text' : 'password';
                     icon.classList.toggle('fa-eye-slash');
                     icon.classList.toggle('fa-eye');
                 });
+            });
+            // Birthday calendar trigger (left icon)
+            const bInput = document.getElementById('birthday');
+            const bIcon = document.getElementById('birthdayIcon');
+            const bWrapper = document.getElementById('birthdayWrapper');
+            function openBirthdayPicker(e){
+                if(e) e.preventDefault();
+                if(!bInput) return;
+                try{
+                    if(typeof bInput.showPicker==='function') bInput.showPicker();
+                    else bInput.focus();
+                    bInput.click();
+                }catch(_){ bInput.focus(); }
+            }
+            if(bIcon) bIcon.addEventListener('click', openBirthdayPicker);
+            if(bWrapper) bWrapper.addEventListener('click', (e)=>{
+                if(e.target.closest('#birthdayIcon') || e.target.closest('.icon-container')) openBirthdayPicker(e);
             });
         })();
         </script>

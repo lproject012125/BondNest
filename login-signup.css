@@ -535,6 +535,19 @@ height: 11px;
 padding-top: 0;
 }
 
+.signup-form-wrapper .input-container {
+position: relative;
+}
+
+/* Ensure password inputs have room for eye icon */
+.signup-form-wrapper .input-container .form-input[type="password"] {
+padding-right: 40px;
+}
+
+.signup-form-wrapper {
+overflow-x: hidden;
+}
+
 .signup-form-wrapper .form-input.error {
 border-color: #f59ca8;
 box-shadow: 0 0 0 3px rgba(245, 156, 168, 0.16);
