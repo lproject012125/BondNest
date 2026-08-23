@@ -24,14 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($action) {
         case 'signup':
             $errors = [];
-            $required = ['firstName', 'lastName', 'username', 'age', 'birthday', 'gender', 'createPassword', 'confirmPassword'];
+            $required = ['firstName', 'lastName', 'username', 'email', 'birthday', 'gender', 'createPassword', 'confirmPassword'];
             foreach ($required as $field) {
                 if (empty($_POST[$field])) {
                     $errors[] = ucfirst($field) . ' is required.';
                 }
             }
 
-            
+            // Email validation
+            if (!empty($_POST['email']) && !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors[] = 'Invalid email format.';
+            }
 
             if ($_POST['createPassword'] !== $_POST['confirmPassword']) {
                 $errors[] = 'Passwords do not match.';
@@ -64,22 +67,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // Email uniqueness check
+            if (empty($errors) && !empty($_POST['email'])) {
+                try {
+                    $check = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+                    $check->execute([$_POST['email']]);
+                    if ($check->fetch()) {
+                        $errors[] = 'Email is already registered.';
+                    }
+                } catch (PDOException $e) { /* ignore if column missing before migration */ }
+                try {
+                    $checkU = $pdo->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
+                    $checkU->execute([$_POST['username']]);
+                    if ($checkU->fetch()) {
+                        $errors[] = 'Username is already taken.';
+                    }
+                } catch (PDOException $e) {}
+            }
+
             if (empty($errors)) {
                 $recovery_code = generateRecoveryCode();
                 $hashed_pw = password_hash($_POST['createPassword'], PASSWORD_DEFAULT);
+                // Compute age from birthday for legacy column (nullable)
+                $computedAge = null;
+                if (!empty($_POST['birthday'])) {
+                    try {
+                        $b = new DateTime($_POST['birthday']);
+                        $computedAge = (new DateTime())->diff($b)->y;
+                    } catch (Exception $e) { $computedAge = null; }
+                }
                 
                 try {
                     $pdo->beginTransaction();
                     
                     $stmt = $pdo->prepare("INSERT INTO users 
-                        (first_name, last_name, username, age, birthday, gender, password, profile_picture, recovery_code) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        (first_name, last_name, username, email, age, birthday, gender, password, profile_picture, recovery_code) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     
                     $stmt->execute([
                         htmlspecialchars($_POST['firstName']),
                         htmlspecialchars($_POST['lastName']),
                         htmlspecialchars($_POST['username']),
-                        intval($_POST['age']),
+                        $_POST['email'],
+                        $computedAge,
                         $_POST['birthday'],
                         $_POST['gender'],
                         $hashed_pw,
@@ -434,6 +464,26 @@ $loggedIn = isset($_SESSION['user_id']);
                 <div class="form-group">
                     <div class="input-container">
                         <div class="icon-container">
+                            <i class="fas fa-at"></i>
+                        </div>
+                        <input type="text" id="username" name="username" placeholder="Username" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-container">
+                        <div class="icon-container">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <input type="email" id="signupEmail" name="email" placeholder="Email" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <div class="input-container">
+                        <div class="icon-container">
                             <i class="fas fa-user"></i>
                         </div>
                         <input type="text" id="firstName" name="firstName" placeholder="First Name" autocomplete="off">
@@ -454,26 +504,6 @@ $loggedIn = isset($_SESSION['user_id']);
                 <div class="form-group">
                     <div class="input-container">
                         <div class="icon-container">
-                            <i class="fas fa-at"></i>
-                        </div>
-                        <input type="text" id="username" name="username" placeholder="Username" autocomplete="off">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <div class="input-container">
-                        <div class="icon-container">
-                            <i class="fas fa-birthday-cake"></i>
-                        </div>
-                        <input type="number" id="age" name="age" placeholder="Age" autocomplete="off">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="input-container">
-                        <div class="icon-container">
                             <i class="fas fa-calendar-alt"></i>
                         </div>
                         <input type="date" id="birthday" name="birthday" placeholder="Birthday">
@@ -486,7 +516,7 @@ $loggedIn = isset($_SESSION['user_id']);
                             <i class="fas fa-venus-mars"></i>
                         </div>
                         <select id="gender" name="gender">
-                            <option value="" disabled>Gender</option>
+                            <option value="" disabled selected>Gender</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                             <option value="Non-binary">Non-binary</option>
@@ -503,7 +533,7 @@ $loggedIn = isset($_SESSION['user_id']);
                         <div class="icon-container">
                             <i class="fas fa-lock"></i>
                         </div>
-                        <input type="password" id="createPassword" name="createPassword" placeholder="Create Password" autocomplete="off">
+                        <input type="password" id="createPassword" name="createPassword" placeholder="Password" autocomplete="off">
                     </div>
                 </div>
 

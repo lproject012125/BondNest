@@ -17,7 +17,8 @@ function runMigration($pdo) {
             first_name VARCHAR(50) NOT NULL,
             last_name VARCHAR(50) NOT NULL,
             username VARCHAR(50) NOT NULL UNIQUE,
-            age INTEGER NOT NULL,
+            email VARCHAR(100) DEFAULT NULL,
+            age INTEGER DEFAULT NULL,
             birthday DATE NOT NULL,
             gender VARCHAR(10) NOT NULL,
             password VARCHAR(255) NOT NULL,
@@ -38,7 +39,8 @@ function runMigration($pdo) {
             first_name VARCHAR(50) NOT NULL,
             last_name VARCHAR(50) NOT NULL,
             username VARCHAR(50) NOT NULL UNIQUE,
-            age INT(11) NOT NULL,
+            email VARCHAR(100) DEFAULT NULL,
+            age INT(11) DEFAULT NULL,
             birthday DATE NOT NULL,
             gender VARCHAR(10) NOT NULL,
             password VARCHAR(255) NOT NULL,
@@ -234,6 +236,25 @@ function runMigration($pdo) {
         } catch (PDOException $e) {
             error_log("Migration error on table {$name}: " . $e->getMessage());
         }
+    }
+
+    // Migrate existing users table: add email column and make age nullable if needed
+    try {
+        if ($isPg) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100)");
+            $pdo->exec("ALTER TABLE users ALTER COLUMN age DROP NOT NULL");
+            $pdo->exec("ALTER TABLE users ALTER COLUMN age DROP DEFAULT");
+        } else {
+            $check = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='email'");
+            $exists = $check && $check->fetch();
+            if (!$exists) {
+                $pdo->exec("ALTER TABLE users ADD COLUMN email VARCHAR(100) DEFAULT NULL");
+            }
+            // Make age nullable (ignore error if already nullable)
+            try { $pdo->exec("ALTER TABLE users MODIFY age INT(11) DEFAULT NULL"); } catch (PDOException $e) {}
+        }
+    } catch (PDOException $e) {
+        error_log("Migration email/age: " . $e->getMessage());
     }
 
     // Fix any absolute paths stored in database (convert /data/uploads/ to uploads/)
