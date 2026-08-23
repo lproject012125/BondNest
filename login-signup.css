@@ -535,6 +535,44 @@ height: 11px;
 padding-top: 0;
 }
 
+.signup-form-wrapper .form-input.error {
+border-color: #f59ca8;
+box-shadow: 0 0 0 3px rgba(245, 156, 168, 0.16);
+}
+
+.signup-form-wrapper .form-input.success {
+border-color: #7fbf9f;
+box-shadow: 0 0 0 3px rgba(127, 191, 159, 0.1);
+}
+
+.signup-form-wrapper .custom-error {
+background: #fef2f2;
+border: 1px solid #f8b4bf;
+color: #b84252;
+padding: 8px 10px;
+border-radius: 8px;
+font-size: 13px;
+font-weight: 500;
+margin-top: 6px;
+line-height: 1.25;
+opacity: 0;
+max-height: 0;
+transform: translateY(-4px);
+transition: opacity 0.22s ease, transform 0.22s ease, max-height 0.22s ease, margin-top 0.22s ease;
+pointer-events: none;
+overflow: hidden;
+margin-top: 0;
+margin-bottom: 0;
+}
+
+.signup-form-wrapper .custom-error.show {
+opacity: 1;
+max-height: 80px;
+transform: translateY(0);
+margin-top: 6px;
+margin-bottom: 4px;
+}
+
 .profile-picture-group {
 margin: 20px 0;
 }
@@ -560,17 +598,25 @@ display: none;
 background: linear-gradient(135deg, #008080, #00a0a0);
 color: white;
 border: none;
-border-radius: 8px;
+border-radius: 25px;
 padding: 13px 16px;
 width: 100%;
 font-size: 1rem;
 font-weight: 600;
 cursor: pointer;
 display: flex;
-justify-content: space-between;
+justify-content: center;
 align-items: center;
 transition: all 0.3s ease;
 margin-top: 14px;
+letter-spacing: 0.3px;
+}
+
+.create-account-button:disabled {
+opacity: 0.6;
+cursor: not-allowed;
+transform: none !important;
+box-shadow: none !important;
 }
 
 .create-account-button:hover {

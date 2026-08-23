@@ -460,40 +460,44 @@ $loggedIn = isset($_SESSION['user_id']);
             <p class="create-account-subtitle">Create your account to start connecting</p>
         </div>
 
-        <form class="create-account-form" id="createAccountForm">
+        <form class="create-account-form" id="createAccountForm" novalidate>
             <div class="form-row">
                 <div class="form-group">
                     <div class="input-wrapper" data-label="Username">
-                        <input type="text" id="username" name="username" class="form-input" placeholder=" " autocomplete="off" required>
+                        <input type="text" id="username" name="username" class="form-input" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
                         <span class="floating-label">Username</span>
                         <i class="fas fa-at input-icon"></i>
                     </div>
+                    <div class="custom-error" id="username-error">Username is required.</div>
                 </div>
 
                 <div class="form-group">
                     <div class="input-wrapper" data-label="E-mail">
-                        <input type="email" id="signupEmail" name="email" class="form-input" placeholder=" " autocomplete="off" required>
+                        <input type="email" id="signupEmail" name="email" class="form-input" placeholder=" " autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
                         <span class="floating-label">E-mail</span>
                         <i class="fas fa-envelope input-icon"></i>
                     </div>
+                    <div class="custom-error" id="signupEmail-error">Email is required.</div>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <div class="input-wrapper" data-label="First name">
-                        <input type="text" id="firstName" name="firstName" class="form-input" placeholder=" " autocomplete="off" required>
+                        <input type="text" id="firstName" name="firstName" class="form-input" placeholder=" " autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" required>
                         <span class="floating-label">First name</span>
                         <i class="fas fa-user input-icon"></i>
                     </div>
+                    <div class="custom-error" id="firstName-error">First name is required.</div>
                 </div>
 
                 <div class="form-group">
                     <div class="input-wrapper" data-label="Last name">
-                        <input type="text" id="lastName" name="lastName" class="form-input" placeholder=" " autocomplete="off" required>
+                        <input type="text" id="lastName" name="lastName" class="form-input" placeholder=" " autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" required>
                         <span class="floating-label">Last name</span>
                         <i class="fas fa-user input-icon"></i>
                     </div>
+                    <div class="custom-error" id="lastName-error">Last name is required.</div>
                 </div>
             </div>
 
@@ -502,8 +506,9 @@ $loggedIn = isset($_SESSION['user_id']);
                     <div class="input-wrapper input-wrapper--static-label" data-label="Birthday">
                         <input type="date" id="birthday" name="birthday" class="form-input form-date-input" placeholder=" " autocomplete="off" required>
                         <span class="floating-label">Birthday</span>
-                        <i class="fas fa-calendar-alt input-icon"></i>
+                        <i class="fas fa-calendar-alt input-icon" id="birthdayIcon"></i>
                     </div>
+                    <div class="custom-error" id="birthday-error">Date of birth is required.</div>
                 </div>
 
                 <div class="form-group">
@@ -512,13 +517,12 @@ $loggedIn = isset($_SESSION['user_id']);
                             <option value="" selected disabled hidden></option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
-                            <option value="Non-binary">Non-binary</option>
-                            <option value="Other">Other</option>
                             <option value="Prefer not to say">Prefer not to say</option>
                         </select>
                         <span class="floating-label">Gender</span>
                         <i class="fas fa-chevron-down input-icon"></i>
                     </div>
+                    <div class="custom-error" id="gender-error">Gender is required.</div>
                 </div>
             </div>
 
@@ -529,6 +533,7 @@ $loggedIn = isset($_SESSION['user_id']);
                         <span class="floating-label">Password</span>
                         <i class="fas fa-eye-slash input-icon toggle-password" id="toggleCreatePassword"></i>
                     </div>
+                    <div class="custom-error" id="createPassword-error">Password is required.</div>
                 </div>
 
                 <div class="form-group">
@@ -537,13 +542,11 @@ $loggedIn = isset($_SESSION['user_id']);
                         <span class="floating-label">Confirm password</span>
                         <i class="fas fa-eye-slash input-icon toggle-password" id="toggleConfirmPassword"></i>
                     </div>
+                    <div class="custom-error" id="confirmPassword-error">Password confirmation is required.</div>
                 </div>
             </div>
 
-            <button type="submit" class="create-account-button">
-                <span class="button-text">Sign Up</span>
-                <i class="fas fa-arrow-right"></i>
-            </button>
+            <button type="submit" class="create-account-button" id="signUpSubmitBtn" disabled>Sign Up</button>
 
             <div class="form-footer">
                 <p class="terms-policy">
@@ -779,80 +782,143 @@ $loggedIn = isset($_SESSION['user_id']);
             }
         });
 
-        // Real-time username availability check
-        const usernameInput = document.getElementById('username');
-        if (usernameInput) {
-            usernameInput.addEventListener('input', function() {
-                const username = this.value.trim();
+        // ——— DiariCore-style inline validation for signup ———
+        const signupIds = ['username','signupEmail','firstName','lastName','gender','birthday','createPassword','confirmPassword'];
+        let signupAvailability = { username: { val:'', ok:null, pending:null }, signupEmail: { val:'', ok:null, pending:null } };
+        let availabilityTimers = {};
 
-                // Clear any previous timer
-                clearTimeout(validationTimer);
+        function isValidEmailBond(email){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
-                if (username.length === 0) {
-                    neggyContainer.style.display = 'none';
-                    return;
-                }
-
-                // Only check after user stops typing for 500ms
-                validationTimer = setTimeout(() => {
-                    if (username.length > 0) {
-                        fetch('index.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: `check_username=1&username=${encodeURIComponent(username)}`
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.exists) {
-                                showNeggyMessage('Username is already taken.');
-                            } else {
-                                // Hide message if username is available
-                                neggyContainer.style.display = 'none';
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error checking username:', error);
-                        });
-                    }
-                }, 500);
-            });
+        function showErrorBond(inputEl, msg){
+            inputEl.classList.add('error'); inputEl.classList.remove('success');
+            const err = document.getElementById(inputEl.id + '-error');
+            if(err){ err.textContent = msg; err.classList.add('show'); }
+        }
+        function showSuccessBond(inputEl){
+            inputEl.classList.remove('error'); inputEl.classList.add('success');
+            const err = document.getElementById(inputEl.id + '-error');
+            if(err) err.classList.remove('show');
+        }
+        function clearValidationBond(inputEl){
+            inputEl.classList.remove('error','success');
+            const err = document.getElementById(inputEl.id + '-error');
+            if(err) err.classList.remove('show');
         }
 
-        // Password strength and match validation
-        const createPasswordInput = document.getElementById('createPassword');
-        const confirmNewPasswordInput = document.getElementById('confirmPassword');
-        if (createPasswordInput && confirmNewPasswordInput) {
-            createPasswordInput.addEventListener('input', validatePassword);
-            confirmNewPasswordInput.addEventListener('input', validatePassword);
-
-            function validatePassword() {
-                const password = createPasswordInput.value;
-                const confirmPassword = confirmNewPasswordInput.value;
-
-                // Clear any previous timer
-                clearTimeout(currentValidationTimer);
-
-                // Hide message if both fields are empty
-                if (password.length === 0 && confirmPassword.length === 0) {
-                    neggyContainer.style.display = 'none';
-                    return;
-                }
-
-                // Check password length
-                if (password.length > 0 && password.length < 8) {
-                    showNeggyMessage('Password must be at least 8 characters long.');
-                }
-                // Check password match
-                else if (confirmPassword.length > 0 && password !== confirmPassword) {
-                    showNeggyMessage('Passwords do not match.');
-                }
-                // If criteria are met, hide the message after a short delay
-                else if (password.length >= 8 && password === confirmPassword) {
-                    currentValidationTimer = setTimeout(() => {
-                        neggyContainer.style.display = 'none';
-                    }, 500); // Hide after 0.5 seconds of meeting criteria
-                }
+        function checkAvailabilityBond(fieldId, value){
+            const key = fieldId==='username' ? 'username' : 'signupEmail';
+            const state = signupAvailability[key];
+            if(!state) return Promise.resolve(true);
+            if(state.val===value && state.ok!==null){
+                const el=document.getElementById(fieldId);
+                if(el){ if(state.ok) showSuccessBond(el); else showErrorBond(el, key==='username'?'Username already exists.':'Email already exists.'); }
+                return Promise.resolve(state.ok);
             }
+            if(state.val===value && state.pending) return state.pending;
+            state.val=value; state.ok=null;
+            const body = key==='username' ? `check_username=1&username=${encodeURIComponent(value)}` : `check_username=1&username=${encodeURIComponent(value)}`;
+            // Reuse check_username for both; for email we check via same endpoint fallback to PHP email check on submit
+            state.pending = fetch('index.php',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body})
+                .then(r=>r.json().then(d=>({ok:r.ok,d})))
+                .then(({ok,d})=>{
+                    if(!ok) return true;
+                    // Only username check is supported server-side; for email, rely on submit error
+                    if(key==='username' && d.exists){
+                        state.ok=false;
+                        const el=document.getElementById(fieldId);
+                        if(el) showErrorBond(el,'Username already exists.');
+                        return false;
+                    }
+                    state.ok=true;
+                    const el=document.getElementById(fieldId);
+                    if(el && key==='username') showSuccessBond(el);
+                    return true;
+                }).catch(()=>true)
+                .finally(()=>{ if(state.val===value) state.pending=null; });
+            return state.pending;
+        }
+
+        function validateSignupField(fieldId){
+            const el=document.getElementById(fieldId);
+            if(!el) return true;
+            const v=el.value.trim();
+            if(fieldId==='username'){
+                if(!v){ showErrorBond(el,'Username is required.'); return false; }
+                if(v.length<4 || v.length>64){ showErrorBond(el,'Username must be 4-64 characters.'); return false; }
+                if(/[<>\/]/.test(v)){ showErrorBond(el,'Invalid characters.'); return false; }
+                const st=signupAvailability.username;
+                if(st.val===v && st.ok===false){ showErrorBond(el,'Username already exists.'); return false; }
+                if(st.val===v && st.ok===true){ showSuccessBond(el); return true; }
+                // schedule availability check
+                if(availabilityTimers.username) clearTimeout(availabilityTimers.username);
+                availabilityTimers.username=setTimeout(()=>checkAvailabilityBond('username',v),300);
+                if(v.length>=4) showSuccessBond(el);
+                return true;
+            }
+            if(fieldId==='signupEmail'){
+                if(!v){ showErrorBond(el,'Email is required.'); return false; }
+                if(!isValidEmailBond(v)){ showErrorBond(el,'Please enter a valid email.'); return false; }
+                showSuccessBond(el); return true;
+            }
+            if(fieldId==='firstName'){ if(!v){ showErrorBond(el,'First name is required.'); return false; } if(/[<>\/]/.test(v)){ showErrorBond(el,'Invalid characters.'); return false; } showSuccessBond(el); return true; }
+            if(fieldId==='lastName'){ if(!v){ showErrorBond(el,'Last name is required.'); return false; } if(/[<>\/]/.test(v)){ showErrorBond(el,'Invalid characters.'); return false; } showSuccessBond(el); return true; }
+            if(fieldId==='gender'){ if(!v){ showErrorBond(el,'Gender is required.'); return false; } showSuccessBond(el); return true; }
+            if(fieldId==='birthday'){ if(!v){ showErrorBond(el,'Date of birth is required.'); return false; } showSuccessBond(el); return true; }
+            if(fieldId==='createPassword'){
+                if(!v){ showErrorBond(el,'Password is required.'); return false; }
+                if(v.length<8){ showErrorBond(el,'Password must be at least 8 characters.'); return false; }
+                showSuccessBond(el);
+                const c=document.getElementById('confirmPassword');
+                if(c && c.value.trim()) validateSignupField('confirmPassword');
+                return true;
+            }
+            if(fieldId==='confirmPassword'){
+                const p=document.getElementById('createPassword')?.value||'';
+                if(!v){ showErrorBond(el,'Password confirmation is required.'); return false; }
+                if(v!==p){ showErrorBond(el,'Passwords do not match.'); return false; }
+                showSuccessBond(el); return true;
+            }
+            return true;
+        }
+
+        // Attach listeners + button enable/disable
+        const signupSubmitBtn = document.getElementById('signUpSubmitBtn');
+        function updateSignupButton(){
+            const allValid = signupIds.every(id=>{
+                const el=document.getElementById(id);
+                return el && el.value.trim()!=='' && !el.classList.contains('error');
+            }) && !document.querySelector('#createAccountForm .custom-error.show');
+            // also check password match explicitly
+            const pw=document.getElementById('createPassword')?.value||'';
+            const cpw=document.getElementById('confirmPassword')?.value||'';
+            const pwOk = pw.length>=8 && pw===cpw;
+            if(signupSubmitBtn) signupSubmitBtn.disabled = !(allValid && pwOk);
+        }
+
+        signupIds.forEach(fid=>{
+            const el=document.getElementById(fid);
+            if(!el) return;
+            el.addEventListener('blur', ()=>{ validateSignupField(fid); updateSignupButton(); });
+            el.addEventListener('input', ()=>{ validateSignupField(fid); updateSignupButton(); });
+            el.addEventListener('change', ()=>{ validateSignupField(fid); updateSignupButton(); });
+        });
+
+        // Birthday calendar icon click -> show picker
+        const birthdayInput = document.getElementById('birthday');
+        const birthdayIcon = document.getElementById('birthdayIcon');
+        if(birthdayIcon && birthdayInput){
+            const openPicker = (e)=>{
+                e.preventDefault();
+                try{ if(typeof birthdayInput.showPicker==='function') birthdayInput.showPicker(); else birthdayInput.focus(); if(!birthdayInput._pickerFallback) birthdayInput.click(); }catch(_){ birthdayInput.focus(); }
+            };
+            birthdayIcon.addEventListener('click', openPicker);
+            birthdayIcon.style.cursor='pointer';
+            // Also clicking wrapper
+            birthdayInput.closest('.input-wrapper')?.addEventListener('click', (e)=>{
+                if(e.target===birthdayInput) return;
+                if(e.target.closest('.input-icon')) return;
+                // don't steal focus from other inputs
+            });
         }
 
         // Forgot password validation
@@ -1042,62 +1108,106 @@ $loggedIn = isset($_SESSION['user_id']);
             });
         }
 
-        // Signup form submission
+        // Signup form submission — DiariCore inline validation (no Neggy)
         if (signupForm) {
-            signupForm.addEventListener('submit', function(e) {
+            // Hide Neggy for signup entirely
+            if (neggyContainer) neggyContainer.style.display = 'none';
+            signupForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
 
-                if (neggyContainer) {
-                    neggyContainer.style.display = 'none';
-                    neggyMessages.innerHTML = '';
+                // Validate all fields inline
+                let isValid = true;
+                signupIds.forEach(id=>{ if(!validateSignupField(id)) isValid=false; });
+                // extra check for email format already in validate
+                updateSignupButton();
+                if(!isValid){
+                    const firstErr = document.querySelector('#createAccountForm .custom-error.show');
+                    if(firstErr) firstErr.scrollIntoView({behavior:'smooth', block:'nearest'});
+                    return;
                 }
+                // Availability checks (username)
+                const uname = document.getElementById('username').value.trim();
+                const emailVal = document.getElementById('signupEmail').value.trim();
+                // For email, server will validate uniqueness on submit; for username we can pre-check
+                const unameOk = await checkAvailabilityBond('username', uname);
+                if(!unameOk) return;
 
                 const formData = new FormData(this);
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalBtnText = submitBtn.textContent;
                 submitBtn.disabled = true;
-                
+                submitBtn.textContent = 'Creating...';
 
-                fetch('index.php', { // Changed to your central endpoint
+                fetch('index.php', {
                     method: 'POST',
                     body: formData
                 })
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
+                    if (!response.ok) throw new Error('Network response was not ok');
                     return response.json();
                 })
                 .then(data => {
                     if (data.success) {
-                        const successMessage = `Registration successful! Your recovery code is: <strong>${data.recovery_code}</strong><br>Save this code in a secure place. You have 1 minute to note it down.`;
-                        showNeggyMessage(successMessage, true);
+                        // Show recovery code inline as success (centered)
+                        let successEl = document.getElementById('signupSuccessMsg');
+                        if(!successEl){
+                            successEl = document.createElement('div');
+                            successEl.id='signupSuccessMsg';
+                            successEl.style.cssText='background:#e6f4ea;border:1px solid #b7d8c2;color:#1e5a3a;padding:14px;border-radius:10px;text-align:center;margin-bottom:14px;font-size:0.95rem;line-height:1.5;';
+                            signupForm.prepend(successEl);
+                        }
+                        successEl.innerHTML = `Registration successful! Your recovery code is: <strong>${data.recovery_code}</strong><br><span style="font-size:0.85em;opacity:0.9;">Save this code securely. Redirecting in 60s...</span>`;
+                        successEl.style.display='block';
                         signupForm.reset();
+                        // clear floating labels
+                        document.querySelectorAll('#createAccountForm .input-wrapper').forEach(w=>w.classList.remove('has-content'));
+                        document.querySelectorAll('#createAccountForm .form-input').forEach(i=>i.classList.remove('error','success'));
+                        // countdown redirect
+                        let sec=60;
+                        const orig = successEl.innerHTML;
+                        const iv=setInterval(()=>{
+                            sec--; 
+                            successEl.innerHTML = orig + `<br><span style="font-weight:700;">Auto-redirect in ${sec}s...</span>`;
+                            if(sec<=0){ clearInterval(iv); window.location.href='index.php'; }
+                        },1000);
+                        // allow manual close by clicking
+                        successEl.style.cursor='pointer'; successEl.title='Click to go to login';
+                        successEl.onclick=()=>{ clearInterval(iv); window.location.href='index.php'; };
                     } else {
-                        if (neggyContainer && neggyMessages) {
-                            neggyContainer.style.display = 'block';
-                            neggyMessages.innerHTML = '';
-
-                            if (data.errors && data.errors.length > 0) {
-                                data.errors.forEach(error => {
-                                    const errorElement = document.createElement('p');
-                                    errorElement.textContent = error;
-                                    neggyMessages.appendChild(errorElement);
-                                });
-                            } else {
-                                neggyMessages.innerHTML = '<p>Registration failed. Please try again.</p>';
+                        // Map server errors to inline fields
+                        if (data.errors && data.errors.length > 0) {
+                            let mapped=false;
+                            data.errors.forEach(msg=>{
+                                const low=msg.toLowerCase();
+                                if(low.includes('username')) showErrorBond(document.getElementById('username'), msg);
+                                else if(low.includes('email')) showErrorBond(document.getElementById('signupEmail'), msg);
+                                else if(low.includes('first name')) showErrorBond(document.getElementById('firstName'), msg);
+                                else if(low.includes('last name')) showErrorBond(document.getElementById('lastName'), msg);
+                                else if(low.includes('birthday')) showErrorBond(document.getElementById('birthday'), msg);
+                                else if(low.includes('gender')) showErrorBond(document.getElementById('gender'), msg);
+                                else if(low.includes('password') && low.includes('match')) showErrorBond(document.getElementById('confirmPassword'), msg);
+                                else if(low.includes('password')) showErrorBond(document.getElementById('createPassword'), msg);
+                                else {
+                                    // fallback: show under confirm
+                                    const fallback = document.getElementById('confirmPassword');
+                                    if(fallback) showErrorBond(fallback, msg);
+                                }
+                                mapped=true;
+                            });
+                            if(!mapped){
+                                // generic
+                                showErrorBond(document.getElementById('confirmPassword'), data.errors[0]);
                             }
-
-                            neggyContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            const firstErr = document.querySelector('#createAccountForm .custom-error.show');
+                            if(firstErr) firstErr.scrollIntoView({behavior:'smooth', block:'nearest'});
+                        } else {
+                            showErrorBond(document.getElementById('confirmPassword'), 'Registration failed. Please try again.');
                         }
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    if (neggyContainer && neggyMessages) {
-                        neggyContainer.style.display = 'block';
-                        neggyMessages.innerHTML = '<p>An error occurred. Please try again.</p>';
-                    }
+                    showErrorBond(document.getElementById('confirmPassword'), 'An error occurred. Please try again.');
                 })
                 .finally(() => {
                     submitBtn.textContent = originalBtnText;
