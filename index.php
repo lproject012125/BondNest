@@ -388,13 +388,13 @@ $loggedIn = isset($_SESSION['user_id']);
  .forgot-password-subtitle{line-height:1.5}
  .forgot-password-wrapper form{width:100%}
  .forgot-password-wrapper .form-group{width:100%;margin-bottom:18px}
- .forgot-password-wrapper .input-container{width:100%;height:52px;min-height:52px;border:1px solid #D5DFD9;border-radius:8px;overflow:hidden;box-sizing:border-box;transition:border-color .2s,box-shadow .2s}
+ .forgot-password-wrapper .input-container{width:100%;height:52px;min-height:52px;position:relative;border:1px solid #D5DFD9;border-radius:8px;overflow:hidden;box-sizing:border-box;transition:border-color .2s,box-shadow .2s}
  .forgot-password-wrapper .input-container:focus-within{border-color:#2B9E9E;box-shadow:0 0 0 3px rgba(43,158,158,.11)}
  .forgot-password-wrapper .input-container.error,.forgot-password-wrapper .input-container:has(input.error){border-color:#f59ca8;box-shadow:0 0 0 3px rgba(245,156,168,.16)}
  .forgot-password-wrapper .input-container .icon-container{width:46px;padding:0;justify-content:center;flex-shrink:0}
  .forgot-password-wrapper .input-container input{min-width:0;height:50px;padding:0 14px;font-size:.95rem}
  .forgot-password-wrapper .input-container input[type=password]{padding-right:56px}
- .forgot-password-wrapper .input-icon{right:30px}
+ .forgot-password-wrapper .input-icon{position:absolute;right:22px !important;top:50%;transform:translateY(-50%);z-index:2;margin:0}
  .forgot-password-wrapper .custom-error{background:#fef2f2;border:1px solid #f8b4bf;color:#b84252;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;line-height:1.25;opacity:0;max-height:0;transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease,max-height .22s ease,margin .22s ease;pointer-events:none;overflow:hidden;margin:0}
  .forgot-password-wrapper .custom-error.show{opacity:1;max-height:80px;transform:translateY(0);margin:6px 0 0}
  .forgot-password-wrapper .create-account-button{height:52px;margin-top:0;border-radius:26px;padding:0 18px;justify-content:center;text-align:center;text-transform:uppercase;font-size:.9rem;letter-spacing:.3px}
@@ -403,6 +403,7 @@ $loggedIn = isset($_SESSION['user_id']);
  #forgotResetForm .form-group{width:100%;display:block;margin-bottom:6px}
  #forgotResetForm .input-container{width:100%}
  #forgotResetForm .form-group--pwd-full{margin-top:0;margin-bottom:8px}
+ #forgotResetForm .form-group--pwd-full:has(.pwd-live:not([hidden])),#forgotResetForm .form-group--pwd-full:has(.custom-error.show){margin-bottom:16px}
  #forgotResetForm .form-group--pwd-full:has(.pwd-live[hidden]){display:none}
  #forgotResetForm .pwd-live[hidden]{display:none !important}
  #forgotResetForm .pwd-live{width:100%;margin:0}
