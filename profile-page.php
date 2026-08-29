@@ -3697,6 +3697,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Post Status Updates Scripts -->
+<script>
     let dateStr = dateString;
     if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/T.*[+-]/)) {
         dateStr = dateStr.replace(' ', 'T') + 'Z';
