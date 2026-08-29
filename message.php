@@ -41,7 +41,7 @@ if (isset($_GET['search'])) {
                 <?php if (!empty($user['profile_picture'])): ?>
                     <img src="<?php echo $user['profile_picture']; ?>" class="user-avatar">
                 <?php else: ?>
-                    <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?>
+                    <div class="user-avatar"><?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?></div>
                 <?php endif; ?>
                 <div class="user-details">
                     <div class="user-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></div>
@@ -1297,7 +1297,7 @@ function formatMessageTime($timestamp) {
                                 <?php if (!empty($user['profile_picture'])): ?>
                                     <img src="<?php echo $user['profile_picture']; ?>" class="user-avatar">
                                 <?php else: ?>
-                                    <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?>
+                                    <div class="user-avatar"><?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?></div>
                                 <?php endif; ?>
                                 <div class="user-details">
                                     <div class="user-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></div>
@@ -1312,7 +1312,7 @@ function formatMessageTime($timestamp) {
                                 <?php if (!empty($conversation['profile_picture'])): ?>
                                     <img src="<?php echo $conversation['profile_picture']; ?>" class="user-avatar">
                                 <?php else: ?>
-                                    <?php echo getInitialsHtml($conversation['first_name'], $conversation['last_name'], 40); ?>
+                                    <div class="user-avatar"><?php echo getInitialsHtml($conversation['first_name'], $conversation['last_name'], 40); ?></div>
                                 <?php endif; ?>
                                 <div class="user-details">
                                     <div class="user-name"><?php echo htmlspecialchars($conversation['first_name'] . ' ' . $conversation['last_name']); ?></div>

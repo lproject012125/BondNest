@@ -1422,7 +1422,7 @@ if (menuTrigger) {
 }
 
 .user-info .user-details {
-    margin-left: 10px;
+    margin-left: 5px;
     padding-left: 0;
 }
 

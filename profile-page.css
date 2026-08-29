@@ -137,6 +137,13 @@ body {
     object-fit: cover;
 }
 
+.profile-avatar .initials-avatar {
+    width: 100% !important;
+    height: 100% !important;
+    font-size: 2.2rem !important;
+    border-radius: 50% !important;
+}
+
 .profile-name {
     font-size: 1.5rem;
     font-weight: 600;
