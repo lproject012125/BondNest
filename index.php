@@ -398,12 +398,13 @@ $loggedIn = isset($_SESSION['user_id']);
  .forgot-password-wrapper .custom-error{background:#fef2f2;border:1px solid #f8b4bf;color:#b84252;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;line-height:1.25;opacity:0;max-height:0;transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease,max-height .22s ease,margin .22s ease;pointer-events:none;overflow:hidden;margin:0}
  .forgot-password-wrapper .custom-error.show{opacity:1;max-height:80px;transform:translateY(0);margin:6px 0 0}
  .forgot-password-wrapper .create-account-button{height:52px;margin-top:0;border-radius:26px;padding:0 18px;justify-content:center;text-align:center;text-transform:uppercase;font-size:.9rem;letter-spacing:.3px}
- #forgotRequestForm .form-group{margin-bottom:10px}
+ #forgotRequestForm .form-group{margin-bottom:4px}
+ #forgotRequestForm .forgot-alert{margin-top:6px;margin-bottom:6px}
  #forgotResetForm{width:100%}
  #forgotResetForm .form-group{width:100%;display:block;margin-bottom:6px}
  #forgotResetForm .input-container{width:100%}
  #forgotResetForm .form-group--pwd-full{margin-top:0;margin-bottom:8px}
- #forgotResetForm .form-group--pwd-full:has(.pwd-live:not([hidden])),#forgotResetForm .form-group--pwd-full:has(.custom-error.show){margin-bottom:16px}
+ #forgotResetForm .form-group--pwd-full:has(.pwd-live:not([hidden])),#forgotResetForm .form-group--pwd-full:has(.custom-error.show){margin-bottom:8px}
  #forgotResetForm .form-group--pwd-full:has(.pwd-live[hidden]){display:none}
  #forgotResetForm .pwd-live[hidden]{display:none !important}
  #forgotResetForm .pwd-live{width:100%;margin:0}
@@ -967,8 +968,6 @@ $loggedIn = isset($_SESSION['user_id']);
                         const field=obj.d && obj.d.field;
                         const msg=(obj.d && obj.d.error) || 'Password reset failed. Please try again.';
                         if(field==='forgotNewPassword'){
-                            const el=document.getElementById('forgotNewPassword-error');
-                            if(el){ el.textContent=msg; el.classList.add('show'); }
                             const inp=document.getElementById('forgotNewPassword');
                             if(inp){ inp.classList.add('error'); const c=inp.closest('.input-container'); if(c) c.classList.add('error'); }
                             const commonErr=document.getElementById('forgotPw-common-error');
