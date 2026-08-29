@@ -31,16 +31,18 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
 $full_name = htmlspecialchars($user['first_name'] . ' ' . $user['last_name'] ?? '');
 $username = htmlspecialchars($user['username'] ?? '');
 
-function getInitialsHtml($first, $last, $size = 44) {
-    $f = mb_strtoupper(mb_substr(trim($first), 0, 1));
-    $l = mb_strtoupper(mb_substr(trim($last), 0, 1));
-    $initials = $f . $l;
-    $colors = ['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50'];
-    $hash = 0;
-    $name = trim($first . $last);
-    for ($i = 0; $i < mb_strlen($name); $i++) { $hash = ($hash * 31 + mb_ord(mb_substr($name, $i, 1))) & 0x7FFFFFFF; }
-    $bg = $colors[$hash % count($colors)];
-    return '<div class="initials-avatar" style="width:'.$size.'px;height:'.$size.'px;border-radius:50%;background:'.$bg.';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:'.($size * 0.38).'px;font-family:Poppins,sans-serif;flex-shrink:0;letter-spacing:0.5px;">'.$initials.'</div>';
+if (!function_exists('getInitialsHtml')) {
+    function getInitialsHtml($first, $last, $size = 44) {
+        $f = mb_strtoupper(mb_substr(trim($first), 0, 1));
+        $l = mb_strtoupper(mb_substr(trim($last), 0, 1));
+        $initials = $f . $l;
+        $colors = ['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50'];
+        $hash = 0;
+        $name = trim($first . $last);
+        for ($i = 0; $i < mb_strlen($name); $i++) { $hash = ($hash * 31 + mb_ord(mb_substr($name, $i, 1))) & 0x7FFFFFFF; }
+        $bg = $colors[$hash % count($colors)];
+        return '<div class="initials-avatar" style="width:'.$size.'px;height:'.$size.'px;border-radius:50%;background:'.$bg.';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:'.($size * 0.38).'px;font-family:Poppins,sans-serif;flex-shrink:0;letter-spacing:0.5px;">'.$initials.'</div>';
+    }
 }
 ?>
 
