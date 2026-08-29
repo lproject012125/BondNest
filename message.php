@@ -201,7 +201,7 @@ function formatMessageTime($timestamp) {
     :root {
         --color-primary: #008080;
         --color-primary-dark: #006666;
-        --color-primary-light: #00a3a3;
+        --color-primary-light: rgba(0, 128, 128, 0.1);
         --color-white: #ffffff;
         --color-dark: #333333;
         --color-gray: #666666;
