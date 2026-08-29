@@ -11,7 +11,6 @@ $profile_picture = '';
 
 if (isset($_SESSION['user_id'])) {
         include 'db_connection.php';
-    }
     
     // Get updated user profile picture
     $user_id = $_SESSION['user_id'];
