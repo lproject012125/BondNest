@@ -385,6 +385,7 @@ function formatMessageTime($timestamp) {
         align-items: center;
         margin-bottom: 15px;
         max-width: 80%;
+        width: fit-content;
         transition: all 0.3s ease;
         position: relative;
         gap: 4px;
