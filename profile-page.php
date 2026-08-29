@@ -607,7 +607,7 @@ unset($_SESSION['form_data']);
         .post-header {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 10px;
             margin-bottom: 1rem;
             position: relative;
         }
