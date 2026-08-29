@@ -374,6 +374,8 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
     <!-- Bootstrap Icons & FontAwesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="homepage.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="homepage2.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="sidebar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="settings.css?v=<?php echo time(); ?>">
 </head>
@@ -381,11 +383,11 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
     <?php include 'navbar.php'; ?>
     <?php include 'mobile-nav.php'; ?>
 
-    <main class="settings-main">
+    <main>
         <div class="container">
-            <div class="settings-layout">
-                <?php include 'sidebar.php'; ?>
+            <?php include 'sidebar.php'; ?>
 
+            <div class="middle">
                 <div class="settings-content">
                     <!-- Page Header -->
                     <div class="settings-header">

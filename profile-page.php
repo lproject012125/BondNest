@@ -310,41 +310,29 @@ $posts = $stmt->fetchAll();
 
 // Helper function to format time
 function time_elapsed_string($datetime, $full = false) {
-    $tz = new DateTimeZone('UTC');
-    $now = new DateTime('now', $tz);
-    $ago = new DateTime($datetime, $tz);
+    $now = new DateTime('now', new DateTimeZone('UTC'));
+    $ago = new DateTime($datetime, new DateTimeZone('UTC'));
     $diff = $now->diff($ago);
-
-    // Calculate weeks separately without modifying the DateInterval object
-    $weeks = floor($diff->d / 7);
-    $days = $diff->d % 7;
-
+    $diff->w = floor($diff->d / 7);
+    $diff->d -= $diff->w * 7;
     $string = array(
-        'y' => $diff->y,
-        'm' => $diff->m,
-        'w' => $weeks,
-        'd' => $days,
-        'h' => $diff->h,
-        'i' => $diff->i,
-        's' => $diff->s,
+        'y' => 'year',
+        'm' => 'month',
+        'w' => 'week',
+        'd' => 'day',
+        'h' => 'hour',
+        'i' => 'minute',
+        's' => 'second',
     );
-    
-    $result = array();
-    foreach ($string as $k => $v) {
-        if ($v > 0) {
-            $unit = $k;
-            if ($v > 1) {
-                $unit .= 's'; // pluralize
-            }
-            $result[] = $v . ' ' . $unit;
+    foreach ($string as $k => &$v) {
+        if ($diff->$k) {
+            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+        } else {
+            unset($string[$k]);
         }
     }
-
-    if (!$full) {
-        $result = array_slice($result, 0, 1);
-    }
-    
-    return $result ? implode(', ', $result) . ' ago' : 'just now';
+    if (!$full) $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
 }
 
 // Set default values
@@ -3298,13 +3286,48 @@ document.addEventListener('DOMContentLoaded', function() {
             const commentButton = e.target.closest('.comment-trigger');
             const postId = commentButton.dataset.postId;
             
-            // Show comment modal (would need to be implemented)
+            // Show comment modal with correct flex styling
             const commentModal = document.getElementById('commentModal');
             if (commentModal) {
-                commentModal.style.display = 'block';
+                commentModal.style.cssText = `
+                    display: flex !important;
+                    z-index: 9999 !important;
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background: rgba(0, 0, 0, 0.7) !important;
+                    backdrop-filter: blur(4px) !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                `;
+                
+                // Style the modal content properly
+                const modalContent = commentModal.querySelector('.comment-modal-content');
+                if (modalContent) {
+                    modalContent.style.cssText = `
+                        background: white !important;
+                        border-radius: 12px !important;
+                        width: 100% !important;
+                        max-width: 600px !important;
+                        max-height: 80vh !important;
+                        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2) !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        overflow: hidden !important;
+                    `;
+                }
+                
+                // Set post_id in form
+                const postIdInput = commentModal.querySelector('input[name="post_id"]');
+                if (postIdInput) postIdInput.value = postId;
                 
                 // Load comments for this post
                 loadComments(postId);
+                
+                // Prevent body scrolling
+                document.body.style.overflow = 'hidden';
             }
         }
         
@@ -3617,29 +3640,28 @@ document.addEventListener('DOMContentLoaded', function() {
         return 'just now';
     }
     
+    // formatTimeAgo — matches homepage.php implementation exactly
+    function formatTimeAgo(dateString) {
+        let dateStr = dateString;
+        if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/T.*[+-]/)) {
+            dateStr = dateStr.replace(' ', 'T') + 'Z';
+        }
+        const date = new Date(dateStr);
+        const now = new Date();
+        const secondsPast = (now - date) / 1000;
+        if (secondsPast < 1) return 'just now';
+        if (secondsPast < 60) return `${Math.round(secondsPast)} seconds ago`;
+        if (secondsPast < 3600) return `${Math.round(secondsPast / 60)} minutes ago`;
+        if (secondsPast < 86400) return `${Math.round(secondsPast / 3600)} hours ago`;
+        if (secondsPast < 604800) return `${Math.round(secondsPast / 86400)} days ago`;
+        if (secondsPast < 2419200) return `${Math.round(secondsPast / 604800)} weeks ago`;
+        if (secondsPast < 29030400) return `${Math.round(secondsPast / 2419200)} months ago`;
+        return `${Math.round(secondsPast / 29030400)} years ago`;
+    }
+
     // Helper function to format time for comments
     function timeElapsedString(dateString) {
-        const now = new Date();
-        const past = new Date(dateString);
-        const diff = now - past;
-
-        const seconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-        const weeks = Math.floor(days / 7);
-        const months = Math.floor(days / 30);
-        const years = Math.floor(days / 365);
-
-        if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`;
-        if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
-        if (weeks > 0) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-        if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-        if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-        if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-        if (seconds > 0) return `${seconds} second${seconds > 1 ? 's' : ''} ago`;
-        
-        return 'just now';
+        return formatTimeAgo(dateString);
     }
     
     // Variables to track current comment

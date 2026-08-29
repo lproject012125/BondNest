@@ -23,31 +23,16 @@ body.settings-page {
     padding: 0;
 }
 
-main.settings-main {
-    margin-top: 20px;
+main {
     padding-bottom: 50px;
 }
 
-.settings-layout {
-    display: grid;
-    grid-template-columns: 18vw auto;
-    column-gap: 2rem;
-    position: relative;
-}
-
-@media screen and (max-width: 1200px) {
-    .settings-layout {
-        grid-template-columns: 0 auto;
-        gap: 0;
-    }
-}
-
+/* settings-content fills the .middle column exactly like the feed does in homepage */
 .settings-content {
     display: flex;
     flex-direction: column;
     gap: 20px;
     width: 100%;
-    max-width: 900px;
 }
 
 /* Header */
