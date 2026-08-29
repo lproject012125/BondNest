@@ -74,11 +74,33 @@ if (isset($_SESSION['user_id'])) {
             }
             ?>
             
-            <a href="profile-page.php" class="profile-link">
-                <div class="profile-picture">
-                    <img src="<?php echo $profile_picture; ?>" alt="Profile Picture">
+            <div class="profile-dropdown">
+                <a href="#" class="profile-link" id="profileDropdownToggle">
+                    <div class="profile-picture">
+                        <img src="<?php echo $profile_picture; ?>" alt="Profile Picture">
+                    </div>
+                </a>
+                
+                <div class="profile-dropdown-content" id="profileDropdownContent">
+                    <a href="profile-page.php" class="profile-dropdown-item">
+                        <i class="bi bi-person"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="message.php" class="profile-dropdown-item">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>Message</span>
+                    </a>
+                    <a href="settings.php" class="profile-dropdown-item">
+                        <i class="bi bi-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                    <div class="profile-dropdown-divider"></div>
+                    <a href="index.php" class="profile-dropdown-item profile-dropdown-logout" id="dropdownLogoutBtn">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Log out</span>
+                    </a>
                 </div>
-            </a>
+            </div>
             
             <div class="notification-dropdown">
                 <a href="#" class="notification-icon" id="notificationDropdownToggle">
@@ -134,11 +156,6 @@ if (isset($_SESSION['user_id'])) {
                     </div>
                 </div>
             </div>
-            
-            <a href="index.php" class="logout-btn" id="logoutButton">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Log Out</span>
-            </a>
         </div>
         
         <div class="navbar-toggle">
@@ -146,21 +163,6 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div>
 </nav>
-
-<!-- Logout confirmation overlay -->
-<div class="logout-confirmation-overlay" id="logoutConfirmationOverlay">
-    <div class="logout-confirmation-container">
-        <div class="logout-header">
-            <i class="fas fa-sign-out-alt"></i>
-            <h2>Confirm Logout</h2>
-        </div>
-        <p class="logout-message">Are you sure you want to log out?</p>
-        <div class="logout-actions">
-            <button class="btn-cancel logout-cancel-button" id="cancelLogout">Cancel</button>
-            <a href="index.php" class="btn-save logout-confirm-button">Log Out</a>
-        </div>
-    </div>
-</div>
 
 <!-- Mobile menu dropdown -->
 <div class="mobile-menu-dropdown" id="mobileMenuDropdown">
@@ -348,49 +350,23 @@ if (isset($_SESSION['user_id'])) {
     .navbar-right {
         display: flex;
         align-items: center;
-        gap: -60px !important;
+        gap: 16px;
         margin-left: auto;
-        margin-right: 250px;
+        margin-right: 180px;
     }
 
-    .logout-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        background-color: #008080;
-        color: white;
-        text-decoration: none;
-        font-weight: 500;
-        padding: 8px 16px;
-        border-radius: 20px;
-        transition: all 0.3s ease;
-        right: 10px !important;
-    }
-
-    .logout-btn i {
-        color: white;
-    }
-
-    .logout-btn:hover {
-        background-color: #006666;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .logout-btn:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    .profile-dropdown {
+        position: relative;
     }
 
     .profile-link {
         text-decoration: none;
         display: block;
-        transition: transform 0.3s ease;
+        transition: transform 0.2s ease;
     }
     
     .profile-link:hover {
-        transform: scale(1.1);
+        transform: scale(1.08);
     }
     
     .profile-picture {
@@ -398,13 +374,15 @@ if (isset($_SESSION['user_id'])) {
         height: 40px;
         border-radius: 50%;
         overflow: hidden;
-        border: none;
-        transition: box-shadow 0.3s ease;
-        margin-right: -20px !important;
+        border: 2px solid rgba(0, 128, 128, 0.3);
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
+        cursor: pointer;
     }
     
-    .profile-link:hover .profile-picture {
-        box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.3);
+    .profile-link:hover .profile-picture,
+    .profile-dropdown:hover .profile-picture {
+        box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.2);
+        border-color: var(--color-primary, #008080);
     }
 
     .profile-picture img {
@@ -412,8 +390,83 @@ if (isset($_SESSION['user_id'])) {
         height: 40px;
         border-radius: 50%;
         object-fit: cover;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        border: 2px solid white;
+    }
+
+    /* Profile Dropdown Menu */
+    .profile-dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 220px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        z-index: 2000;
+        overflow: hidden;
+        animation: profileDropIn 0.2s ease;
+    }
+
+    .profile-dropdown-content.show {
+        display: block;
+    }
+
+    @keyframes profileDropIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .profile-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 18px;
+        text-decoration: none;
+        color: #3a4a4a;
+        font-size: 0.92rem;
+        font-weight: 500;
+        transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .profile-dropdown-item i {
+        font-size: 1.15rem;
+        color: #5a6a6a;
+        width: 22px;
+        text-align: center;
+        transition: color 0.18s ease;
+    }
+
+    .profile-dropdown-item:hover {
+        background: rgba(0, 128, 128, 0.06);
+        color: var(--color-primary, #008080);
+    }
+
+    .profile-dropdown-item:hover i {
+        color: var(--color-primary, #008080);
+    }
+
+    .profile-dropdown-divider {
+        height: 1px;
+        background: #eef2f2;
+        margin: 4px 0;
+    }
+
+    .profile-dropdown-logout {
+        color: #c0392b;
+    }
+
+    .profile-dropdown-logout i {
+        color: #c0392b;
+    }
+
+    .profile-dropdown-logout:hover {
+        background: rgba(192, 57, 43, 0.06);
+        color: #c0392b;
+    }
+
+    .profile-dropdown-logout:hover i {
+        color: #c0392b;
     }
 
     /* Mobile menu toggle */
@@ -447,111 +500,6 @@ if (isset($_SESSION['user_id'])) {
 
     .navbar-toggle-icon::after {
         top: 8px;
-    }
-    
-    /* Logout confirmation overlay */
-    .logout-confirmation-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(4px);
-        z-index: 1000;
-        display: none;
-        justify-content: center;
-        align-items: center;
-        transition: all 0.3s ease;
-    }
-
-    .logout-confirmation-container {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 16px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
-        width: 100% !important;
-        max-width: 380px !important;
-        transform: scale(0.95);
-        animation: modal-in 0.3s forwards;
-        border-top: 4px solid #008080;
-    }
-
-    @keyframes modal-in {
-        to { transform: scale(1); }
-    }
-
-    .logout-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1.2rem;
-        color: #008080;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .logout-header i {
-        font-size: 1.3rem;
-        margin-right: 0.75rem;
-        width: 32px;
-        height: 32px;
-        background: rgba(0, 128, 128, 0.1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .logout-header h2 {
-        font-size: 1.3rem;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .logout-message {
-        font-size: 1.1rem;
-        margin-bottom: 1.5rem;
-        color: #333;
-        line-height: 1.5;
-        text-align: center;
-    }
-
-    .logout-actions {
-        display: flex;
-        justify-content: center;
-        gap: 0.75rem;
-        padding-top: 0.5rem;
-    }
-
-    .btn-cancel, .btn-save {
-        padding: 0.7rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 500;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: none;
-        min-width: 100px;
-        text-align: center;
-    }
-
-    .btn-cancel {
-        background: #f0f0f0;
-        color: #555;
-    }
-
-    .btn-cancel:hover {
-        background: #e0e0e0;
-    }
-
-    .btn-save {
-        background: #008080;
-        color: white;
-    }
-
-    .btn-save:hover {
-        opacity: 0.95;
-        box-shadow: 0 3px 8px rgba(0, 128, 128, 0.2);
     }
 
     @media (max-width: 768px) {
@@ -587,7 +535,6 @@ if (isset($_SESSION['user_id'])) {
     /* Notification dropdown styles */
     .notification-dropdown {
         position: relative;
-        margin-right: 20px;
     }
     
     .notification-icon {
@@ -596,10 +543,7 @@ if (isset($_SESSION['user_id'])) {
         font-size: 1.4rem;
         color: #333;
         cursor: pointer;
-        padding: 5px;
-        top: 2px;
-        right: 110px;
-        margin-right: 0px !important;
+        padding: 8px;
         border-radius: 50%;
         transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
     }
@@ -972,6 +916,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Profile dropdown functionality
+    const profileToggle = document.getElementById('profileDropdownToggle');
+    const profileContent = document.getElementById('profileDropdownContent');
+    
+    if (profileToggle && profileContent) {
+        profileToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            profileContent.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!profileToggle.contains(e.target) && !profileContent.contains(e.target)) {
+                profileContent.classList.remove('show');
+            }
+        });
+
+        profileContent.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
     // Notification dropdown functionality
     const notificationToggle = document.getElementById('notificationDropdownToggle');
     const notificationContent = document.getElementById('notificationDropdownContent');
@@ -981,20 +947,30 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             notificationContent.classList.toggle('show');
+            // Close profile dropdown if open
+            if (profileContent) profileContent.classList.remove('show');
         });
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (!notificationToggle.contains(e.target) && !notificationContent.contains(e.target)) {
                 notificationContent.classList.remove('show');
             }
         });
 
-        // Prevent dropdown from closing when clicking inside
         notificationContent.addEventListener('click', function(e) {
             e.stopPropagation();
         });
     }
+
+    // Close both dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (profileContent && !profileToggle.contains(e.target) && !profileContent.contains(e.target)) {
+            profileContent.classList.remove('show');
+        }
+        if (notificationContent && !notificationToggle.contains(e.target) && !notificationContent.contains(e.target)) {
+            notificationContent.classList.remove('show');
+        }
+    });
     
     // Search bar functionality
     const searchBar = document.querySelector('.search-bar');
@@ -1002,30 +978,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchResults = document.getElementById('navbarSearchResults');
     
     if (searchBar && searchInput && searchResults) {
-        // Visual effects
         searchInput.addEventListener('focus', function() {
             searchBar.style.width = '450px';
             searchBar.style.backgroundColor = '#d8d8d8';
         });
         
-        // Real-time search functionality
         let searchTimeout = null;
         searchInput.addEventListener('input', function() {
             const query = this.value.trim();
             
-            // Clear any existing timeout
             if (searchTimeout) {
                 clearTimeout(searchTimeout);
             }
             
             if (query.length > 0) {
-                // Add a small delay to avoid too many requests
                 searchTimeout = setTimeout(() => {
-                    // Show loading state
                     searchResults.innerHTML = '<div class="no-results">Searching...</div>';
                     searchResults.style.display = 'block';
                     
-                    // Fetch users based on the input
                     fetch('search_users.php?search=' + encodeURIComponent(query), {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
@@ -1043,15 +1013,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.error('Error fetching search results:', error);
                         searchResults.innerHTML = '<div class="no-results">Error searching users</div>';
                     });
-                }, 300); // 300ms delay for typing
+                }, 300);
             } else {
-                // Clear search results when input is empty
                 searchResults.innerHTML = '';
                 searchResults.style.display = 'none';
             }
         });
         
-        // Close search results when clicking outside
         document.addEventListener('click', function(e) {
             if (searchResults && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
                 searchResults.style.display = 'none';
@@ -1061,31 +1029,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Logout button functionality
-    const logoutButton = document.getElementById('logoutButton');
-    const logoutConfirmationOverlay = document.getElementById('logoutConfirmationOverlay');
-    const cancelLogoutButton = document.getElementById('cancelLogout');
-    
-    if (logoutButton && logoutConfirmationOverlay && cancelLogoutButton) {
-        logoutButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            logoutConfirmationOverlay.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        });
-        
-        cancelLogoutButton.addEventListener('click', function() {
-            logoutConfirmationOverlay.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        });
-        
-        logoutConfirmationOverlay.addEventListener('click', function(event) {
-            if (event.target === logoutConfirmationOverlay) {
-                logoutConfirmationOverlay.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-        });
-    }
-
     // Mobile menu toggle
     const mobileMenuToggle = document.querySelector('.navbar-toggle');
     const mobileMenuDropdown = document.getElementById('mobileMenuDropdown');
@@ -1095,7 +1038,6 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             mobileMenuDropdown.classList.toggle('active');
         });
-        // Hide dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (mobileMenuDropdown.classList.contains('active') && !mobileMenuDropdown.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
                 mobileMenuDropdown.classList.remove('active');
@@ -1105,24 +1047,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mobile logout button
     const mobileLogoutButton = document.getElementById('mobileLogoutButton');
-    const logoutConfirmationOverlayMobile = document.getElementById('logoutConfirmationOverlay');
     
-    if (mobileLogoutButton && logoutConfirmationOverlayMobile) {
+    if (mobileLogoutButton) {
         mobileLogoutButton.addEventListener('click', function(e) {
             e.preventDefault();
             mobileMenuDropdown.classList.remove('active');
-            logoutConfirmationOverlayMobile.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            window.location.href = 'index.php';
         });
     }
 
-    // Notification bell for mobile (optional: show dropdown or redirect)
+    // Notification bell for mobile
     const mobileNotificationToggle = document.getElementById('mobileNotificationToggle');
     if (mobileNotificationToggle) {
         mobileNotificationToggle.addEventListener('click', function(e) {
             e.preventDefault();
-            window.location.href = 'warnings.php'; // or show notification dropdown
+            window.location.href = 'warnings.php';
         });
     }
 });
-</script> 
+</script>
