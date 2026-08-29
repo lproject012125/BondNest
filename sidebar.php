@@ -120,15 +120,24 @@ main .container .left .profile .profile_picture img {
 .left .sidebar h3 {
     margin-left: 1.5rem;
     font-size: 1rem;
+    color: #000000 !important;
+}
+
+.left .sidebar .menu-item:not(.active) h3 {
+    color: #000000 !important;
 }
 
 .left .sidebar .active {
     background: var(--color-light);
 }
 
-.left .sidebar .active i,
-.left .sidebar .active h3 {
+.left .sidebar .active i {
     color: var(--color-primary);
+}
+
+.left .sidebar .active h3 {
+    color: #000000 !important;
+    font-weight: 600;
 }
 
 .left .sidebar .active::before {

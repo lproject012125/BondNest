@@ -2822,8 +2822,101 @@ unset($_SESSION['form_data']);
     </div>
 </div>
 
+<!-- Comment Modal -->
+<div class="comment-modal" id="commentModal" style="display:none;">
+    <div class="comment-modal-content">
+        <div class="comment-header">
+            <h3>Comments</h3>
+            <span class="close-comment" id="closeCommentModal">&times;</span>
+        </div>
+        <div class="comments-container">
+            <div class="comment-list" id="commentList"></div>
+            <form id="commentForm" method="POST" class="comment-form-fixed">
+                <input type="hidden" name="post_id" value="">
+                <textarea class="comment-input" placeholder="Write a comment..." name="comment-content" required rows="2" maxlength="1000"></textarea>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Comment Confirmation Modal -->
+<div class="logout-confirmation-overlay" id="deleteCommentConfirmationOverlay" style="display:none;">
+    <div class="logout-confirmation-container delete-modal" style="border-top: 4px solid var(--color-primary);">
+        <div class="logout-header">
+            <i class="fas fa-trash-alt"></i>
+            <h2>Delete Comment</h2>
+        </div>
+        <p class="logout-message">Are you sure you want to delete this comment?</p>
+        <div class="logout-actions">
+            <button class="btn-cancel logout-cancel-button" id="cancelDeleteComment">Cancel</button>
+            <button class="btn-save logout-confirm-button delete-btn" id="confirmDeleteComment">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Comment Modal -->
+<div class="edit-post-modal" id="editCommentModal" style="display:none;">
+    <div class="edit-post-modal-content">
+        <div class="edit-post-header">
+            <h2>Edit Comment</h2>
+            <span class="edit-post-close" id="closeEditComment">&times;</span>
+        </div>
+        <div class="edit-post-body">
+            <textarea id="editCommentContent" placeholder="Edit your comment..."></textarea>
+        </div>
+        <div class="edit-post-actions">
+            <button class="btn btn-secondary" id="cancelEditComment">Cancel</button>
+            <button class="btn btn-primary" id="saveEditComment">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Post Modal -->
+<div class="edit-post-modal" id="editPostModal" style="display:none;">
+    <div class="edit-post-modal-content" style="position:relative; z-index:1001; background:white; border-radius:10px; max-width:600px; width:90%; max-height:80vh; overflow:hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+        <div class="edit-post-header">
+            <h2>Edit Post</h2>
+            <span class="edit-post-close" id="closeEditPost">&times;</span>
+        </div>
+        <div class="edit-post-body">
+            <textarea id="editPostContent" placeholder="Edit your post..."></textarea>
+            <img src="" class="edit-image-preview" id="editImagePreview" style="display:none; max-width:100%; max-height:200px; border-radius:8px; margin-top:10px;">
+            <div class="add-to-post">
+                <span>Change image</span>
+                <div class="icons">
+                    <label for="editPostImage" style="cursor: pointer;">
+                        <i class="bi bi-image" style="color: lightgreen;"></i>
+                    </label>
+                    <input type="file" id="editPostImage" name="editPostImage" accept="image/*" style="display: none;">
+                    <button class="btn btn-danger" id="removePostImage" style="display:none;">Remove Image</button>
+                </div>
+            </div>
+        </div>
+        <div class="edit-post-actions">
+            <button class="btn btn-secondary" id="cancelEditPost">Cancel</button>
+            <button class="btn btn-primary" id="saveEditPost">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Post Confirmation Modal -->
+<div class="logout-confirmation-overlay" id="deletePostConfirmationOverlay" style="display:none;">
+    <div class="logout-confirmation-container delete-modal">
+        <div class="logout-header">
+            <i class="fas fa-trash-alt"></i>
+            <h2>Confirm Delete</h2>
+        </div>
+        <p class="logout-message">Are you sure you want to delete this post?</p>
+        <div class="logout-actions">
+            <button class="btn-cancel logout-cancel-button" id="cancelDeletePost">Cancel</button>
+            <button class="btn-save logout-confirm-button delete-btn" id="confirmDeletePost">Delete</button>
+        </div>
+    </div>
+</div>
+
 <script>
-// TIME AGO FUNCTIONS - Exactly matching homepage.php
+// ==================== TIME AGO FUNCTIONS ====================
 function formatTimeAgo(dateString) {
     let dateStr = dateString;
     if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/T.*[+-]/)) {
@@ -2856,1546 +2949,216 @@ function timeElapsedString(dateString) {
     return formatTimeAgo(dateString);
 }
 
-// Sidebar menu item functionality & Relative Timestamps
+// Global Tracking Variables
+let currentPostId = null;
+let currentEditingPostId = null;
+let postToDelete = null;
+let commentToEdit = null;
+let commentToDelete = null;
+
+// ==================== DOM READY INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', function() {
-    // Initial dynamic timestamp update
+    // 1. Initial dynamic timestamp update
     updateAllTimeAgo();
     setInterval(updateAllTimeAgo, 60000);
 
-    // Get all menu items
+    // 2. Sidebar active navigation
     const menuItems = document.querySelectorAll('.left .sidebar .menu-item');
-    
-    // Function to remove active class from all menu items
-    function removeActiveClass() {
-        menuItems.forEach(item => {
-            item.classList.remove('active');
-        });
-    }
-    
-    // Add click event to each menu item
     menuItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            removeActiveClass();
+        item.addEventListener('click', function() {
+            menuItems.forEach(i => i.classList.remove('active'));
             this.classList.add('active');
         });
     });
-});
 
-// Notification functionality
-function showNotification(notificationId) {
-    const notification = document.getElementById(notificationId);
-    if (notification) {
-        notification.style.display = 'block';
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 5000);
-    }
-}
-
-// Error notification functionality
-function showNeggyError(message) {
-    const notification = document.getElementById('neggyErrorNotification');
-    const messageElement = document.getElementById('neggyErrorMessage');
-    
-    messageElement.textContent = message;
-    notification.style.display = 'block';
-    notification.classList.remove('hide');
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        notification.classList.add('hide');
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 500); // Wait for animation to complete
-    }, 5000);
-}
-
-// Modal functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // Generic modal handling
-    function setupModal(triggerSelector, modalId, notificationId) {
-        const trigger = document.querySelector(triggerSelector);
-        const modal = document.getElementById(modalId);
-        
-        if (!trigger || !modal) return;
-        
-        const closeBtn = modal.querySelector('.close-modal');
-        const cancelBtn = modal.querySelector('.btn-cancel');
-        const saveBtn = modal.querySelector('.btn-save');
-        
-        // Ensure modal is hidden by default
-        modal.style.display = 'none';
-        
-        // Modal toggle function
-        function toggleModal(show) {
-            if (show) {
-                // For edit profile and edit details modals, position them higher
-                if (modalId === 'editProfileModal' || modalId === 'editDetailsModal') {
-                    modal.style.cssText = `
-                        display: flex !important;
-                        z-index: 100000 !important;
-                        position: fixed !important;
-                        top: 0 !important;
-                        left: 0 !important;
-                        width: 100% !important;
-                        height: 100% !important;
-                        background: rgba(0, 0, 0, 0.7) !important;
-                        backdrop-filter: blur(4px) !important;
-                        justify-content: center !important;
-                        align-items: flex-start !important;
-                        padding-top: 100px !important;
-                    `;
-                    
-                    // Make modal content scrollable if needed
-                    const modalContent = modal.querySelector('.modal-content');
-                    if (modalContent) {
-                        modalContent.style.cssText = `
-                            max-height: 90vh !important;
-                            overflow-y: auto !important;
-                        `;
-                    }
-                } else {
-                    modal.style.display = 'block';
-                }
-            } else {
-                modal.style.display = 'none';
-            }
-            document.body.style.overflow = show ? 'hidden' : '';
-        }
-        
-        // Event listeners
-        trigger.addEventListener('click', () => toggleModal(true));
-        if (closeBtn) closeBtn.addEventListener('click', () => toggleModal(false));
-        if (cancelBtn) cancelBtn.addEventListener('click', () => toggleModal(false));
-        
-        // Save button handling - REMOVED preventDefault() for the details form
-        if (saveBtn && modalId === 'editDetailsModal', 'editProdileModal') {
-            saveBtn.addEventListener('click', function() {
-                // No preventDefault() here - allow normal form submission
-                toggleModal(false);
-            });
-        } else if (saveBtn && notificationId) {
-            saveBtn.addEventListener('click', function(e) {
-                e.preventDefault(); // Keep for other modals if needed
-                toggleModal(false);
-                showNotification(notificationId);
-            });
-        }
-        
-        // Close when clicking outside modal
-        modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                toggleModal(false);
-            }
-        });
-    }
-    
-    // Image preview functionality
-    function setupImagePreview(inputId, previewId, fallbackSelector = null) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-        
-        input.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    if (previewId) {
-                        const preview = document.getElementById(previewId);
-                        if (preview) preview.src = event.target.result;
-                    }
-                    
-                    if (fallbackSelector) {
-                        const fallbackElement = document.querySelector(fallbackSelector);
-                        if (fallbackElement && !document.getElementById(previewId)) {
-                            fallbackElement.innerHTML = `<img src="${event.target.result}" alt="Preview" id="${previewId}">`;
-                        }
-                    }
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            }
-        });
-    }
-    
-    setupImagePreview('profilePictureInput', 'currentProfilePic');
-    setupImagePreview('coverPhotoInput', 'currentCoverPhoto', '.current-cover .no-cover');
-    
-    // Enhanced Character counter for bio field
-    const bioField = document.getElementById('bio');
-    const charCounter = document.getElementById('bioCharCount');
-    
-    if (bioField && charCounter) {
-        // Set initial count
-        charCounter.textContent = bioField.value.length;
-        
-        // Update on input
-        bioField.addEventListener('input', function() {
-            const currentLength = this.value.length;
-            charCounter.textContent = currentLength;
-            
-            // Visual feedback for minimum requirement
-            if (currentLength < 10) {
-                this.classList.add('invalid');
-                charCounter.classList.add('text-warning');
-                // Show Neggy error only when below 10 characters
-                if (currentLength > 0) {  // Only show if user has typed something
-                    showNeggyError('Bio must be at least 10 characters long');
-                }
-            } else {
-                this.classList.remove('invalid');
-                charCounter.classList.remove('text-warning');
-                // Hide the error if it was shown
-                document.getElementById('neggyErrorNotification').style.display = 'none';
-            }
-        });
-        
-        // Also validate on blur (when user leaves the field)
-        bioField.addEventListener('blur', function() {
-            const currentLength = this.value.length;
-            if (currentLength > 0 && currentLength < 10) {
-                showNeggyError('Bio must be at least 10 characters long');
-            }
-        });
-    }
-    
-    // Close notification buttons
-    document.querySelectorAll('.close-notification').forEach(button => {
-        button.addEventListener('click', function() {
-            this.closest('.success-notification').style.display = 'none';
-        });
-    });
-
-    // Handle details form submission with validation
-const detailsForm = document.getElementById('detailsForm');
-if (detailsForm) {
-    detailsForm.addEventListener('submit', function(e) {
-        const bioField = document.getElementById('bio');
-        
-        // Validate bio length
-        if (bioField.value.length < 10) {
+    // 3. Logout modal
+    const logoutBtn = document.getElementById('logoutButton');
+    const logoutModal = document.getElementById('logoutConfirmationOverlay');
+    const cancelLogoutBtn = document.getElementById('cancelLogout');
+    if (logoutBtn && logoutModal) {
+        logoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            showNeggyError('Bio must be at least 10 characters long');
-            bioField.focus();
-            bioField.classList.add('error-field');
-            return false;
-        }
-        
-        // UI feedback
-        const submitBtn = this.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        }
-        
-        // Allow form to submit normally if validation passes
-        return true;
-    });
-}
-    
-    // Display messages if they exist
-    <?php if ($success_message): ?>
-        showNotification('detailsSuccessNotification');
-    <?php elseif ($error_message): ?>
-        showNeggyError('<?php echo addslashes($error_message); ?>');
-    <?php endif; ?>
-});
-
-// Logout functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const logoutButton = document.getElementById('logoutButton');
-    const logoutConfirmationOverlay = document.getElementById('logoutConfirmationOverlay');
-    const cancelLogoutButton = document.getElementById('cancelLogout');
-
-    if (logoutButton && logoutConfirmationOverlay && cancelLogoutButton) {
-        logoutButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            logoutConfirmationOverlay.style.display = 'flex';
-        });
-
-        cancelLogoutButton.addEventListener('click', function() {
-            logoutConfirmationOverlay.style.display = 'none';
-        });
-
-        logoutConfirmationOverlay.addEventListener('click', function(event) {
-            if (event.target === logoutConfirmationOverlay) {
-                logoutConfirmationOverlay.style.display = 'none';
-            }
-        });
-    }
-});
-
-  // Real-time username availability check
-  const usernameInput = document.getElementById('username');
-    const usernameFeedback = document.getElementById('usernameFeedback');
-    
-    if (usernameInput && usernameFeedback) {
-        usernameInput.addEventListener('input', function() {
-            const username = this.value.trim();
-            
-            if (username.length < 3) {
-                usernameFeedback.textContent = 'Username too short (min 3 chars)';
-                usernameFeedback.style.color = 'red';
-                return;
-            }
-            
-            // AJAX check
-            fetch('profile-page.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'check_username=1&username=' + encodeURIComponent(username)
-            })
-            .then(response => response.json())
-            .then(data => {
-                usernameFeedback.textContent = data.message;
-                usernameFeedback.style.color = data.available ? 'green' : 'red';
-            });
-        });
-        });
-    }
-
-    // Profile picture preview
-    const profilePicInput = document.getElementById('profilePictureInput');
-    const currentProfilePic = document.getElementById('currentProfilePic');
-    
-    if (profilePicInput && currentProfilePic) {
-        profilePicInput.addEventListener('change', function(e) {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    currentProfilePic.src = event.target.result;
-                }
-                reader.readAsDataURL(this.files[0]);
-                
-                // Show file info
-                const fileInfo = document.getElementById('profilePictureInfo');
-                fileInfo.textContent = `Selected: ${this.files[0].name} (${Math.round(this.files[0].size/1024)} KB)`;
-                fileInfo.style.display = 'block';
-            }
-        });
-    }
-
-    // Handle profile form submission
-    const profileForm = document.getElementById('profileForm');
-    if (profileForm) {
-        profileForm.addEventListener('submit', function(e) {
-            const submitBtn = document.getElementById('saveProfileBtn');
-            const usernameFeedback = document.getElementById('usernameFeedback');
-            
-            // Disable button during submission
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-            
-            // Check if username is valid
-            if (usernameFeedback && usernameFeedback.style.color === 'red') {
-                e.preventDefault();
-                showNeggyError('Please fix the username before saving');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Save Changes';
-                return;
-            }
-            
-            // If validation passes, the form will submit normally to your PHP handler
-        });
-    }
-
-    // Post menu functionality
-    document.addEventListener('click', function(e) {
-        // Handle post menu triggers
-        if (e.target.classList.contains('post-menu-trigger')) {
-            const postId = e.target.dataset.postId;
-            const dropdown = document.querySelector(`.post-menu-dropdown[data-post-id="${postId}"]`);
-            
-            // Close all other dropdowns first
-            document.querySelectorAll('.post-menu-dropdown.show').forEach(menu => {
-                if (menu !== dropdown) {
-                    menu.classList.remove('show');
-                }
-            });
-            
-            // Toggle this dropdown
-            dropdown.classList.toggle('show');
-            e.stopPropagation();
-        } 
-        // Close dropdowns when clicking elsewhere
-        else if (!e.target.closest('.post-menu-dropdown')) {
-            document.querySelectorAll('.post-menu-dropdown.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-        }
-        
-        // Handle like button clicks
-        if (e.target.closest('.like-button')) {
-            const likeButton = e.target.closest('.like-button');
-            const postId = likeButton.dataset.postId;
-            const isLiked = likeButton.dataset.liked === 'true';
-            const likeIcon = likeButton.querySelector('i');
-            const likeText = likeButton.querySelector('span');
-            const likeCount = likeButton.querySelector('.like-count');
-            
-            // Disable button during AJAX call
-            likeButton.style.pointerEvents = 'none';
-            likeButton.classList.add('processing');
-            
-            // Toggle like state visually
-            likeButton.dataset.liked = isLiked ? 'false' : 'true';
-            likeIcon.className = isLiked ? 'bi bi-heart' : 'bi bi-heart-fill';
-            likeText.textContent = isLiked ? 'Like' : 'Liked';
-            
-            // Update count
-            let count = parseInt(likeCount.textContent);
-            count = isLiked ? count - 1 : count + 1;
-            likeCount.textContent = count;
-            
-            // Update the liked-by text
-            const likedByText = likeButton.closest('.feed').querySelector('.liked-by p');
-            if (likedByText) {
-                likedByText.textContent = count === 1 
-                    ? '1 person liked this' 
-                    : `${count} people liked this`;
-            }
-            
-            // Send AJAX request to update like status
-            fetch('like_post.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `post_id=${postId}&action=${isLiked ? 'unlike' : 'like'}`
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Server responded with status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Like response:', data);
-                
-                if (!data.success) {
-                    throw new Error(data.error || 'Unknown error occurred');
-                }
-                
-                // Update like count with server's count (in case of sync issues)
-                likeCount.textContent = data.likes;
-                
-                // Update liked-by text with accurate count
-                if (likedByText) {
-                    likedByText.textContent = data.likes === 1 
-                        ? '1 person liked this' 
-                        : `${data.likes} people liked this`;
-                }
-                
-                // Flash animation to confirm action
-                likeButton.classList.add('liked-animation');
-                setTimeout(() => {
-                    likeButton.classList.remove('liked-animation');
-                }, 700);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                
-                // Revert visual changes on error
-                likeButton.dataset.liked = isLiked ? 'true' : 'false';
-                likeIcon.className = isLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
-                likeText.textContent = isLiked ? 'Liked' : 'Like';
-                likeCount.textContent = isLiked ? count + 1 : count - 1;
-                
-                // Show error (could use a toast notification)
-                alert(`Could not update like status: ${error.message}`);
-            })
-            .finally(() => {
-                // Re-enable button
-                likeButton.style.pointerEvents = '';
-                likeButton.classList.remove('processing');
-            });
-        }
-        
-        // Handle comment button clicks
-        if (e.target.closest('.comment-trigger')) {
-            const commentButton = e.target.closest('.comment-trigger');
-            const postId = commentButton.dataset.postId;
-            
-            // Show comment modal with correct flex styling
-            const commentModal = document.getElementById('commentModal');
-            if (commentModal) {
-                commentModal.style.cssText = `
-                    display: flex !important;
-                    z-index: 9999 !important;
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    background: rgba(0, 0, 0, 0.7) !important;
-                    backdrop-filter: blur(4px) !important;
-                    justify-content: center !important;
-                    align-items: center !important;
-                `;
-                
-                // Style the modal content properly
-                const modalContent = commentModal.querySelector('.comment-modal-content');
-                if (modalContent) {
-                    modalContent.style.cssText = `
-                        background: white !important;
-                        border-radius: 12px !important;
-                        width: 100% !important;
-                        max-width: 600px !important;
-                        max-height: 80vh !important;
-                        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2) !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        overflow: hidden !important;
-                    `;
-                }
-                
-                // Set post_id in form
-                const postIdInput = commentModal.querySelector('input[name="post_id"]');
-                if (postIdInput) postIdInput.value = postId;
-                
-                // Load comments for this post
-                loadComments(postId);
-                
-                // Prevent body scrolling
-                document.body.style.overflow = 'hidden';
-            }
-        }
-        
-        // Close comment modal
-        if (e.target.classList.contains('close-comment')) {
-            const commentModal = document.getElementById('commentModal');
-            if (commentModal) {
-                commentModal.style.display = 'none';
-            }
-        }
-        
-        // Handle delete post button - removed (using modal implementation instead)
-        
-        // Handle edit post button
-        if (e.target.closest('.edit-post')) {
-            const postItem = e.target.closest('.edit-post');
-            const postId = postItem.dataset.postId;
-            
-            // Redirect to edit post page or show edit modal
-            // This would need to be implemented based on your application's flow
-        }
-    });
-    
-    // Function to load comments for a post
-    function loadComments(postId) {
-        console.log('Loading comments for post ID:', postId);
-        
-        const commentList = document.getElementById('commentList');
-        if (!commentList) {
-            console.error('Comment list element not found in the DOM!');
-            return;
-        }
-        
-        // Clear existing comments first to prevent stacking
-        commentList.innerHTML = '<div class="loading-comments" style="text-align: center; padding: 20px;">Loading comments...</div>';
-        
-        fetch(`get_comments.php?post_id=${postId}`)
-            .then(response => {
-                console.log('Got response from server:', response.status);
-                
-                // First check if the response is OK
-                if (!response.ok) {
-                    throw new Error(`Server responded with status: ${response.status}`);
-                }
-                
-                // Then check if the response is JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    return response.text().then(text => {
-                        console.error('Invalid content type:', contentType, 'Response text:', text.substring(0, 100));
-                        throw new Error(`Invalid response format: ${contentType}`);
-                    });
-                }
-                
-                return response.json();
-            })
-            .then(data => {
-                console.log('Comment data received:', data);
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                // Clear the list completely before adding new comments
-                    commentList.innerHTML = '';
-                
-                if (!data.comments || data.comments.length === 0) {
-                    commentList.innerHTML = '<div class="no-comments" style="text-align: center; padding: 40px; color: #888;">No comments yet. Be the first to comment!</div>';
-                    return;
-                }
-                
-                console.log(`Adding ${data.comments.length} comments to the list`);
-                
-                // Force commentList to have correct styling
-                commentList.style.maxHeight = '400px';
-                commentList.style.overflowY = 'auto';
-                commentList.style.padding = '0 15px';
-                commentList.style.marginBottom = '60px';
-                commentList.style.background = 'transparent';
-                
-                // Add the comments to the list
-                    data.comments.forEach(comment => {
-                    const commentElement = createCommentElement(comment);
-                    commentList.appendChild(commentElement);
-                });
-                
-                console.log('Comments loaded successfully');
-                
-                // Set post_id in the comment form
-                const commentForm = document.getElementById('commentForm');
-                if (commentForm) {
-                    const hiddenInput = commentForm.querySelector('input[name="post_id"]');
-                    if (hiddenInput) {
-                        hiddenInput.value = postId;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error loading comments:', error);
-                commentList.innerHTML = `
-                    <div class="error-loading" style="text-align: center; padding: 30px; color: #e74c3c;">
-                        <p style="margin-bottom: 15px;">Error loading comments: ${error.message}</p>
-                        <button onclick="loadComments('${postId}')" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Try Again</button>
-                    </div>
-                `;
-            });
-    }
-
-    // Function to create a comment element
-    function createCommentElement(comment) {
-        const formattedContent = (comment.content || '').replace(/\r\n|\r|\n/g, '<br>');
-        console.log('Creating comment element for:', comment);
-        
-        const isCommentAuthor = <?php echo $_SESSION['user_id']; ?> === parseInt(comment.user_id);
-        
-        const div = document.createElement('div');
-        div.className = 'comment-item new-comment';
-        div.dataset.commentId = comment.id;
-        
-        div.innerHTML = `
-            <div class="comment-content">
-                ${comment.profile_picture 
-                    ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
-                    : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
-                }
-                <div class="comment-body">
-                    <div style="display: flex; width: 100%; background: transparent;">
-                        <h4 class="comment-author" style="background: transparent; margin: 0; padding: 0;">${comment.first_name} ${comment.last_name}</h4>
-                    </div>
-                    <p class="comment-text">${formattedContent}</p>
-                    <small class="comment-time" style="font-size: 0.75rem; color: #999; display: block; margin-top: 2px;" data-timestamp="${comment.created_at}">${formatTimeAgo(comment.created_at)}</small>
-                </div>
-                ${isCommentAuthor ? `
-                <div class="comment-actions" style="position: absolute; right: 5px; top: 5px; z-index: 100;">
-                    <i class="bi bi-three-dots-vertical comment-menu-trigger" data-comment-id="${comment.id}" style="cursor: pointer; padding: 8px; border-radius: 50%; transition: background-color 0.2s;"></i>
-                </div>
-                ` : ''}
-            </div>
-        `;
-        
-        const commentText = div.querySelector('.comment-text');
-        if (commentText) {
-            commentText.style.cssText = `
-                position: relative !important;
-                background: #f0f2f5 !important;
-                padding: 8px 12px !important;
-                border-radius: 18px !important;
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-                width: fit-content !important;
-                max-width: 100% !important;
-                margin: 2px 0 !important;
-                line-height: 1.4 !important;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-            `;
-        }
-        
-        const commentContent = div.querySelector('.comment-content');
-        if (commentContent) {
-            commentContent.style.cssText = `
-                display: flex !important;
-                align-items: flex-start !important;
-                width: 100% !important;
-                background: transparent !important;
-                position: relative !important;
-            `;
-        }
-        
-        div.style.background = 'transparent';
-        
-        const commentBody = div.querySelector('.comment-body');
-        if (commentBody) {
-            commentBody.style.cssText = `
-                flex: 1 !important;
-                max-width: calc(100% - 50px) !important;
-                display: flex !important;
-                flex-direction: column !important;
-                background: transparent !important;
-            `;
-        }
-        
-        const menuTrigger = div.querySelector('.comment-menu-trigger');
-        if (menuTrigger) {
-            menuTrigger.addEventListener('mouseenter', () => {
-                menuTrigger.style.backgroundColor = '#f0f0f0';
-            });
-            menuTrigger.addEventListener('mouseleave', () => {
-                menuTrigger.style.backgroundColor = 'transparent';
-            });
-        }
-        
-        return div;
-    }
-    
-    // Handle comment form submission
-    document.addEventListener('DOMContentLoaded', function() {
-        const commentForm = document.getElementById('commentForm');
-        if (commentForm) {
-            commentForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const postId = this.querySelector('input[name="post_id"]').value;
-                const textarea = this.querySelector('textarea[name="comment-content"]');
-                const content = textarea.value.trim();
-                
-                if (!content) {
-                    alert('Please enter a comment');
-                    return;
-                }
-                
-                const submitBtn = this.querySelector('button[type="submit"]');
-                const origBtnText = submitBtn.textContent;
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Posting...';
-                
-                try {
-                    const formData = new FormData();
-                    formData.append('post_id', postId);
-                    formData.append('content', content);
-                    
-                    const response = await fetch('add_comment.php', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        textarea.value = '';
-                        const commentList = document.getElementById('commentList');
-                        if (commentList) {
-                            const noMsg = commentList.querySelector('.no-comments');
-                            if (noMsg) noMsg.remove();
-                            const newCommentEl = createCommentElement(data.comment);
-                            commentList.insertBefore(newCommentEl, commentList.firstChild);
-                            newCommentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        }
-                        const countEl = document.querySelector(`.comment-trigger[data-post-id="${postId}"] .comment-count`);
-                        if (countEl && data.new_count !== undefined) {
-                            countEl.textContent = data.new_count;
-                        }
-                    } else {
-                        alert('Error: ' + (data.error || data.message || 'Unknown error'));
-                    }
-                } catch (err) {
-                    console.error('Error adding comment:', err);
-                    alert('An error occurred while posting your comment.');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = origBtnText;
-                }
-            });
-        }
-    });
-            // Add click event to show the floating menu
-            menuTrigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                
-                // Close all existing menus first
-                document.querySelectorAll('.floating-comment-menu').forEach(menu => {
-                    document.body.removeChild(menu);
-                });
-                
-                // Create floating menu
-                const floatingMenu = document.createElement('div');
-                floatingMenu.className = 'floating-comment-menu';
-                floatingMenu.dataset.commentId = comment.id;
-                
-                // Set menu styles
-                floatingMenu.style.cssText = `
-                    position: fixed;
-                    background: white;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                    z-index: 9999;
-                    min-width: 180px;
-                    padding: 5px 0;
-                `;
-                
-                // Add menu items
-                floatingMenu.innerHTML = `
-                    <div class="comment-menu-item edit-comment" data-comment-id="${comment.id}" style="color: var(--color-primary); padding: 10px 15px; cursor: pointer; display: flex; align-items: center;">
-                        <i class="bi bi-pencil-fill" style="margin-right: 8px; font-size: 14px;"></i> Edit Comment
-                    </div>
-                    <div class="comment-menu-item delete-comment" data-comment-id="${comment.id}" style="color: #e74c3c; padding: 10px 15px; cursor: pointer; display: flex; align-items: center;">
-                        <i class="bi bi-trash-fill" style="margin-right: 8px; font-size: 14px;"></i> Delete Comment
-                    </div>
-                `;
-                
-                // Position the menu at the right location
-                const triggerRect = menuTrigger.getBoundingClientRect();
-                floatingMenu.style.top = (triggerRect.bottom + 5) + 'px';
-
-                // Ensure the menu doesn't go off-screen to the left
-                const rightEdgeOffset = window.innerWidth - triggerRect.right;
-                if (rightEdgeOffset < 180) {
-                    // Position to the left of the trigger
-                    floatingMenu.style.right = (rightEdgeOffset + 10) + 'px';
-                    floatingMenu.style.left = 'auto';
-                } else {
-                    // Position to the right of the trigger
-                    floatingMenu.style.left = triggerRect.right + 'px';
-                }
-                
-                // Add to document
-                document.body.appendChild(floatingMenu);
-                
-                // Add event listeners to menu items
-                floatingMenu.querySelector('.edit-comment').addEventListener('click', () => {
-                    const editEvent = new CustomEvent('edit-comment-clicked', {
-                        detail: { commentId: comment.id }
-                    });
-                    document.dispatchEvent(editEvent);
-                    document.body.removeChild(floatingMenu);
-                });
-                
-                floatingMenu.querySelector('.delete-comment').addEventListener('click', () => {
-                    const deleteEvent = new CustomEvent('delete-comment-clicked', {
-                        detail: { commentId: comment.id }
-                    });
-                    document.dispatchEvent(deleteEvent);
-                    document.body.removeChild(floatingMenu);
-                });
-                
-                // Close menu when clicking outside
-                setTimeout(() => {
-                    const closeMenu = (e) => {
-                        if (!floatingMenu.contains(e.target) && e.target !== menuTrigger) {
-                            document.body.removeChild(floatingMenu);
-                            document.removeEventListener('click', closeMenu);
-                        }
-                    };
-                    document.addEventListener('click', closeMenu);
-                }, 100);
-            });
-        }
-        
-        console.log('Comment element created:', div);
-        return div;
-    }
-    
-    // Set up event listeners for the edit and delete comment events
-    document.addEventListener('edit-comment-clicked', function(e) {
-        const commentId = e.detail.commentId;
-        console.log('Edit comment event received for comment ID:', commentId);
-        
-        // Find the comment item
-        const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
-        if (!commentItem) {
-            console.error('Comment item not found for editing');
-            return;
-        }
-        
-        const commentText = commentItem.querySelector('.comment-text').innerHTML;
-        
-        // Set up edit modal
-        commentToEdit = commentId;
-        const editCommentModal = document.getElementById('editCommentModal');
-        
-        if (!editCommentModal) {
-            console.error('Edit comment modal not found in the DOM!');
-            alert('Error: Could not find the edit comment modal.');
-            return;
-        }
-        
-        const editCommentContent = document.getElementById('editCommentContent');
-        if (!editCommentContent) {
-            console.error('Edit comment content textarea not found!');
-            alert('Error: Could not find the edit comment textarea.');
-            return;
-        }
-        
-        // Clean up any HTML entities for editing
-        const cleanText = commentText.replace(/<br\s*\/?>/gi, '\n')
-                                   .replace(/&lt;/g, '<')
-                                   .replace(/&gt;/g, '>')
-                                   .replace(/&amp;/g, '&');
-        editCommentContent.value = cleanText;
-        
-        // Show the modal with improved display technique
-        editCommentModal.style.cssText = `
-            display: flex !important;
-            z-index: 10000 !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background: rgba(0, 0, 0, 0.7) !important;
-            backdrop-filter: blur(4px) !important;
-            justify-content: center !important;
-            align-items: center !important;
-        `;
-        document.body.style.overflow = 'hidden'; // Prevent scrolling
-    });
-
-    document.addEventListener('delete-comment-clicked', function(e) {
-        const commentId = e.detail.commentId;
-        console.log('Delete comment event received for comment ID:', commentId);
-        
-        commentToDelete = commentId;
-        
-        // Show delete confirmation modal
-        const deleteOverlay = document.getElementById('deleteCommentConfirmationOverlay');
-        
-        if (!deleteOverlay) {
-            console.error('Delete comment modal not found in the DOM!');
-            // Remove the alert and create the modal if it doesn't exist
-            
-            // Create the delete confirmation modal
-            const deleteModal = document.createElement('div');
-            deleteModal.id = 'deleteCommentConfirmationOverlay';
-            deleteModal.className = 'logout-confirmation-overlay';
-            
-            // Apply the styles for full-screen coverage
-            deleteModal.style.position = 'fixed';
-            deleteModal.style.top = '0';
-            deleteModal.style.left = '0';
-            deleteModal.style.width = '100%';
-            deleteModal.style.height = '100%';
-            deleteModal.style.background = 'rgba(0, 0, 0, 0.7)';
-            deleteModal.style.backdropFilter = 'blur(4px)';
-            deleteModal.style.zIndex = '9999';
-            deleteModal.style.display = 'none';
-            deleteModal.style.justifyContent = 'center';
-            deleteModal.style.alignItems = 'center';
-            
-            // Add the click handler to close when clicking outside
-            deleteModal.onclick = function(event) {
-                if (event.target === this) {
-                    this.style.display = 'none';
-                    window.commentToDelete = null;
-                    console.log('Closing Delete Comment modal via outside click (dynamic)');
-                }
-            };
-            
-            deleteModal.innerHTML = `
-                <div class="logout-confirmation-container delete-modal" style="position:relative; z-index:1001; background:white; border-radius:16px; width:100%; max-width:380px; box-shadow: 0 15px 35px rgba(0,0,0,0.25); border-top: 4px solid var(--color-primary);">
-                    <div class="logout-header">
-                        <i class="fas fa-trash-alt"></i>
-                        <h2>Delete Comment</h2>
-                    </div>
-                    <p class="logout-message">Are you sure you want to delete this comment?</p>
-                    <div class="logout-actions">
-                        <button class="btn-cancel logout-cancel-button" id="cancelDeleteComment">Cancel</button>
-                        <button class="btn-save logout-confirm-button delete-btn" id="confirmDeleteComment">Delete</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(deleteModal);
-            
-            // Set up the newly created modal
-            const cancelDeleteBtn = deleteModal.querySelector('#cancelDeleteComment');
-            if (cancelDeleteBtn) {
-                cancelDeleteBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation(); // Prevent event bubbling to parent
-                    deleteModal.style.display = 'none';
-                    document.body.style.overflow = '';
-                    commentToDelete = null;
-                    console.log('Closing Delete Comment modal via Cancel button (dynamic)');
-                });
-            }
-            
-            const confirmDeleteBtn = deleteModal.querySelector('#confirmDeleteComment');
-            if (confirmDeleteBtn) {
-                confirmDeleteBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation(); // Prevent event bubbling to parent
-                    handleDeleteComment(commentId);
-                    console.log('Processing Delete Comment via Delete button (dynamic)');
-                });
-            }
-            
-            // Show the newly created modal
-            deleteModal.style.cssText = `
-                display: flex !important;
-                z-index: 10000 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: rgba(0, 0, 0, 0.7) !important;
-                backdrop-filter: blur(4px) !important;
-                justify-content: center !important;
-                align-items: center !important;
-            `;
-            
+            logoutModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
-            return;
-        }
-        
-        // Show the modal with inline styles to ensure it displays
-        deleteOverlay.style.cssText = `
-            display: flex !important;
-            z-index: 10000 !important; /* Higher z-index to ensure it's on top */
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background: rgba(0, 0, 0, 0.7) !important;
-            backdrop-filter: blur(4px) !important;
-            justify-content: center !important;
-            align-items: center !important;
-        `;
-        
-        document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
-    });
-
-    // Handle edit comment modal close
-    document.getElementById('closeEditComment').addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        document.getElementById('editCommentModal').style.display = 'none';
-        commentToEdit = null;
-        console.log('Closing Edit Comment modal via X button');
-    });
-
-    document.getElementById('cancelEditComment').addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        document.getElementById('editCommentModal').style.display = 'none';
-        commentToEdit = null;
-    });
-
-    // Handle edit comment save
-    document.getElementById('saveEditComment').addEventListener('click', async function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (!commentToEdit) {
-            console.error('No comment ID to edit!');
-            alert('Error: No comment selected for editing.');
-            return;
-        }
-        
-        const content = document.getElementById('editCommentContent').value.trim();
-        if (!content) {
-            alert('Comment cannot be empty');
-            return;
-        }
-        
-        console.log('Saving edited comment:', commentToEdit, 'with content:', content);
-        
-        // Show loading indicator
-        const saveButton = this;
-        const originalText = saveButton.textContent;
-        saveButton.textContent = 'Saving...';
-        saveButton.disabled = true;
-        
-        try {
-            // Use URLSearchParams for proper encoding
-            const formData = new URLSearchParams();
-            formData.append('comment_id', commentToEdit);
-            formData.append('content', content);
-            
-            console.log('Sending update request to server...');
-            const response = await fetch('update_comment.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData.toString()
-            });
-            
-            console.log('Raw response:', response);
-            
-            // Check if the response is OK
-            if (!response.ok) {
-                throw new Error(`Server responded with status: ${response.status}`);
-            }
-            
-            // Parse the response JSON
-            const responseText = await response.text();
-            console.log('Response text:', responseText);
-            
-            let data;
-            try {
-                data = JSON.parse(responseText);
-            } catch (parseError) {
-                console.error('Failed to parse response as JSON:', parseError);
-                throw new Error('Server returned invalid JSON');
-            }
-            
-            console.log('Response data:', data);
-            
-            if (data.success) {
-                // Update comment in DOM
-                const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentToEdit}"]`);
-                if (commentItem) {
-                    const commentTextElement = commentItem.querySelector('.comment-text');
-                    if (commentTextElement) {
-                        // Format the content for display
-                        const formattedContent = content.replace(/\r\n|\r|\n/g, '<br>');
-                        commentTextElement.innerHTML = formattedContent;
-                        console.log('Updated comment in DOM');
-                    } else {
-                        console.error('Comment text element not found in DOM');
-                    }
-                } else {
-                    console.error('Comment item not found in DOM');
-                }
-                
-                // Close the modal
-                document.getElementById('editCommentModal').style.display = 'none';
-                commentToEdit = null;
-                console.log('Comment updated successfully');
-            } else {
-                console.error('Server reported error:', data.error);
-                alert('Error: ' + data.error);
-            }
-        } catch (error) {
-            console.error('Error updating comment:', error);
-            alert('An error occurred while updating the comment: ' + error.message);
-        } finally {
-            // Reset button state
-            saveButton.textContent = originalText;
-            saveButton.disabled = false;
-        }
-    });
-
-    // Handle delete comment cancel
-    document.getElementById('cancelDeleteComment').addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const deleteOverlay = document.getElementById('deleteCommentConfirmationOverlay');
-        if (deleteOverlay) {
-            deleteOverlay.style.display = 'none';
-            document.body.style.overflow = 'auto'; // Re-enable scrolling
-            console.log('Delete comment modal hidden');
-        } else {
-            console.error('Delete comment modal not found in the DOM!');
-        }
-        
-        commentToDelete = null;
-    });
-
-    // Handle delete comment confirm
-    document.getElementById('confirmDeleteComment').addEventListener('click', async function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (!commentToDelete) {
-            console.error('No comment ID to delete!');
-            return;
-        }
-        
-        console.log('Confirming delete for comment ID:', commentToDelete);
-        
-        // Show loading indicator
-        const deleteButton = this;
-        const originalText = deleteButton.textContent;
-        deleteButton.textContent = 'Deleting...';
-        deleteButton.disabled = true;
-        
-        try {
-            // Use URLSearchParams for proper encoding
-            const formData = new URLSearchParams();
-            formData.append('comment_id', commentToDelete);
-            
-            console.log('Sending delete request to server...');
-            const response = await fetch('delete_comment.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData.toString()
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Server responded with status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Hide the delete confirmation modal
-                const deleteOverlay = document.getElementById('deleteCommentConfirmationOverlay');
-                if (deleteOverlay) {
-                    deleteOverlay.style.display = 'none';
-                    document.body.style.overflow = 'auto'; // Re-enable scrolling
-                }
-                
-                // Find and animate the comment removal
-                const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentToDelete}"]`);
-                if (commentItem) {
-                    // Immediately add the deletion class to start the animation
-                    commentItem.classList.add('comment-item-deleting');
-                    
-                    // Use animation end event to completely remove from DOM
-                    const animationDuration = 400; // Should match the CSS transition duration in ms
-                    
-                    setTimeout(() => {
-                        // Remove the element completely from DOM
-                        if (commentItem && commentItem.parentNode) {
-                            commentItem.parentNode.removeChild(commentItem);
-                        }
-                        
-                        // Update comment count
-                        const commentCountElement = document.querySelector(`[data-post-id="${currentPostId}"] .comment-count`);
-                        if (commentCountElement) {
-                            const newCount = parseInt(commentCountElement.textContent) - 1;
-                            commentCountElement.textContent = newCount > 0 ? newCount : '0';
-                        }
-                        
-                        // Check if we need to show "no comments" message
-                        const commentList = document.getElementById('commentList');
-                        if (commentList && commentList.children.length === 0) {
-                            commentList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
-                        }
-                        
-                        console.log('Comment fully removed from DOM');
-                    }, animationDuration);
-                    
-                    console.log('Comment deletion animation started');
-                } else {
-                    console.error('Comment element not found in DOM');
-                    // Refresh comments if we can't find the element
-                    if (currentPostId) {
-                        loadComments(currentPostId);
-                    }
-                }
-                                } else {
-                        console.error('Server reported error:', data.error);
-                        // Removed alert - just log the error
-                    }
-                } catch (error) {
-                    console.error('Error deleting comment:', error);
-                    // Removed alert - just log the error
-        } finally {
-            // Reset button state
-            deleteButton.textContent = originalText;
-            deleteButton.disabled = false;
-            commentToDelete = null;
-        }
-    });
-
-    // Close delete comment modal when clicking outside
-    document.getElementById('deleteCommentConfirmationOverlay').addEventListener('click', function(e) {
-        if (e.target === this) {
-            e.stopPropagation();
-            this.style.display = 'none';
-            commentToDelete = null;
-        }
-    });
-
-    // Move modals to be direct children of body for better z-index handling
-    document.addEventListener('DOMContentLoaded', function() {
-        const modals = [
-            'editCommentModal',
-            'editPostModal',
-            'deleteCommentConfirmationOverlay',
-            'deletePostConfirmationOverlay',
-            'commentModal'
-        ];
-        
-        modals.forEach(modalId => {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                // Remove from current position and append to body
-                document.body.appendChild(modal);
-                console.log(`Moved ${modalId} to be a direct child of body`);
-            }
-        });
-    });
-
-    // Add these functions to handle opening/closing modals programmatically
-    function openEditPostModal() {
-        const modal = document.getElementById('editPostModal');
-        if (modal) {
-            modal.style.cssText = `
-                display: flex !important;
-                z-index: 9999 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: rgba(0, 0, 0, 0.7) !important;
-                backdrop-filter: blur(4px) !important;
-                justify-content: center !important;
-                align-items: center !important;
-            `;
-        }
-    }
-
-    function closeEditPostModal() {
-        const modal = document.getElementById('editPostModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-
-    function openDeletePostModal() {
-        const modal = document.getElementById('deletePostConfirmationOverlay');
-        if (modal) {
-            modal.style.cssText = `
-                display: flex !important;
-                z-index: 9999 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: rgba(0, 0, 0, 0.7) !important;
-                backdrop-filter: blur(4px) !important;
-                justify-content: center !important;
-                align-items: center !important;
-            `;
-        }
-    }
-
-    function closeDeletePostModal() {
-        const modal = document.getElementById('deletePostConfirmationOverlay');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-    
-    // Helper functions to manually adjust modal positions
-    function adjustModalPosition(modalId, topPadding = 100) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            // First make sure the modal is displayed
-            modal.style.cssText = `
-                display: flex !important;
-                z-index: 9999 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: rgba(0, 0, 0, 0.7) !important;
-                backdrop-filter: blur(4px) !important;
-                justify-content: center !important;
-                align-items: flex-start !important;
-                padding-top: ${topPadding}px !important;
-            `;
-            
-            // Make modal content scrollable if needed
-            const modalContent = modal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.style.cssText = `
-                    max-height: 92vh !important;
-                    overflow-y: auto !important;
-                `;
-            }
-            
-            console.log(`Modal ${modalId} position adjusted to ${topPadding}px from top`);
-        }
-    }
-    
-    // Example usage in browser console:
-    // adjustModalPosition('editProfileModal', 15); // Adjust to 15vh from top
-    // adjustModalPosition('editDetailsModal', 5);  // Adjust to 5vh from top
-</script>
-
-<!-- Comment Modal -->
-<div class="comment-modal" id="commentModal">
-    <div class="comment-modal-content">
-        <div class="comment-header">
-            <h3>Comments</h3>
-            <span class="close-comment">&times;</span>
-        </div>
-        <div class="comments-container">
-            <!-- Scrollable comments area -->
-            <div class="comment-list" id="commentList">
-                <!-- Comments will be loaded here -->
-            </div>
-            
-            <!-- Fixed comment form at bottom -->
-            <form id="commentForm" method="POST" class="comment-form-fixed">
-                <input type="hidden" name="post_id" value="">
-                <textarea class="comment-input" placeholder="Write a comment..." name="comment-content" required rows="2" maxlength="1000"></textarea>
-                <button type="submit" class="btn btn-primary">Post Comment</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Comment Confirmation Modal -->
-<div class="logout-confirmation-overlay" id="deleteCommentConfirmationOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); display:none; justify-content:center; align-items:center; z-index:9999;" onclick="if(event.target === this) { this.style.display = 'none'; window.commentToDelete = null; console.log('Closing Delete Comment modal via outside click'); }">
-    <div class="logout-confirmation-container delete-modal" style="position:relative; z-index:1001; background:white; border-radius:16px; width:100%; max-width:380px; box-shadow: 0 15px 35px rgba(0,0,0,0.25); border-top: 4px solid var(--color-primary);">
-        <div class="logout-header">
-            <i class="fas fa-trash-alt"></i>
-            <h2>Delete Comment</h2>
-        </div>
-        <p class="logout-message">Are you sure you want to delete this comment?</p>
-        <div class="logout-actions">
-            <button class="btn-cancel logout-cancel-button" id="cancelDeleteComment">Cancel</button>
-            <button class="btn-save logout-confirm-button delete-btn" id="confirmDeleteComment">Delete</button>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Comment Modal -->
-<div class="edit-post-modal" id="editCommentModal">
-    <div class="edit-post-modal-content">
-        <div class="edit-post-header">
-            <h2>Edit Comment</h2>
-            <span class="edit-post-close" id="closeEditComment">&times;</span>
-        </div>
-        <div class="edit-post-body">
-            <textarea id="editCommentContent" placeholder="Edit your comment..."></textarea>
-        </div>
-        <div class="edit-post-actions">
-            <button class="btn btn-secondary" id="cancelEditComment">Cancel</button>
-            <button class="btn btn-primary" id="saveEditComment">Save Changes</button>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Post Modal -->
-<div class="edit-post-modal" id="editPostModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); display:none; justify-content:center; align-items:center; z-index:9999;" onclick="if(event.target === this) { this.style.display = 'none'; console.log('Closing Edit Post modal via outside click'); }">
-    <div class="edit-post-modal-content" style="position:relative; z-index:1001; background:white; border-radius:10px; max-width:600px; width:90%; max-height:80vh; overflow:hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
-        <div class="edit-post-header">
-            <h2>Edit Post</h2>
-            <span class="edit-post-close" id="closeEditPost">&times;</span>
-        </div>
-        <div class="edit-post-body">
-            <textarea id="editPostContent" placeholder="Edit your post..."></textarea>
-            <img src="" class="edit-image-preview" id="editImagePreview">
-            <div class="add-to-post">
-                <span>Change image</span>
-                <div class="icons">
-                    <label for="editPostImage" style="cursor: pointer;">
-                        <i class="bi bi-image" style="color: lightgreen;"></i>
-                    </label>
-                    <input type="file" id="editPostImage" name="editPostImage" accept="image/*" style="display: none;">
-                    <button class="btn btn-danger" id="removePostImage">Remove Image</button>
-                </div>
-            </div>
-        </div>
-        <div class="edit-post-actions">
-            <button class="btn btn-secondary" id="cancelEditPost">Cancel</button>
-            <button class="btn btn-primary" id="saveEditPost">Save Changes</button>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Post Confirmation Modal -->
-<div class="logout-confirmation-overlay" id="deletePostConfirmationOverlay">
-    <div class="logout-confirmation-container delete-modal">
-        <div class="logout-header">
-            <i class="fas fa-trash-alt"></i>
-            <h2>Confirm Delete</h2>
-        </div>
-        <p class="logout-message">Are you sure you want to delete this post?</p>
-        <div class="logout-actions">
-            <button class="btn-cancel logout-cancel-button" id="cancelDeletePost">Cancel</button>
-            <button class="btn-save logout-confirm-button delete-btn" id="confirmDeletePost">Delete</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Add this below your existing JavaScript
-
-    // Variables to track current post
-    let currentEditingPostId = null;
-    let postToDelete = null;
-
-    // Define the deletePost function to delete a post without confirmation
-    function deletePost(postId) {
-        if (!postId) return;
-        
-        // Send AJAX request to delete post
-        fetch('delete_post.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `post_id=${postId}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Reload page after successful deletion
-                window.location.reload();
-            } else {
-                alert('Error deleting post: ' + (data.message || data.error));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while deleting the post.');
         });
     }
-
-    // Edit post functionality
-    document.addEventListener('click', async function(e) {
-        if (e.target.classList.contains('edit-post') || e.target.closest('.edit-post')) {
+    if (cancelLogoutBtn && logoutModal) {
+        cancelLogoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
+            logoutModal.style.display = 'none';
+            document.body.style.overflow = '';
+        });
+    }
+    if (logoutModal) {
+        logoutModal.addEventListener('click', function(e) {
+            if (e.target === logoutModal) {
+                logoutModal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    // 4. Move floating modals to body for proper overlay
+    ['commentModal', 'deleteCommentConfirmationOverlay', 'editCommentModal', 'editPostModal', 'deletePostConfirmationOverlay'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.parentNode !== document.body) {
+            document.body.appendChild(el);
+        }
+    });
+});
+
+// ==================== GLOBAL CLICK HANDLER FOR POSTS & MENUS ====================
+document.addEventListener('click', async function(e) {
+    // A. 3-Dots Post Menu Trigger (Toggle dropdown)
+    if (e.target.classList.contains('post-menu-trigger') || e.target.closest('.post-menu-trigger')) {
+        const trigger = e.target.classList.contains('post-menu-trigger') ? e.target : e.target.closest('.post-menu-trigger');
+        const postId = trigger.dataset.postId;
+        const dropdown = document.querySelector(`.post-menu-dropdown[data-post-id="${postId}"]`);
+        
+        document.querySelectorAll('.post-menu-dropdown').forEach(d => {
+            if (d !== dropdown) d.classList.remove('show');
+        });
+        
+        if (dropdown) {
+            dropdown.classList.toggle('show');
+        }
+        e.stopPropagation();
+        return;
+    }
+
+    // Close post dropdowns when clicking outside
+    if (!e.target.closest('.post-actions-menu')) {
+        document.querySelectorAll('.post-menu-dropdown.show').forEach(d => {
+            d.classList.remove('show');
+        });
+    }
+
+    // B. Like Button
+    if (e.target.closest('.like-button')) {
+        const likeButton = e.target.closest('.like-button');
+        const postId = likeButton.dataset.postId;
+        const isLiked = likeButton.dataset.liked === 'true';
+        const likeIcon = likeButton.querySelector('i');
+        const likeText = likeButton.querySelector('span');
+        const likeCount = likeButton.querySelector('.like-count');
+        
+        likeButton.style.pointerEvents = 'none';
+        likeButton.classList.add('processing');
+        
+        likeButton.dataset.liked = isLiked ? 'false' : 'true';
+        likeIcon.className = isLiked ? 'bi bi-heart' : 'bi bi-heart-fill';
+        likeText.textContent = isLiked ? 'Like' : 'Liked';
+        
+        let count = parseInt(likeCount.textContent) || 0;
+        count = isLiked ? Math.max(0, count - 1) : count + 1;
+        likeCount.textContent = count;
+        
+        const likedByP = likeButton.closest('.feed').querySelector('.liked-by p');
+        if (likedByP) {
+            likedByP.textContent = count > 0 
+                ? (count === 1 ? '1 person liked this' : `${count} people liked this`)
+                : 'Be the first to like this';
+        }
+        
+        try {
+            const res = await fetch('like_post.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `post_id=${postId}&action=${isLiked ? 'unlike' : 'like'}`
+            });
+            const data = await res.json();
+            if (data.success && data.likes !== undefined) {
+                likeCount.textContent = data.likes;
+                if (likedByP) {
+                    likedByP.textContent = data.likes > 0 
+                        ? (data.likes === 1 ? '1 person liked this' : `${data.likes} people liked this`)
+                        : 'Be the first to like this';
+                }
+            }
+        } catch (err) {
+            console.error('Error liking post:', err);
+        } finally {
+            likeButton.style.pointerEvents = '';
+            likeButton.classList.remove('processing');
+        }
+        return;
+    }
+
+    // C. Comment Trigger Button (Open Comment Modal)
+    if (e.target.closest('.comment-trigger')) {
+        e.preventDefault();
+        const btn = e.target.closest('.comment-trigger');
+        const postId = btn.dataset.postId;
+        currentPostId = postId;
+        
+        const commentModal = document.getElementById('commentModal');
+        if (commentModal) {
+            commentModal.style.cssText = `
+                display: flex !important;
+                z-index: 9999 !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: rgba(0, 0, 0, 0.7) !important;
+                backdrop-filter: blur(4px) !important;
+                justify-content: center !important;
+                align-items: center !important;
+            `;
             
-            const postId = e.target.dataset.postId || e.target.closest('.edit-post').dataset.postId;
-            currentEditingPostId = postId;
+            const postIdInput = commentModal.querySelector('input[name="post_id"]');
+            if (postIdInput) postIdInput.value = postId;
             
-            console.log('Edit post clicked for post ID:', postId);
-            
-            // Fetch post data
-            try {
-                const response = await fetch(`get_post_for_edit.php?post_id=${postId}`);
-                const data = await response.json();
+            loadComments(postId);
+            document.body.style.overflow = 'hidden';
+        }
+        return;
+    }
+
+    // Close comment modal
+    if (e.target.classList.contains('close-comment') || e.target.closest('.close-comment') || e.target.id === 'commentModal') {
+        const commentModal = document.getElementById('commentModal');
+        if (commentModal) {
+            commentModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        return;
+    }
+
+    // D. Edit Post (Open Edit Post Modal)
+    if (e.target.classList.contains('edit-post') || e.target.closest('.edit-post')) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Close any open dropdowns
+        document.querySelectorAll('.post-menu-dropdown.show').forEach(d => d.classList.remove('show'));
+        
+        const el = e.target.classList.contains('edit-post') ? e.target : e.target.closest('.edit-post');
+        const postId = el.dataset.postId;
+        currentEditingPostId = postId;
+        
+        try {
+            const res = await fetch(`get_post_for_edit.php?post_id=${postId}`);
+            const data = await res.json();
+            if (data.success && data.post) {
+                const modal = document.getElementById('editPostModal');
+                const content = document.getElementById('editPostContent');
+                const imagePreview = document.getElementById('editImagePreview');
+                const removeImageBtn = document.getElementById('removePostImage');
                 
-                if (data.success) {
-                    const modal = document.getElementById('editPostModal');
-                    
-                    if (!modal) {
-                        console.error('Edit post modal not found in the DOM!');
-                        alert('Error: Could not find the edit post modal.');
-                        return;
-                    }
-                    
-                    const content = document.getElementById('editPostContent');
-                    const imagePreview = document.getElementById('editImagePreview');
-                    
-                    if (!content || !imagePreview) {
-                        console.error('Edit post form elements not found!');
-                        alert('Error: Could not find the edit post form elements.');
-                        return;
-                    }
-                    
-                    content.value = data.post.content;
-                    
+                if (modal && content && imagePreview) {
+                    content.value = data.post.content || '';
                     if (data.post.image_path) {
                         imagePreview.src = data.post.image_path;
                         imagePreview.style.display = 'block';
-                        document.getElementById('removePostImage').style.display = 'inline-block';
+                        if (removeImageBtn) removeImageBtn.style.display = 'inline-block';
                     } else {
+                        imagePreview.src = '';
                         imagePreview.style.display = 'none';
-                        document.getElementById('removePostImage').style.display = 'none';
+                        if (removeImageBtn) removeImageBtn.style.display = 'none';
                     }
                     
-                    // Show the modal with inline styles to ensure it displays
                     modal.style.cssText = `
                         display: flex !important;
                         z-index: 9999 !important;
@@ -4409,98 +3172,166 @@ document.addEventListener('DOMContentLoaded', function() {
                         justify-content: center !important;
                         align-items: center !important;
                     `;
-                } else {
-                    alert('Error: ' + data.error);
+                    document.body.style.overflow = 'hidden';
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while loading the post');
-            }
-        }
-        
-        // Handle delete post button
-        if (e.target.classList.contains('delete-post') || e.target.closest('.delete-post')) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const postId = e.target.dataset.postId || e.target.closest('.delete-post').dataset.postId;
-            postToDelete = postId;
-            
-            console.log('Delete post clicked for post ID:', postId);
-            
-            // Show delete confirmation modal
-            const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
-            if (deleteOverlay) {
-                deleteOverlay.style.cssText = `
-                    display: flex !important;
-                    z-index: 9999 !important;
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    background: rgba(0, 0, 0, 0.7) !important;
-                    backdrop-filter: blur(4px) !important;
-                    justify-content: center !important;
-                    align-items: center !important;
-                `;
             } else {
-                console.error('Delete post modal not found in the DOM!');
-                // Removed confirmation dialog, directly call deletePost
-                deletePost(postId);
+                alert('Error: ' + (data.error || 'Could not load post data'));
             }
+        } catch (err) {
+            console.error('Error fetching post for edit:', err);
+            alert('An error occurred while loading the post');
         }
-    });
+        return;
+    }
 
-    // Close edit modal
-    document.getElementById('closeEditPost').addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent event bubbling to parent containers
-        document.getElementById('editPostModal').style.display = 'none';
-        console.log('Closing Edit Post modal via X button');
-    });
-
-    document.getElementById('cancelEditPost').addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent event bubbling to parent containers
-        document.getElementById('editPostModal').style.display = 'none';
-        console.log('Closing Edit Post modal via Cancel button');
-    });
-
-    // Additional click handler for Edit Post Modal
-    window.addEventListener('click', function(e) {
-        const editPostModal = document.getElementById('editPostModal');
-        if (editPostModal && e.target === editPostModal) {
-            editPostModal.style.display = 'none';
-            console.log('Closed Edit Post modal via window click handler');
+    // Close Edit Post Modal
+    if (e.target.id === 'closeEditPost' || e.target.id === 'cancelEditPost' || e.target.id === 'editPostModal') {
+        const modal = document.getElementById('editPostModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
         }
-    });
+        currentEditingPostId = null;
+        return;
+    }
 
-    // Handle image change in edit modal
-    document.getElementById('editPostImage').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const imagePreview = document.getElementById('editImagePreview');
-                imagePreview.src = event.target.result;
-                imagePreview.style.display = 'block';
-                document.getElementById('removePostImage').style.display = 'inline-block';
+    // E. Delete Post (Open Delete Post Modal)
+    if (e.target.classList.contains('delete-post') || e.target.closest('.delete-post')) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Close any open dropdowns
+        document.querySelectorAll('.post-menu-dropdown.show').forEach(d => d.classList.remove('show'));
+        
+        const el = e.target.classList.contains('delete-post') ? e.target : e.target.closest('.delete-post');
+        postToDelete = el.dataset.postId;
+        
+        const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
+        if (deleteOverlay) {
+            deleteOverlay.style.cssText = `
+                display: flex !important;
+                z-index: 9999 !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: rgba(0, 0, 0, 0.7) !important;
+                backdrop-filter: blur(4px) !important;
+                justify-content: center !important;
+                align-items: center !important;
+            `;
+            document.body.style.overflow = 'hidden';
+        }
+        return;
+    }
+
+    // Close Delete Post Modal
+    if (e.target.id === 'cancelDeletePost' || e.target.id === 'deletePostConfirmationOverlay') {
+        const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
+        if (deleteOverlay) {
+            deleteOverlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        postToDelete = null;
+        return;
+    }
+
+    // F. Comment 3-Dots Menu Trigger
+    if (e.target.classList.contains('comment-menu-trigger') || e.target.closest('.comment-menu-trigger')) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const trigger = e.target.classList.contains('comment-menu-trigger') ? e.target : e.target.closest('.comment-menu-trigger');
+        const commentId = trigger.dataset.commentId;
+        
+        // Remove existing floating menus
+        document.querySelectorAll('.floating-comment-menu').forEach(m => m.remove());
+        
+        const menu = document.createElement('div');
+        menu.className = 'floating-comment-menu';
+        menu.dataset.commentId = commentId;
+        menu.style.cssText = `
+            position: fixed;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 10001;
+            min-width: 160px;
+            padding: 5px 0;
+        `;
+        
+        menu.innerHTML = `
+            <div class="comment-menu-item edit-comment-btn" style="color: var(--color-primary); padding: 10px 15px; cursor: pointer; display: flex; align-items: center;">
+                <i class="bi bi-pencil-fill" style="margin-right: 8px; font-size: 14px;"></i> Edit Comment
+            </div>
+            <div class="comment-menu-item delete-comment-btn" style="color: #e74c3c; padding: 10px 15px; cursor: pointer; display: flex; align-items: center;">
+                <i class="bi bi-trash-fill" style="margin-right: 8px; font-size: 14px;"></i> Delete Comment
+            </div>
+        `;
+        
+        const rect = trigger.getBoundingClientRect();
+        menu.style.top = (rect.bottom + 5) + 'px';
+        menu.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
+        document.body.appendChild(menu);
+        
+        menu.querySelector('.edit-comment-btn').addEventListener('click', function() {
+            menu.remove();
+            openEditCommentModal(commentId);
+        });
+        
+        menu.querySelector('.delete-comment-btn').addEventListener('click', function() {
+            menu.remove();
+            openDeleteCommentModal(commentId);
+        });
+        
+        setTimeout(() => {
+            const closeFloatingMenu = (event) => {
+                if (!menu.contains(event.target) && event.target !== trigger) {
+                    menu.remove();
+                    document.removeEventListener('click', closeFloatingMenu);
+                }
             };
-            reader.readAsDataURL(file);
+            document.addEventListener('click', closeFloatingMenu);
+        }, 50);
+        return;
+    }
+});
+
+// ==================== EDIT POST ACTIONS ====================
+const editPostImageInput = document.getElementById('editPostImage');
+if (editPostImageInput) {
+    editPostImageInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const preview = document.getElementById('editImagePreview');
+                const removeBtn = document.getElementById('removePostImage');
+                if (preview) {
+                    preview.src = evt.target.result;
+                    preview.style.display = 'block';
+                }
+                if (removeBtn) removeBtn.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(this.files[0]);
         }
     });
+}
 
-    // Handle image removal
-    document.getElementById('removePostImage').addEventListener('click', function() {
-        document.getElementById('editImagePreview').src = '';
-        document.getElementById('editImagePreview').style.display = 'none';
-        document.getElementById('editPostImage').value = '';
+const removePostImageBtn = document.getElementById('removePostImage');
+if (removePostImageBtn) {
+    removePostImageBtn.addEventListener('click', function() {
+        const preview = document.getElementById('editImagePreview');
+        const input = document.getElementById('editPostImage');
+        if (preview) { preview.src = ''; preview.style.display = 'none'; }
+        if (input) input.value = '';
         this.style.display = 'none';
     });
+}
 
-    // Save edited post
-    document.getElementById('saveEditPost').addEventListener('click', async function() {
+const saveEditPostBtn = document.getElementById('saveEditPost');
+if (saveEditPostBtn) {
+    saveEditPostBtn.addEventListener('click', async function() {
         if (!currentEditingPostId) return;
         
         const content = document.getElementById('editPostContent').value.trim();
@@ -4509,601 +3340,73 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const imageFile = document.getElementById('editPostImage').files[0];
-        const removeImage = document.getElementById('editImagePreview').style.display === 'none';
+        const imageFile = document.getElementById('editPostImage') ? document.getElementById('editPostImage').files[0] : null;
+        const imagePreview = document.getElementById('editImagePreview');
+        const removeImage = imagePreview && imagePreview.style.display === 'none';
         
         const formData = new FormData();
         formData.append('post_id', currentEditingPostId);
         formData.append('content', content);
+        if (imageFile) formData.append('image', imageFile);
+        if (removeImage) formData.append('remove_image', 'true');
         
-        if (imageFile) {
-            formData.append('image', imageFile);
-        }
-        
-        if (removeImage) {
-            formData.append('remove_image', 'true');
-        }
+        this.disabled = true;
+        this.textContent = 'Saving...';
         
         try {
-            const response = await fetch('update_post.php', {
+            const res = await fetch('update_post.php', {
                 method: 'POST',
                 body: formData
             });
-            
-            const data = await response.json();
-            
+            const data = await res.json();
             if (data.success) {
-                // Close modal
-                document.getElementById('editPostModal').style.display = 'none';
-                
-                // You might want to update the post in the DOM, or reload the page
+                const modal = document.getElementById('editPostModal');
+                if (modal) modal.style.display = 'none';
+                document.body.style.overflow = '';
                 window.location.reload();
             } else {
-                alert('Error: ' + data.error);
+                alert('Error: ' + (data.error || 'Failed to update post'));
             }
-        } catch (error) {
-            console.error('Error:', error);
+        } catch (err) {
+            console.error('Error saving edited post:', err);
             alert('An error occurred while updating the post');
+        } finally {
+            this.disabled = false;
+            this.textContent = 'Save Changes';
         }
     });
+}
 
-    // Delete post confirmation
-    document.getElementById('confirmDeletePost').addEventListener('click', async function() {
+// ==================== DELETE POST CONFIRMATION ====================
+const confirmDeletePostBtn = document.getElementById('confirmDeletePost');
+if (confirmDeletePostBtn) {
+    confirmDeletePostBtn.addEventListener('click', async function() {
         if (!postToDelete) return;
         
-        // Change button state to show loading
-        const deleteButton = this;
-        const originalText = deleteButton.textContent;
-        deleteButton.textContent = 'Deleting...';
-        deleteButton.disabled = true;
+        this.disabled = true;
+        this.textContent = 'Deleting...';
         
         try {
-            const response = await fetch('delete_post.php', {
+            const res = await fetch('delete_post.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `post_id=${postToDelete}`
             });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Hide the modal
-                const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
-                if (deleteOverlay) {
-                    deleteOverlay.style.display = 'none';
-                }
+            const data = await res.json();
+            if (data.success || data.status === 'success') {
+                const postEl = document.querySelector(`.post-item[data-post-id="${postToDelete}"]`);
+                if (postEl) postEl.remove();
                 
-                // Remove post from DOM or reload the page
-                window.location.reload();
+                const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
+                if (deleteOverlay) deleteOverlay.style.display = 'none';
+                document.body.style.overflow = '';
             } else {
-                alert('Error: ' + data.error);
+                alert('Error: ' + (data.error || data.message || 'Failed to delete post'));
             }
-        } catch (error) {
-            console.error('Error:', error);
+        } catch (err) {
+            console.error('Error deleting post:', err);
             alert('An error occurred while deleting the post');
         } finally {
-            // Reset button state
-            deleteButton.textContent = originalText;
-            deleteButton.disabled = false;
-            postToDelete = null;
-        }
-    });
-
-    // Cancel delete post
-    document.getElementById('cancelDeletePost').addEventListener('click', function() {
-        const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
-        if (deleteOverlay) {
-            deleteOverlay.style.display = 'none';
-        }
-        postToDelete = null;
-    });
-
-    // Close delete post modal when clicking outside
-    document.getElementById('deletePostConfirmationOverlay').addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-            postToDelete = null;
-        }
-    });
-
-    // Add these functions to handle opening/closing modals programmatically
-    function openEditPostModal() {
-        const modal = document.getElementById('editPostModal');
-        if (modal) {
-            modal.style.cssText = `
-                display: flex !important;
-                z-index: 9999 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: rgba(0, 0, 0, 0.7) !important;
-                backdrop-filter: blur(4px) !important;
-                justify-content: center !important;
-                align-items: center !important;
-            `;
-        }
-    }
-
-    function closeEditPostModal() {
-        const modal = document.getElementById('editPostModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-
-    function openDeletePostModal() {
-        const modal = document.getElementById('deletePostConfirmationOverlay');
-        if (modal) {
-            modal.style.cssText = `
-                display: flex !important;
-                z-index: 9999 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: rgba(0, 0, 0, 0.7) !important;
-                backdrop-filter: blur(4px) !important;
-                justify-content: center !important;
-                align-items: center !important;
-            `;
-        }
-    }
-
-    function closeDeletePostModal() {
-        const modal = document.getElementById('deletePostConfirmationOverlay');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-    
-    // Helper functions to manually adjust modal positions
-    function adjustModalPosition(modalId, topPadding = 100) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            // First make sure the modal is displayed
-            modal.style.cssText = `
-                display: flex !important;
-                z-index: 9999 !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: rgba(0, 0, 0, 0.7) !important;
-                backdrop-filter: blur(4px) !important;
-                justify-content: center !important;
-                align-items: flex-start !important;
-                padding-top: ${topPadding}px !important;
-            `;
-            
-            // Make modal content scrollable if needed
-            const modalContent = modal.querySelector('.modal-content');
-            if (modalContent) {
-                modalContent.style.cssText = `
-                    max-height: 92vh !important;
-                    overflow-y: auto !important;
-                `;
-            }
-            
-            console.log(`Modal ${modalId} position adjusted to ${topPadding}px from top`);
-        }
-    }
-    
-    // Example usage in browser console:
-    // adjustModalPosition('editProfileModal', 15); // Adjust to 15vh from top
-    // adjustModalPosition('editDetailsModal', 5);  // Adjust to 5vh from top
-</script>
-
-<script>
-    // Add this at the end of the document ready function or as a separate script
-    document.addEventListener('DOMContentLoaded', function() {
-        // Ensure the comment modals are properly initialized
-        console.log('Initializing comment modals...');
-        
-        // Check if modals exist in DOM
-        let editCommentModal = document.getElementById('editCommentModal');
-        let deleteCommentConfirmation = document.getElementById('deleteCommentConfirmationOverlay');
-        
-        // Create the modals if they don't exist
-        if (!editCommentModal) {
-            console.error('Edit comment modal not found in the DOM! Creating it...');
-            
-            // Create edit comment modal
-            editCommentModal = document.createElement('div');
-            editCommentModal.id = 'editCommentModal';
-            editCommentModal.className = 'edit-post-modal';
-            editCommentModal.innerHTML = `
-                <div class="edit-post-modal-content">
-                    <div class="edit-post-header">
-                        <h2>Edit Comment</h2>
-                        <span class="edit-post-close" id="closeEditComment">&times;</span>
-                    </div>
-                    <div class="edit-post-body">
-                        <textarea id="editCommentContent" placeholder="Edit your comment..."></textarea>
-                    </div>
-                    <div class="edit-post-actions">
-                        <button class="btn btn-secondary" id="cancelEditComment">Cancel</button>
-                        <button class="btn btn-primary" id="saveEditComment">Save Changes</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(editCommentModal);
-            console.log('Edit comment modal created and added to DOM');
-            
-            // Add event listeners for the new modal
-            document.getElementById('closeEditComment').addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('editCommentModal').style.display = 'none';
-                document.body.style.overflow = '';
-                commentToEdit = null;
-                console.log('Closing Edit Comment modal via X button');
-            });
-
-            document.getElementById('cancelEditComment').addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                document.getElementById('editCommentModal').style.display = 'none';
-                document.body.style.overflow = '';
-                commentToEdit = null;
-            });
-            
-            // Implement save functionality for edit comment
-            document.getElementById('saveEditComment').addEventListener('click', async function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                if (!commentToEdit) {
-                    console.error('No comment ID to edit!');
-                    alert('Error: No comment selected for editing.');
-                    return;
-                }
-                
-                const content = document.getElementById('editCommentContent').value.trim();
-                if (!content) {
-                    alert('Comment cannot be empty');
-                    return;
-                }
-                
-                console.log('Saving edited comment:', commentToEdit, 'with content:', content);
-                
-                // Show loading indicator
-                const saveButton = this;
-                const originalText = saveButton.textContent;
-                saveButton.textContent = 'Saving...';
-                saveButton.disabled = true;
-                
-                try {
-                    // Use URLSearchParams for proper encoding
-                    const formData = new URLSearchParams();
-                    formData.append('comment_id', commentToEdit);
-                    formData.append('content', content);
-                    
-                    console.log('Sending update request to server...');
-                    const response = await fetch('update_comment.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: formData.toString()
-                    });
-                    
-                    // Check if the response is OK
-                    if (!response.ok) {
-                        throw new Error(`Server responded with status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        // Update comment in DOM
-                        const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentToEdit}"]`);
-                        if (commentItem) {
-                            const commentTextElement = commentItem.querySelector('.comment-text');
-                            if (commentTextElement) {
-                                // Format the content for display
-                                const formattedContent = content.replace(/\r\n|\r|\n/g, '<br>');
-                                commentTextElement.innerHTML = formattedContent;
-                                console.log('Updated comment in DOM');
-                            }
-                        }
-                        
-                        // Close the modal
-                        document.getElementById('editCommentModal').style.display = 'none';
-                        document.body.style.overflow = '';
-                        commentToEdit = null;
-                        console.log('Comment updated successfully');
-                    } else {
-                        console.error('Server reported error:', data.error);
-                        alert('Error: ' + data.error);
-                    }
-                } catch (error) {
-                    console.error('Error updating comment:', error);
-                    alert('An error occurred while updating the comment: ' + error.message);
-                } finally {
-                    // Reset button state
-                    saveButton.textContent = originalText;
-                    saveButton.disabled = false;
-                }
-            });
-        } else {
-            console.log('Edit comment modal found');
-        }
-        
-        if (!deleteCommentConfirmation) {
-            console.error('Delete comment confirmation modal not found in the DOM! Creating it...');
-            
-            // Create delete comment confirmation modal
-            deleteCommentConfirmation = document.createElement('div');
-            deleteCommentConfirmation.id = 'deleteCommentConfirmationOverlay';
-            deleteCommentConfirmation.className = 'logout-confirmation-overlay';
-            deleteCommentConfirmation.innerHTML = `
-                <div class="logout-confirmation-container delete-modal" style="border-top: 4px solid var(--color-primary);">
-                    <div class="logout-header">
-                        <i class="fas fa-trash-alt"></i>
-                        <h2>Delete Comment</h2>
-                    </div>
-                    <p class="logout-message">Are you sure you want to delete this comment?</p>
-                    <div class="logout-actions">
-                        <button class="btn-cancel logout-cancel-button" id="cancelDeleteComment">Cancel</button>
-                        <button class="btn-save logout-confirm-button delete-btn" id="confirmDeleteComment">Delete</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(deleteCommentConfirmation);
-            console.log('Delete comment confirmation modal created and added to DOM');
-            
-            // Add event listeners for the new modal
-            document.getElementById('cancelDeleteComment').addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const deleteOverlay = document.getElementById('deleteCommentConfirmationOverlay');
-                if (deleteOverlay) {
-                    deleteOverlay.style.display = 'none';
-                    document.body.style.overflow = 'auto'; // Re-enable scrolling
-                    console.log('Delete comment modal hidden');
-                }
-                
-                commentToDelete = null;
-            });
-            
-            document.getElementById('confirmDeleteComment').addEventListener('click', async function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                if (!commentToDelete) {
-                    console.error('No comment ID to delete!');
-                    return;
-                }
-                
-                console.log('Confirming delete for comment ID:', commentToDelete);
-                
-                // Show loading indicator
-                const deleteButton = this;
-                const originalText = deleteButton.textContent;
-                deleteButton.textContent = 'Deleting...';
-                deleteButton.disabled = true;
-                
-                try {
-                    // Use URLSearchParams for proper encoding
-                    const formData = new URLSearchParams();
-                    formData.append('comment_id', commentToDelete);
-                    
-                    console.log('Sending delete request to server...');
-                    const response = await fetch('delete_comment.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: formData.toString()
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`Server responded with status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        // Hide the delete confirmation modal
-                        const deleteOverlay = document.getElementById('deleteCommentConfirmationOverlay');
-                        if (deleteOverlay) {
-                            deleteOverlay.style.display = 'none';
-                            document.body.style.overflow = 'auto'; // Re-enable scrolling
-                        }
-                        
-                        // Find and animate the comment removal
-                        const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentToDelete}"]`);
-                        if (commentItem) {
-                            // Remove comment from DOM
-                            if (commentItem.parentNode) {
-                                commentItem.parentNode.removeChild(commentItem);
-                            }
-                            
-                            // Update comment count
-                            const commentCountElement = document.querySelector(`[data-post-id="${currentPostId}"] .comment-count`);
-                            if (commentCountElement) {
-                                const newCount = parseInt(commentCountElement.textContent) - 1;
-                                commentCountElement.textContent = newCount > 0 ? newCount : '0';
-                            }
-                            
-                            // Check if we need to show "no comments" message
-                            const commentList = document.getElementById('commentList');
-                            if (commentList && commentList.children.length === 0) {
-                                commentList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
-                            }
-                        } else {
-                            // Refresh comments if we can't find the element
-                            if (currentPostId) {
-                                loadComments(currentPostId);
-                            }
-                        }
-                    } else {
-                        console.error('Server reported error:', data.error);
-                        // Removed alert - just log the error
-                    }
-                } catch (error) {
-                    console.error('Error deleting comment:', error);
-                    // Removed alert - just log the error
-                } finally {
-                    // Reset button state
-                    deleteButton.textContent = originalText;
-                    deleteButton.disabled = false;
-                    commentToDelete = null;
-                }
-            });
-            
-            // Close modal when clicking outside
-            deleteCommentConfirmation.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    e.stopPropagation();
-                    this.style.display = 'none';
-                    document.body.style.overflow = '';
-                    commentToDelete = null;
-                }
-            });
-        } else {
-            console.log('Delete comment confirmation modal found');
-        }
-        
-        // Ensure current post ID is set when opening comment modal
-        document.querySelectorAll('.comment-trigger').forEach(trigger => {
-            trigger.addEventListener('click', function() {
-                currentPostId = this.dataset.postId;
-                console.log('Set current post ID:', currentPostId);
-            });
-        });
-        
-        // Debug comment menu events
-        document.addEventListener('edit-comment-clicked', function() {
-            console.log('Edit comment event triggered');
-        });
-        
-        document.addEventListener('delete-comment-clicked', function() {
-            console.log('Delete comment event triggered');
-        });
-        
-        // Handle direct clicks on comment menu items (alternative approach)
-        document.addEventListener('click', function(e) {
-            // Direct click on edit comment menu item
-            if (e.target.classList.contains('edit-comment') || e.target.closest('.edit-comment')) {
-                const commentId = e.target.dataset.commentId || e.target.closest('.edit-comment').dataset.commentId;
-                if (commentId) {
-                    console.log('Direct edit comment click detected for comment ID:', commentId);
-                    commentToEdit = commentId;
-                    
-                    // Find comment content
-                    const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
-                    if (commentItem) {
-                        const commentTextElement = commentItem.querySelector('.comment-text');
-                        if (commentTextElement) {
-                            const commentText = commentTextElement.innerHTML;
-                            const cleanText = commentText.replace(/<br\s*\/?>/gi, '\n')
-                                                        .replace(/&lt;/g, '<')
-                                                        .replace(/&gt;/g, '>')
-                                                        .replace(/&amp;/g, '&');
-                            
-                            // Set content in modal
-                            const editCommentContent = document.getElementById('editCommentContent');
-                            if (editCommentContent) {
-                                editCommentContent.value = cleanText;
-                            }
-                            
-                            // Show modal
-                            const editCommentModal = document.getElementById('editCommentModal');
-                            if (editCommentModal) {
-                                editCommentModal.style.cssText = `
-                                    display: flex !important;
-                                    z-index: 10000 !important;
-                                    position: fixed !important;
-                                    top: 0 !important;
-                                    left: 0 !important;
-                                    width: 100% !important;
-                                    height: 100% !important;
-                                    background: rgba(0, 0, 0, 0.7) !important;
-                                    backdrop-filter: blur(4px) !important;
-                                    justify-content: center !important;
-                                    align-items: center !important;
-                                `;
-                                document.body.style.overflow = 'hidden';
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Direct click on delete comment menu item
-            if (e.target.classList.contains('delete-comment') || e.target.closest('.delete-comment')) {
-                const commentId = e.target.dataset.commentId || e.target.closest('.delete-comment').dataset.commentId;
-                if (commentId) {
-                    console.log('Direct delete comment click detected for comment ID:', commentId);
-                    commentToDelete = commentId;
-                    
-                    // Show delete confirmation
-                    const deleteCommentConfirmationOverlay = document.getElementById('deleteCommentConfirmationOverlay');
-                    if (deleteCommentConfirmationOverlay) {
-                        deleteCommentConfirmationOverlay.style.cssText = `
-                            display: flex !important;
-                            z-index: 10000 !important;
-                            position: fixed !important;
-                            top: 0 !important;
-                            left: 0 !important;
-                            width: 100% !important;
-                            height: 100% !important;
-                            background: rgba(0, 0, 0, 0.7) !important;
-                            backdrop-filter: blur(4px) !important;
-                            justify-content: center !important;
-                            align-items: center !important;
-                        `;
-                        document.body.style.overflow = 'hidden';
-                    }
-                }
-            }
-        });
-    });
-</script>
-
-<!-- After all modals but before the closing body tag -->
-<script>
-// Direct implementation to fix comment edit/delete functionality
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Loading comment functionality fix...');
-    
-    // Set variables in global scope
-    window.commentToEdit = null;
-    window.commentToDelete = null;
-    window.currentPostId = null;
-    
-    // Function to monitor comments and attach event handlers
-    function setupCommentMenuHandlers() {
-        console.log('Setting up comment menu handlers...');
-        
-        // Use direct event delegation for all comment menu clicks
-        document.addEventListener('click', function(e) {
-            // Check for comment menu trigger clicks
-            if (e.target.classList.contains('comment-menu-trigger') || e.target.closest('.comment-menu-trigger')) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log('Comment menu trigger clicked');
-                
-                // Get the comment ID from the clicked element
-                const trigger = e.target.classList.contains('comment-menu-trigger') ? 
-                    e.target : e.target.closest('.comment-menu-trigger');
-                const commentId = trigger.dataset.commentId;
-                
-                if (!commentId) {
-                    console.error('No comment ID found on trigger');
-                    return;
-                }
-                
-                console.log('Opening menu for comment ID:', commentId);
                 
                 // Close any existing menus
                 document.querySelectorAll('.floating-comment-menu').forEach(menu => {
