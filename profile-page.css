@@ -424,31 +424,32 @@ body {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
 }
 
-.feed-header {
+.activity-feed-header-card {
+    background: white;
+    border-radius: 15px;
+    padding: 15px 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .feed-title {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     color: var(--primary);
     font-weight: 600;
-    margin-right: 20px;
-    flex-shrink: 0;
+    margin: 0;
 }
 
 .feeds {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
     width: 100%;
 }
 
@@ -599,28 +600,41 @@ body {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 12px 15px !important;
-    border: 1px solid #eee !important;
-    border-radius: 8px !important;
+    border: none !important;
+    border-top: 1px solid #eee !important;
+    border-radius: 0 !important;
+    padding: 15px 0 0 0 !important;
+    margin-top: 15px !important;
     margin-bottom: 15px !important;
-    margin-top: 0 !important;
 }
 
 #createPostModal .add-to-post span {
-    font-weight: 600 !important;
+    font-weight: bold !important;
     color: #65676b !important;
-    font-size: 0.95rem !important;
+    font-size: 1.05em !important;
 }
 
 #createPostModal .add-to-post .icons {
     display: flex !important;
     align-items: center !important;
-    gap: 15px !important;
+    gap: 12px !important;
+}
+
+#createPostModal .add-to-post .icons label {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
 }
 
 #createPostModal .add-to-post .icons i {
-    font-size: 1.3rem !important;
+    font-size: 1.5rem !important;
     cursor: pointer !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    padding: 0 !important;
     transition: transform 0.2s ease !important;
 }
 

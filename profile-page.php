@@ -1040,21 +1040,22 @@ unset($_SESSION['form_data']);
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
         }
         
-        .feed-header {
+        .activity-feed-header-card {
+            background: var(--color-white);
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
         }
         
         .feed-title {
             color: var(--color-primary);
-            font-size: 1.4rem;
+            font-size: 1.25rem;
             font-weight: 600;
             margin: 0;
         }
@@ -1064,7 +1065,7 @@ unset($_SESSION['form_data']);
             margin-top: 0;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
         }
         
         .activity-feed .feed {
@@ -2639,9 +2640,11 @@ unset($_SESSION['form_data']);
 </li>
         </ul>
         
-        <button class="profile-btn btn-primary">
-    <i class="fas fa-edit"></i> Edit Details
-</button>
+        <div class="profile-actions" style="margin-top: 15px;">
+            <button class="profile-btn btn-primary">
+                <i class="fas fa-edit"></i> Edit Details
+            </button>
+        </div>
     </div>
 </div>
 <!-- EDIT DETAILS MODAL -->
@@ -2834,7 +2837,7 @@ unset($_SESSION['form_data']);
 
                 <!-- 2. Your Activity Container (Below Composer) -->
                 <div class="activity-feed">
-                    <div class="feed-header">
+                    <div class="activity-feed-header-card">
                         <h2 class="feed-title">Your Activity</h2>
                     </div>
 
@@ -2959,12 +2962,11 @@ unset($_SESSION['form_data']);
                     <div class="add-to-post">
                         <span>Add to your post</span>
                         <div class="icons">
-                            <label for="post-image" style="cursor: pointer;">
+                            <label for="post-image" style="cursor: pointer; margin: 0; display: flex; align-items: center;">
                                 <i class="bi bi-plus-square-dotted" style="color: teal;"></i>
                             </label>
                             <input type="file" id="post-image" name="post-image" accept="image/*" style="display: none;">
-                            <i class="fa-regular fa-face-smile-beam" style="color: teal; vertical-align: middle; margin-top: 5px; display: inline-block;"></i>
-                            <i class="bi bi-file-gif" style="color: purple;"></i>
+                            <i class="fa-regular fa-face-smile-beam" style="color: teal;"></i>
                         </div>
                     </div>
                     <div class="image-preview-container" id="imagePreviewContainer"></div>
@@ -2976,7 +2978,6 @@ unset($_SESSION['form_data']);
         </form>
     </div>
   
-
 
     <div class="error-notification" id="neggyErrorNotification">
     <div class="notification-content">
@@ -2990,7 +2991,7 @@ unset($_SESSION['form_data']);
     </div>
 </div>
 
-
+<script>
 // Sidebar menu item functionality
 document.addEventListener('DOMContentLoaded', function() {
     // Get all menu items
