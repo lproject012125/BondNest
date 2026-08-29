@@ -2901,27 +2901,7 @@ unset($_SESSION['form_data']);
         </div>
     </div>
   
-    <main>
-        <div class="container">
-        <div class="left">
-      
-<div class="sidebar">
-                    <a class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'homepage.php' ? 'active' : ''; ?>" href="homepage.php">
-                        <i class="bi bi-house"></i>
-                        <h3>Home</h3>
-                    </a>
-                    <a class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'profile-page.php' ? 'active' : ''; ?>" href="profile-page.php">
-                        <i class="bi bi-person-square"></i>
-                        <h3>Profile</h3>
-                    </a>
-                    <a class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'message.php' ? 'active' : ''; ?>" href="message.php">
-                        <i class="bi bi-chat-dots"></i>
-                        <h3>Message</h3>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </main>
+
 
     <div class="error-notification" id="neggyErrorNotification">
     <div class="notification-content">

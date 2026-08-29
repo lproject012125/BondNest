@@ -298,10 +298,6 @@ main .container .left .profile .profile_picture img {
             <h3>Message</h3>
         </a>
     </div>
-
-    <?php if (basename($_SERVER['PHP_SELF']) !== 'message.php'): ?>
-    <label for="create_post" class="btn btn-primary">Create Post</label>
-    <?php endif; ?>
 </div>
 
 <!-- Mobile Navigation -->
