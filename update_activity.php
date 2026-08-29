@@ -2,7 +2,7 @@
 session_start();
 
 require_once 'db_connection.php';
-date_default_timezone_set('Asia/Manila');
+date_default_timezone_set('UTC');
 
 if (!isset($_SESSION['user_id'])) {
     exit(json_encode(['status' => 'error', 'message' => 'Not logged in']));

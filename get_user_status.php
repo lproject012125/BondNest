@@ -3,7 +3,7 @@ session_start();
 
 require_once 'db_connection.php';
 
-date_default_timezone_set('Asia/Manila');
+date_default_timezone_set('UTC');
 
 if (!isset($_GET['user_id'])) {
     exit(json_encode(['status' => 'error', 'message' => 'User ID not provided']));
@@ -19,7 +19,8 @@ $stmt->execute([$user_id]);
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($row) {
-    $last_activity = strtotime($row['last_activity']);
+    // Parse last_activity as UTC
+    $last_activity = strtotime($row['last_activity'] . ' UTC');
     $current_time = time();
     $diff_minutes = round(($current_time - $last_activity) / 60);
     $user_status = isset($row['user_status']) ? $row['user_status'] : 'offline';

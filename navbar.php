@@ -1076,7 +1076,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Notification bell for mobile
+    // Mobile notification bell for mobile
     const mobileNotificationToggle = document.getElementById('mobileNotificationToggle');
     if (mobileNotificationToggle) {
         mobileNotificationToggle.addEventListener('click', function(e) {
@@ -1084,5 +1084,43 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = 'warnings.php';
         });
     }
+
+    // Activity tracking — runs on every page so the user's online status is always current
+    (function() {
+        function updateMyActivity(status) {
+            fetch('update_activity.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ status: status })
+            }).catch(function() {});
+        }
+
+        // Mark active on page load
+        updateMyActivity('active');
+
+        // Heartbeat every 30 seconds
+        setInterval(function() {
+            if (document.visibilityState === 'visible') {
+                updateMyActivity('active');
+            }
+        }, 30000);
+
+        // Tab focus / blur
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                updateMyActivity('active');
+            } else {
+                updateMyActivity('inactive');
+            }
+        });
+
+        // Mark offline on close
+        window.addEventListener('beforeunload', function() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'update_activity.php', false);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({ status: 'offline' }));
+        });
+    })();
 });
 </script>

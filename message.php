@@ -1616,8 +1616,6 @@ function formatMessageTime($timestamp) {
             
             // Track the last message ID we've received
             let lastReceivedMessageId = <?php echo !empty($messages) ? end($messages)['id'] : 0; ?>;
-            let activityInterval; // To store the activity update interval
-            let isPageActive = true; // Track if page is active or in background
             
             // Auto-scroll to bottom of messages on load
             function scrollToBottom() {
@@ -1633,22 +1631,6 @@ function formatMessageTime($timestamp) {
                 setTimeout(scrollToBottom, 100);
             });
             
-            // Update current user activity status
-            function updateActivity(status = 'active') {
-                fetch('update_activity.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ status: status })
-                })
-                .then(response => response.json())
-                .catch(error => {
-                    console.error('Error updating activity:', error);
-                });
-            }
-            
             // Get selected user's status
             function getSelectedUserStatus() {
                 <?php if ($selected_user_id): ?>
@@ -1660,7 +1642,6 @@ function formatMessageTime($timestamp) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        // Update status text and class
                         userStatus.textContent = data.data.status_text;
                         userStatus.className = 'chat-status ' + data.data.status_class;
                     }
@@ -1671,46 +1652,12 @@ function formatMessageTime($timestamp) {
                 <?php endif; ?>
             }
             
-            // Start activity tracking
-            function startActivityTracking() {
-                // Update activity on page load
-                updateActivity('active');
-                
-                // Update activity periodically (every 30 seconds) when page is active
-                activityInterval = setInterval(() => {
-                    if (isPageActive) {
-                        updateActivity('active');
-                    }
-                }, 30000);
-                
-                // Setup page visibility detection to track when user switches tabs
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible') {
-                        isPageActive = true;
-                        updateActivity('active');
-                    } else {
-                        isPageActive = false;
-                        updateActivity('inactive');
-                    }
-                });
-                
-                // Handle page unload/close to update status
-                window.addEventListener('beforeunload', function() {
-                    // Use synchronous AJAX to ensure the request completes before page close
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', 'update_activity.php', false); // false for synchronous
-                    xhr.setRequestHeader('Content-Type', 'application/json');
-                    xhr.send(JSON.stringify({ status: 'offline' }));
-                });
-            }
+            // Activity tracking is now handled globally in navbar.php
             
-            // Initialize activity tracking
-            startActivityTracking();
-            
-            // Check selected user status periodically (every 5 seconds instead of 10)
+            // Check selected user status periodically (every 5 seconds)
             <?php if ($selected_user_id): ?>
-            getSelectedUserStatus(); // Check immediately
-            setInterval(getSelectedUserStatus, 5000); // Check every 5 seconds
+            getSelectedUserStatus();
+            setInterval(getSelectedUserStatus, 5000);
             <?php endif; ?>
             
             if (sendButton && messageInput && chatMessages) {
