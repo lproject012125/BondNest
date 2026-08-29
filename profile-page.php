@@ -2705,6 +2705,7 @@ unset($_SESSION['form_data']);
                                             <?php endif; ?>
                                         </div>
                                     </div>
+                                    <?php if ($post['user_id'] == $_SESSION['user_id']): ?>
                                     <div class="post-actions-menu">
                                         <i class="bi bi-three-dots-vertical post-menu-trigger" data-post-id="<?php echo $post['id']; ?>"></i>
                                         <div class="post-menu-dropdown" data-post-id="<?php echo $post['id']; ?>">
@@ -2716,6 +2717,7 @@ unset($_SESSION['form_data']);
                                             </div>
                                         </div>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="post-content">
@@ -2916,8 +2918,785 @@ unset($_SESSION['form_data']);
 </div>
 
 <script>
-// ==================== TIME AGO FUNCTIONS ====================
+// TIME AGO - same as homepage.php
 function formatTimeAgo(dateString) {
+    let dStr = dateString;
+    if (dStr && !dStr.includes('Z') && !dStr.includes('+') && !dStr.match(/T.*[+-]/)) {
+        dStr = dStr.replace(' ', 'T') + 'Z';
+    }
+    const date = new Date(dStr);
+    const now = new Date();
+    const secondsPast = (now - date) / 1000;
+
+    if (secondsPast < 1) return 'just now';
+    if (secondsPast < 60) return `${Math.round(secondsPast)} seconds ago`;
+    if (secondsPast < 3600) return `${Math.round(secondsPast / 60)} minutes ago`;
+    if (secondsPast < 86400) return `${Math.round(secondsPast / 3600)} hours ago`;
+    if (secondsPast < 604800) return `${Math.round(secondsPast / 86400)} days ago`;
+    if (secondsPast < 2419200) return `${Math.round(secondsPast / 604800)} weeks ago`;
+    if (secondsPast < 29030400) return `${Math.round(secondsPast / 2419200)} months ago`;
+    return `${Math.round(secondsPast / 29030400)} years ago`;
+}
+
+function updateAllTimeAgo() {
+    document.querySelectorAll('.time-ago').forEach(el => {
+        const ts = el.getAttribute('data-timestamp') || el.dataset.originalDate;
+        if (ts) el.textContent = formatTimeAgo(ts);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateAllTimeAgo();
+    setInterval(updateAllTimeAgo, 60000);
+});
+
+// ==================== LOGOUT ====================
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutButton = document.getElementById('logoutButton');
+    const logoutOverlay = document.getElementById('logoutConfirmationOverlay');
+    const cancelLogout = document.getElementById('cancelLogout');
+
+    if (logoutButton && logoutOverlay) {
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    if (cancelLogout) {
+        cancelLogout.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutOverlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+    }
+    if (logoutOverlay) {
+        logoutOverlay.addEventListener('click', function(e) {
+            if (e.target === logoutOverlay) {
+                logoutOverlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+    }
+});
+
+// ==================== LIKE BUTTON ====================
+document.addEventListener('click', async function(e) {
+    const likeButton = e.target.closest('.like-button');
+    if (likeButton) {
+        e.preventDefault();
+        if (likeButton.classList.contains('processing')) return;
+        likeButton.classList.add('processing');
+
+        const postId = likeButton.dataset.postId;
+        const isLiked = likeButton.dataset.liked === 'true';
+        const action = isLiked ? 'unlike' : 'like';
+
+        const heartIcon = likeButton.querySelector('i');
+        const likeText = likeButton.querySelector('span');
+        const likeCountElement = likeButton.querySelector('.like-count');
+        const likedBySection = likeButton.closest('.feed').querySelector('.liked-by');
+
+        // Optimistic UI update
+        if (isLiked) {
+            heartIcon.classList.remove('bi-heart-fill');
+            heartIcon.classList.add('bi-heart');
+            likeText.textContent = 'Like';
+            likeButton.dataset.liked = 'false';
+            likeCountElement.textContent = parseInt(likeCountElement.textContent) - 1;
+        } else {
+            heartIcon.classList.remove('bi-heart');
+            heartIcon.classList.add('bi-heart-fill');
+            likeText.textContent = 'Liked';
+            likeButton.dataset.liked = 'true';
+            likeCountElement.textContent = parseInt(likeCountElement.textContent) + 1;
+        }
+
+        if (likedBySection) {
+            const newLikes = parseInt(likeCountElement.textContent);
+            likedBySection.innerHTML = `
+                <div style="display: flex; align-items: center; margin-top: 10px;">
+                    <p style="font-size: 0.8rem; color: var(--text-medium);">
+                        ${newLikes > 0 ?
+                            `${newLikes} ${newLikes === 1 ? 'person' : 'people'} liked this` :
+                            'Be the first to like this'}
+                    </p>
+                </div>
+            `;
+        }
+
+        try {
+            const response = await fetch('like_post.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `post_id=${postId}&action=${action}`
+            });
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+            const data = await response.json();
+            if (data.success) {
+                likeCountElement.textContent = data.likes;
+                likeButton.style.transform = 'scale(1.2)';
+                setTimeout(() => { likeButton.style.transform = ''; }, 300);
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            if (isLiked) {
+                heartIcon.classList.remove('bi-heart');
+                heartIcon.classList.add('bi-heart-fill');
+                likeText.textContent = 'Liked';
+                likeButton.dataset.liked = 'true';
+            } else {
+                heartIcon.classList.remove('bi-heart-fill');
+                heartIcon.classList.add('bi-heart');
+                likeText.textContent = 'Like';
+                likeButton.dataset.liked = 'false';
+            }
+            likeCountElement.textContent = parseInt(likeCountElement.textContent) + (isLiked ? 1 : -1);
+        } finally {
+            setTimeout(() => { likeButton.classList.remove('processing'); }, 300);
+        }
+    }
+});
+
+// ==================== POST 3-DOT MENU ====================
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('post-menu-trigger')) {
+        const postId = e.target.dataset.postId;
+        const dropdown = document.querySelector(`.post-menu-dropdown[data-post-id="${postId}"]`);
+        document.querySelectorAll('.post-menu-dropdown').forEach(d => {
+            if (d !== dropdown) d.classList.remove('show');
+        });
+        if (dropdown) dropdown.classList.toggle('show');
+        e.stopPropagation();
+    }
+    if (!e.target.closest('.post-actions-menu')) {
+        document.querySelectorAll('.post-menu-dropdown').forEach(d => d.classList.remove('show'));
+    }
+});
+
+// ==================== DELETE POST ====================
+let postToDelete = null;
+
+document.addEventListener('click', async function(e) {
+    if (e.target.classList.contains('delete-post') || e.target.closest('.delete-post')) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const postId = e.target.dataset.postId || e.target.closest('.delete-post').dataset.postId;
+        postToDelete = postId;
+
+        const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
+        if (!deleteOverlay) { console.error('Delete post modal not found!'); return; }
+
+        deleteOverlay.style.cssText = `
+            display: flex !important;
+            z-index: 9999 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.7) !important;
+            backdrop-filter: blur(4px) !important;
+            justify-content: center !important;
+            align-items: center !important;
+        `;
+        void deleteOverlay.offsetWidth;
+    }
+});
+
+document.getElementById('confirmDeletePost').addEventListener('click', async function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!postToDelete) return;
+
+    const deleteButton = this;
+    const originalText = deleteButton.textContent;
+    deleteButton.textContent = 'Deleting...';
+    deleteButton.disabled = true;
+
+    try {
+        const formData = new URLSearchParams();
+        formData.append('post_id', postToDelete);
+        const response = await fetch('delete_post.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        });
+        if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+        const responseText = await response.text();
+        let data;
+        try { data = JSON.parse(responseText); } catch(pe) { throw new Error('Server returned invalid JSON'); }
+
+        if (data.success) {
+            const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
+            if (deleteOverlay) { deleteOverlay.style.display = 'none'; document.body.style.overflow = 'auto'; }
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to delete'));
+        }
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        alert('An error occurred while deleting the post: ' + error.message);
+    } finally {
+        deleteButton.textContent = originalText;
+        deleteButton.disabled = false;
+        postToDelete = null;
+    }
+});
+
+document.getElementById('cancelDeletePost').addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const deleteOverlay = document.getElementById('deletePostConfirmationOverlay');
+    if (deleteOverlay) deleteOverlay.style.display = 'none';
+    postToDelete = null;
+});
+
+document.getElementById('deletePostConfirmationOverlay').addEventListener('click', function(e) {
+    if (e.target === this) { this.style.display = 'none'; postToDelete = null; }
+});
+
+// ==================== EDIT POST ====================
+let currentEditingPostId = null;
+
+document.addEventListener('click', async function(e) {
+    if (e.target.classList.contains('edit-post') || e.target.closest('.edit-post')) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const postId = e.target.dataset.postId || e.target.closest('.edit-post').dataset.postId;
+        currentEditingPostId = postId;
+
+        try {
+            const response = await fetch(`get_post_for_edit.php?post_id=${postId}`);
+            const data = await response.json();
+            if (data.success) {
+                const modal = document.getElementById('editPostModal');
+                const content = document.getElementById('editPostContent');
+                const imagePreview = document.getElementById('editImagePreview');
+                if (!modal || !content || !imagePreview) { alert('Error: Could not find edit post form elements.'); return; }
+
+                content.value = data.post.content;
+                if (data.post.image_path) {
+                    imagePreview.src = data.post.image_path;
+                    imagePreview.style.display = 'block';
+                    document.getElementById('removePostImage').style.display = 'inline-block';
+                } else {
+                    imagePreview.style.display = 'none';
+                    document.getElementById('removePostImage').style.display = 'none';
+                }
+
+                modal.style.cssText = `
+                    display: flex !important;
+                    z-index: 9999 !important;
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background: rgba(0, 0, 0, 0.7) !important;
+                    backdrop-filter: blur(4px) !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                `;
+                void modal.offsetWidth;
+            } else {
+                alert('Error: ' + (data.error || 'Could not load post'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while loading the post');
+        }
+    }
+});
+
+document.getElementById('closeEditPost').addEventListener('click', function() {
+    document.getElementById('editPostModal').style.display = 'none';
+});
+document.getElementById('cancelEditPost').addEventListener('click', function() {
+    document.getElementById('editPostModal').style.display = 'none';
+});
+document.getElementById('editPostModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+
+document.getElementById('editPostImage').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const imagePreview = document.getElementById('editImagePreview');
+            imagePreview.src = event.target.result;
+            imagePreview.style.display = 'block';
+            document.getElementById('removePostImage').style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('removePostImage').addEventListener('click', function() {
+    document.getElementById('editImagePreview').src = '';
+    document.getElementById('editImagePreview').style.display = 'none';
+    document.getElementById('editPostImage').value = '';
+    this.style.display = 'none';
+});
+
+document.getElementById('saveEditPost').addEventListener('click', async function() {
+    const content = document.getElementById('editPostContent').value.trim();
+    const imageFile = document.getElementById('editPostImage').files[0];
+    const hasImageShowing = document.getElementById('editImagePreview').style.display !== 'none';
+    const removeImage = document.getElementById('editImagePreview').style.display === 'none';
+
+    if (!content && !imageFile && !hasImageShowing) {
+        alert('Please add some text or an image to your post.');
+        return;
+    }
+
+    const saveButton = this;
+    const originalText = saveButton.textContent;
+    saveButton.textContent = 'Saving...';
+    saveButton.disabled = true;
+
+    const formData = new FormData();
+    formData.append('post_id', currentEditingPostId);
+    formData.append('content', content);
+    if (imageFile) formData.append('image', imageFile);
+    formData.append('remove_image', removeImage);
+
+    try {
+        const response = await fetch('update_post.php', { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('editPostModal').style.display = 'none';
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to update post'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while updating the post');
+    } finally {
+        saveButton.textContent = originalText;
+        saveButton.disabled = false;
+    }
+});
+
+// ==================== COMMENTS ====================
+let currentPostId = null;
+
+document.addEventListener('click', function(e) {
+    const commentTrigger = e.target.closest('.comment-trigger');
+    if (commentTrigger) {
+        e.preventDefault();
+        currentPostId = commentTrigger.dataset.postId;
+
+        const commentModal = document.getElementById('commentModal');
+        if (!commentModal) { console.error('Comment modal not found!'); return; }
+
+        commentModal.style.cssText = `
+            display: block !important;
+            z-index: 9999 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            backdrop-filter: blur(3px) !important;
+            overflow: auto !important;
+        `;
+
+        const modalContent = commentModal.querySelector('.comment-modal-content');
+        if (modalContent) {
+            modalContent.style.cssText = `
+                background: white !important;
+                border-radius: 10px !important;
+                margin: 50px auto !important;
+                padding: 20px !important;
+                width: 90% !important;
+                max-width: 600px !important;
+                max-height: 80vh !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2) !important;
+            `;
+            const commentsContainer = modalContent.querySelector('.comments-container');
+            if (commentsContainer) {
+                commentsContainer.style.cssText = `flex: 1 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; background: transparent !important;`;
+            }
+            const commentList = modalContent.querySelector('.comment-list');
+            if (commentList) {
+                commentList.style.cssText = `flex: 1 !important; overflow-y: auto !important; padding: 0 15px !important; margin-bottom: 60px !important; background: transparent !important;`;
+            }
+        }
+
+        void commentModal.offsetWidth;
+        document.body.style.overflow = 'hidden';
+        loadComments(currentPostId);
+    }
+});
+
+document.querySelector('.close-comment').addEventListener('click', () => {
+    const commentModal = document.getElementById('commentModal');
+    if (commentModal) commentModal.style.cssText = `display: none !important;`;
+    document.body.style.overflow = 'auto';
+    setTimeout(() => {
+        const commentList = document.getElementById('commentList');
+        if (commentList) commentList.innerHTML = '';
+    }, 300);
+});
+
+document.addEventListener('click', function(e) {
+    const commentModal = document.getElementById('commentModal');
+    if (commentModal && e.target === commentModal) {
+        commentModal.style.cssText = `display: none !important;`;
+        document.body.style.overflow = 'auto';
+        setTimeout(() => {
+            const commentList = document.getElementById('commentList');
+            if (commentList) commentList.innerHTML = '';
+        }, 300);
+    }
+});
+
+// Comment form submit - post to add_comment.php
+document.getElementById('commentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const textarea = form.querySelector('textarea');
+    const content = textarea ? textarea.value.trim() : '';
+    if (!content) return;
+
+    const formData = new FormData();
+    formData.append('post_id', currentPostId);
+    formData.append('content', content);
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const origText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Posting...';
+
+    try {
+        const response = await fetch('add_comment.php', { method: 'POST', body: formData });
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        if (data.success) {
+            if (textarea) textarea.value = '';
+            const commentList = document.getElementById('commentList');
+            const newComment = createCommentElement(data.comment);
+            commentList.insertBefore(newComment, commentList.firstChild);
+            newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            const commentCountElement = document.querySelector(`[data-post-id="${currentPostId}"] .comment-count`);
+            if (commentCountElement) commentCountElement.textContent = data.new_count;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error posting comment. Please try again.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+    }
+});
+
+function loadComments(postId) {
+    const commentList = document.getElementById('commentList');
+    if (!commentList) { console.error('Comment list element not found!'); return; }
+    commentList.innerHTML = '<div class="loading-comments" style="text-align: center; padding: 20px;">Loading comments...</div>';
+
+    fetch(`get_comments.php?post_id=${postId}`)
+        .then(response => {
+            if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => { throw new Error(`Invalid response format: ${contentType}`); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            commentList.innerHTML = '';
+            if (!data.comments || data.comments.length === 0) {
+                commentList.innerHTML = '<div class="no-comments" style="text-align: center; padding: 40px; color: #888;">No comments yet. Be the first to comment!</div>';
+                return;
+            }
+            commentList.style.maxHeight = '400px';
+            commentList.style.overflowY = 'auto';
+            commentList.style.padding = '0 15px';
+            commentList.style.marginBottom = '60px';
+            commentList.style.background = 'transparent';
+            data.comments.forEach(comment => {
+                commentList.appendChild(createCommentElement(comment));
+            });
+        })
+        .catch(error => {
+            console.error('Error loading comments:', error);
+            commentList.innerHTML = `<div style="text-align: center; padding: 30px; color: #e74c3c;"><p>Error loading comments: ${error.message}</p><button onclick="loadComments('${postId}')" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Try Again</button></div>`;
+        });
+}
+
+function createCommentElement(comment) {
+    const formattedContent = (comment.content || '').replace(/\r\n|\r|\n/g, '<br>');
+    const isCommentAuthor = <?php echo (int)($_SESSION['user_id'] ?? 0); ?> === parseInt(comment.user_id);
+
+    const div = document.createElement('div');
+    div.className = 'comment-item new-comment';
+    div.dataset.commentId = comment.id;
+
+    div.innerHTML = `
+        <div class="comment-content">
+            ${comment.profile_picture
+                ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
+                : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
+            }
+            <div class="comment-body">
+                <div style="display: flex; width: 100%; background: transparent;">
+                    <h4 class="comment-author" style="background: transparent; margin: 0; padding: 0;">${comment.first_name} ${comment.last_name}</h4>
+                </div>
+                <p class="comment-text">${formattedContent}</p>
+                <small class="comment-time" style="font-size: 0.75rem; color: #999; display: block; margin-top: 2px;" data-timestamp="${comment.created_at}">${formatTimeAgo(comment.created_at)}</small>
+            </div>
+            ${isCommentAuthor ? `
+            <div class="comment-actions" style="position: absolute; right: 5px; top: 5px; z-index: 100;">
+                <i class="bi bi-three-dots-vertical comment-menu-trigger" data-comment-id="${comment.id}" style="cursor: pointer; padding: 8px; border-radius: 50%; transition: background-color 0.2s;"></i>
+            </div>
+            ` : ''}
+        </div>
+    `;
+
+    const commentText = div.querySelector('.comment-text');
+    if (commentText) {
+        commentText.style.cssText = `position: relative !important; background: #f0f2f5 !important; padding: 8px 12px !important; border-radius: 18px !important; word-wrap: break-word !important; overflow-wrap: break-word !important; width: fit-content !important; max-width: 100% !important; margin: 2px 0 !important; line-height: 1.4 !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;`;
+    }
+    const commentContent = div.querySelector('.comment-content');
+    if (commentContent) {
+        commentContent.style.cssText = `display: flex !important; align-items: flex-start !important; width: 100% !important; background: transparent !important; position: relative !important;`;
+    }
+    div.style.background = 'transparent';
+    const commentBody = div.querySelector('.comment-body');
+    if (commentBody) {
+        commentBody.style.cssText = `flex: 1 !important; max-width: calc(100% - 50px) !important; display: flex !important; flex-direction: column !important; background: transparent !important;`;
+    }
+
+    const menuTrigger = div.querySelector('.comment-menu-trigger');
+    if (menuTrigger) {
+        menuTrigger.addEventListener('mouseenter', () => { menuTrigger.style.backgroundColor = '#f0f0f0'; });
+        menuTrigger.addEventListener('mouseleave', () => { menuTrigger.style.backgroundColor = 'transparent'; });
+        menuTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.floating-comment-menu').forEach(menu => {
+                if (document.body.contains(menu)) document.body.removeChild(menu);
+            });
+
+            const floatingMenu = document.createElement('div');
+            floatingMenu.className = 'floating-comment-menu';
+            floatingMenu.dataset.commentId = comment.id;
+            floatingMenu.style.cssText = `position: fixed; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9999; min-width: 180px; padding: 5px 0;`;
+            floatingMenu.innerHTML = `
+                <div class="comment-menu-item edit-comment" data-comment-id="${comment.id}" style="color: var(--color-primary); padding: 10px 15px; cursor: pointer; display: flex; align-items: center;">
+                    <i class="bi bi-pencil-fill" style="margin-right: 8px; font-size: 14px;"></i> Edit Comment
+                </div>
+                <div class="comment-menu-item delete-comment" data-comment-id="${comment.id}" style="color: #e74c3c; padding: 10px 15px; cursor: pointer; display: flex; align-items: center;">
+                    <i class="bi bi-trash-fill" style="margin-right: 8px; font-size: 14px;"></i> Delete Comment
+                </div>
+            `;
+
+            const triggerRect = menuTrigger.getBoundingClientRect();
+            floatingMenu.style.top = (triggerRect.bottom + 5) + 'px';
+            const rightEdgeOffset = window.innerWidth - triggerRect.right;
+            if (rightEdgeOffset < 180) {
+                floatingMenu.style.right = (rightEdgeOffset + 10) + 'px';
+                floatingMenu.style.left = 'auto';
+            } else {
+                floatingMenu.style.left = triggerRect.right + 'px';
+            }
+            document.body.appendChild(floatingMenu);
+
+            floatingMenu.querySelector('.edit-comment').addEventListener('click', () => {
+                document.dispatchEvent(new CustomEvent('edit-comment-clicked', { detail: { commentId: comment.id } }));
+                if (document.body.contains(floatingMenu)) document.body.removeChild(floatingMenu);
+            });
+            floatingMenu.querySelector('.delete-comment').addEventListener('click', () => {
+                document.dispatchEvent(new CustomEvent('delete-comment-clicked', { detail: { commentId: comment.id } }));
+                if (document.body.contains(floatingMenu)) document.body.removeChild(floatingMenu);
+            });
+
+            setTimeout(() => {
+                const closeMenu = (ev) => {
+                    if (!floatingMenu.contains(ev.target) && ev.target !== menuTrigger) {
+                        if (document.body.contains(floatingMenu)) document.body.removeChild(floatingMenu);
+                        document.removeEventListener('click', closeMenu);
+                    }
+                };
+                document.addEventListener('click', closeMenu);
+            }, 100);
+        });
+    }
+    return div;
+}
+
+// ==================== COMMENT EDIT/DELETE EVENTS ====================
+let commentToEdit = null;
+let commentToDelete = null;
+
+document.addEventListener('edit-comment-clicked', function(e) {
+    const commentId = e.detail.commentId;
+    const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+    if (!commentItem) return;
+    const commentText = commentItem.querySelector('.comment-text').innerHTML;
+    commentToEdit = commentId;
+    const editCommentModal = document.getElementById('editCommentModal');
+    if (!editCommentModal) { alert('Error: Could not find the edit comment modal.'); return; }
+    const editCommentContent = document.getElementById('editCommentContent');
+    if (!editCommentContent) { alert('Error: Could not find the edit comment textarea.'); return; }
+    const cleanText = commentText.replace(/<br\s*\/?>/gi, '\n').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    editCommentContent.value = cleanText;
+    editCommentModal.style.cssText = `display: flex !important; z-index: 10000 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0, 0, 0, 0.7) !important; backdrop-filter: blur(4px) !important; justify-content: center !important; align-items: center !important;`;
+    void editCommentModal.offsetWidth;
+});
+
+document.addEventListener('delete-comment-clicked', function(e) {
+    const commentId = e.detail.commentId;
+    commentToDelete = commentId;
+    const deleteOverlay = document.getElementById('deleteCommentConfirmationOverlay');
+    if (!deleteOverlay) { alert('Error: Could not find the delete comment modal.'); return; }
+    deleteOverlay.style.cssText = `display: flex !important; z-index: 10000 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0, 0, 0, 0.7) !important; backdrop-filter: blur(4px) !important; justify-content: center !important; align-items: center !important;`;
+    document.body.style.overflow = 'hidden';
+});
+
+document.getElementById('closeEditComment').addEventListener('click', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    document.getElementById('editCommentModal').style.display = 'none';
+    commentToEdit = null;
+});
+document.getElementById('cancelEditComment').addEventListener('click', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    document.getElementById('editCommentModal').style.display = 'none';
+    commentToEdit = null;
+});
+
+document.getElementById('saveEditComment').addEventListener('click', async function(e) {
+    e.preventDefault(); e.stopPropagation();
+    if (!commentToEdit) { alert('Error: No comment selected for editing.'); return; }
+    const content = document.getElementById('editCommentContent').value.trim();
+    if (!content) { alert('Comment cannot be empty'); return; }
+
+    const saveButton = this;
+    const originalText = saveButton.textContent;
+    saveButton.textContent = 'Saving...';
+    saveButton.disabled = true;
+
+    try {
+        const formData = new URLSearchParams();
+        formData.append('comment_id', commentToEdit);
+        formData.append('content', content);
+        const response = await fetch('update_comment.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        });
+        if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+        const responseText = await response.text();
+        let data;
+        try { data = JSON.parse(responseText); } catch(pe) { throw new Error('Server returned invalid JSON'); }
+
+        if (data.success) {
+            const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentToEdit}"]`);
+            if (commentItem) {
+                const commentTextElement = commentItem.querySelector('.comment-text');
+                if (commentTextElement) commentTextElement.innerHTML = content.replace(/\r\n|\r|\n/g, '<br>');
+            }
+            document.getElementById('editCommentModal').style.display = 'none';
+            commentToEdit = null;
+        } else {
+            alert('Error: ' + (data.error || 'Failed to update comment'));
+        }
+    } catch (error) {
+        console.error('Error updating comment:', error);
+        alert('An error occurred while updating the comment: ' + error.message);
+    } finally {
+        saveButton.textContent = originalText;
+        saveButton.disabled = false;
+    }
+});
+
+document.getElementById('cancelDeleteComment').addEventListener('click', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    const deleteOverlay = document.getElementById('deleteCommentConfirmationOverlay');
+    if (deleteOverlay) { deleteOverlay.style.display = 'none'; document.body.style.overflow = 'auto'; }
+    commentToDelete = null;
+});
+
+document.getElementById('confirmDeleteComment').addEventListener('click', async function(e) {
+    e.preventDefault(); e.stopPropagation();
+    if (!commentToDelete) return;
+
+    const deleteButton = this;
+    const originalText = deleteButton.textContent;
+    deleteButton.textContent = 'Deleting...';
+    deleteButton.disabled = true;
+
+    try {
+        const formData = new URLSearchParams();
+        formData.append('comment_id', commentToDelete);
+        const response = await fetch('delete_comment.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        });
+        if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const deleteOverlay = document.getElementById('deleteCommentConfirmationOverlay');
+            if (deleteOverlay) { deleteOverlay.style.display = 'none'; document.body.style.overflow = 'auto'; }
+
+            const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentToDelete}"]`);
+            if (commentItem) {
+                commentItem.classList.add('comment-item-deleting');
+                setTimeout(() => {
+                    if (commentItem && commentItem.parentNode) commentItem.parentNode.removeChild(commentItem);
+                    const commentCountElement = document.querySelector(`[data-post-id="${currentPostId}"] .comment-count`);
+                    if (commentCountElement) {
+                        const newCount = parseInt(commentCountElement.textContent) - 1;
+                        commentCountElement.textContent = newCount > 0 ? newCount : '0';
+                    }
+                    const commentList = document.getElementById('commentList');
+                    if (commentList && commentList.children.length === 0) {
+                        commentList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
+                    }
+                }, 400);
+            } else {
+                if (currentPostId) loadComments(currentPostId);
+            }
+        } else {
+            console.error('Server reported error:', data.error);
+        }
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+    } finally {
+        deleteButton.textContent = originalText;
+        deleteButton.disabled = false;
+        commentToDelete = null;
+    }
+});
+
+document.getElementById('deleteCommentConfirmationOverlay').addEventListener('click', function(e) {
+    if (e.target === this) { this.style.display = 'none'; commentToDelete = null; }
+});
+
+// Move modals to body for proper z-index
+document.addEventListener('DOMContentLoaded', function() {
+    ['editCommentModal','editPostModal','deleteCommentConfirmationOverlay','deletePostConfirmationOverlay','commentModal'].forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) document.body.appendChild(modal);
+    });
+});
+</script>
+
+<!-- Post Status Updates Scripts -->
     let dateStr = dateString;
     if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/T.*[+-]/)) {
         dateStr = dateStr.replace(' ', 'T') + 'Z';
@@ -4428,7 +5207,115 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <!-- Include post status checker for real-time updates from admin actions -->
 <script src="post_status_checker.js?v=<?php echo time(); ?>"></script>
+<script>
+// Keep profile-feed controls independent from the legacy duplicate scripts above.
+(function () {
+    let activePostId = null;
+
+    function updateLike(button, liked, count) {
+        const icon = button.querySelector('i');
+        const label = button.querySelector('span');
+        const countEl = button.querySelector('.like-count');
+        button.dataset.liked = liked ? 'true' : 'false';
+        if (icon) icon.className = liked ? 'bi bi-heart-fill' : 'bi bi-heart';
+        if (label) label.textContent = liked ? 'Liked' : 'Like';
+        if (countEl) countEl.textContent = count;
+        const likedBy = button.closest('.feed')?.querySelector('.liked-by');
+        if (likedBy) likedBy.textContent = count > 0 ? `${count} ${count === 1 ? 'person' : 'people'} liked this` : 'Be the first to like this';
+    }
+
+    document.addEventListener('click', async function (event) {
+        const like = event.target.closest('.like-button');
+        if (!like) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (like.dataset.processing === 'true') return;
+
+        const wasLiked = like.dataset.liked === 'true';
+        const countEl = like.querySelector('.like-count');
+        const oldCount = Number.parseInt(countEl?.textContent || '0', 10) || 0;
+        const nextLiked = !wasLiked;
+        like.dataset.processing = 'true';
+        updateLike(like, nextLiked, Math.max(0, oldCount + (nextLiked ? 1 : -1)));
+
+        try {
+            const response = await fetch('like_post.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `post_id=${encodeURIComponent(like.dataset.postId)}&action=${nextLiked ? 'like' : 'unlike'}`
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.error || 'Unable to update like.');
+            updateLike(like, nextLiked, Number(data.likes));
+        } catch (error) {
+            console.error(error);
+            updateLike(like, wasLiked, oldCount);
+        } finally {
+            delete like.dataset.processing;
+        }
+    }, true);
+
+    document.addEventListener('click', function (event) {
+        const trigger = event.target.closest('.post-menu-trigger');
+        if (trigger) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const menu = document.querySelector(`.post-menu-dropdown[data-post-id="${trigger.dataset.postId}"]`);
+            document.querySelectorAll('.post-menu-dropdown').forEach(function (item) {
+                if (item !== menu) item.classList.remove('show');
+            });
+            if (menu) menu.classList.toggle('show');
+            return;
+        }
+        if (!event.target.closest('.post-actions-menu')) {
+            document.querySelectorAll('.post-menu-dropdown').forEach(function (item) { item.classList.remove('show'); });
+        }
+    }, true);
+
+    document.addEventListener('click', function (event) {
+        const trigger = event.target.closest('.comment-trigger');
+        if (!trigger) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        activePostId = trigger.dataset.postId;
+        const modal = document.getElementById('commentModal');
+        const postIdInput = modal?.querySelector('input[name="post_id"]');
+        if (!modal) return;
+        if (postIdInput) postIdInput.value = activePostId;
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        if (typeof window.loadComments === 'function') window.loadComments(activePostId);
+    }, true);
+
+    const commentForm = document.getElementById('commentForm');
+    if (commentForm) {
+        commentForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const textarea = commentForm.querySelector('textarea[name="comment-content"]');
+            const content = textarea?.value.trim();
+            if (!activePostId || !content) return;
+            const button = commentForm.querySelector('button[type="submit"]');
+            if (button) button.disabled = true;
+            try {
+                const formData = new FormData();
+                formData.append('post_id', activePostId);
+                formData.append('content', content);
+                const response = await fetch('add_comment.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Unable to add comment.');
+                if (textarea) textarea.value = '';
+                const count = document.querySelector(`.comment-trigger[data-post-id="${activePostId}"] .comment-count`);
+                if (count) count.textContent = data.new_count;
+                if (typeof window.loadComments === 'function') window.loadComments(activePostId);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }, true);
+    }
+})();
+</script>
 </body>
 </html>
-
-
