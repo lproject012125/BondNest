@@ -75,10 +75,46 @@ $selected_user = null;
 
 if ($selected_user_id) {
     // Get selected user info
-    $sql = "SELECT id, first_name, last_name, username, profile_picture FROM users WHERE id = ?";
+    $sql = "SELECT id, first_name, last_name, username, profile_picture, last_activity, user_status FROM users WHERE id = ?";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$selected_user_id]);
     $selected_user = $stmt->fetch();
+
+    // Compute initial status server-side to avoid flash of "Active recently"
+    $initial_status_text = 'Active recently';
+    $initial_status_class = 'recently';
+    if ($selected_user) {
+        $last_activity = strtotime($selected_user['last_activity'] . ' UTC');
+        $diff_minutes = round((time() - $last_activity) / 60);
+        $user_status = isset($selected_user['user_status']) ? $selected_user['user_status'] : 'offline';
+
+        if ($user_status === 'offline') {
+            $initial_status_text = 'Last seen recently';
+            $initial_status_class = 'offline';
+        } else if ($user_status === 'inactive') {
+            $initial_status_text = 'Away';
+            $initial_status_class = 'away';
+        } else {
+            if ($diff_minutes < 1) {
+                $initial_status_text = 'Active now';
+                $initial_status_class = 'online';
+            } else if ($diff_minutes < 5) {
+                $initial_status_text = 'Active ' . $diff_minutes . ' minutes ago';
+                $initial_status_class = 'recently';
+            } else if ($diff_minutes < 60) {
+                $initial_status_text = 'Active ' . $diff_minutes . ' minutes ago';
+                $initial_status_class = 'away';
+            } else if ($diff_minutes < 1440) {
+                $hours = floor($diff_minutes / 60);
+                $initial_status_text = 'Active ' . $hours . ' hours ago';
+                $initial_status_class = 'away';
+            } else {
+                $days = floor($diff_minutes / 1440);
+                $initial_status_text = 'Active ' . $days . ' days ago';
+                $initial_status_class = 'offline';
+            }
+        }
+    }
 
     // Get messages between current user and selected user, including deleted ones
     $sql = "SELECT m.*, u.first_name, u.last_name, u.profile_picture
@@ -1450,7 +1486,7 @@ function formatMessageTime($timestamp) {
                             <?php endif; ?>
                             <div class="chat-user-info">
                                 <div class="chat-user"><?php echo htmlspecialchars($selected_user['first_name'] . ' ' . $selected_user['last_name']); ?></div>
-                                <div class="chat-status" id="userStatus">Active recently</div>
+                                <div class="chat-status <?php echo $initial_status_class; ?>" id="userStatus"><?php echo $initial_status_text; ?></div>
                             </div>
                         </div>
                         
