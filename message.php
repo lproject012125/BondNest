@@ -219,6 +219,7 @@ function formatMessageTime($timestamp) {
         border-bottom: 1px solid var(--color-primary);
         display: flex;
         align-items: center;
+        gap: 20px;
         position: relative;
     }
 
@@ -237,8 +238,13 @@ function formatMessageTime($timestamp) {
         height: 42px;
         border-radius: 50%;
         object-fit: cover;
-        margin-right: 12px;
-        /* Removed border */
+        flex-shrink: 0;
+    }
+
+    .chat-header-avatar .initials-avatar {
+        width: 100% !important;
+        height: 100% !important;
+        font-size: 1rem !important;
     }
 
     .chat-user-info {
@@ -1219,7 +1225,7 @@ function formatMessageTime($timestamp) {
                             <?php if (!empty($selected_user['profile_picture'])): ?>
                                 <img src="<?php echo $selected_user['profile_picture']; ?>" class="chat-header-avatar">
                             <?php else: ?>
-                                <?php echo getInitialsHtml($selected_user['first_name'], $selected_user['last_name'], 44); ?>
+                                <div class="chat-header-avatar"><?php echo getInitialsHtml($selected_user['first_name'], $selected_user['last_name'], 44); ?></div>
                             <?php endif; ?>
                             <div class="chat-user-info">
                                 <div class="chat-user"><?php echo htmlspecialchars($selected_user['first_name'] . ' ' . $selected_user['last_name']); ?></div>
