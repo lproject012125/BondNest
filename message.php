@@ -513,11 +513,19 @@ function formatMessageTime($timestamp) {
     }
     .message-image-grid.grid-1 { grid-template-columns: 1fr; }
     .message-image-grid.grid-2 { grid-template-columns: 1fr 1fr; }
-    .message-image-grid.grid-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .message-image-grid.grid-3 { grid-template-columns: 1fr 1fr; }
     .message-image-grid.grid-3 .message-image-cell:first-child { grid-row: span 2; }
     .message-image-grid.grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-    .message-image-grid.grid-5 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
-    .message-image-grid.grid-5 .message-image-cell:first-child { grid-row: span 2; }
+    .message-image-grid.grid-5 {
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: 1fr 1fr;
+    }
+    .message-image-grid.grid-5 .message-image-cell:nth-child(-n+3) {
+        grid-column: span 2;
+    }
+    .message-image-grid.grid-5 .message-image-cell:nth-child(n+4) {
+        grid-column: span 3;
+    }
 
     .message-image-cell {
         overflow: hidden;
@@ -557,9 +565,6 @@ function formatMessageTime($timestamp) {
         background: rgba(0,0,0,0.92);
         z-index: 10000;
         justify-content: center;
-        align-items: center;
-        flex-direction: column;
-    }
         align-items: center;
         flex-direction: column;
     }
@@ -2440,74 +2445,72 @@ function formatMessageTime($timestamp) {
                     }
                 });
             }
-        });
 
-        function getCurrentTime() {
-            const now = new Date();
-            const options = { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit', hour12: true };
-            return 'Today at ' + now.toLocaleString('en-US', options);
-        }
-
-        // Lightbox functionality
-        const lightbox = document.getElementById('messageLightbox');
-        const lightboxImage = document.getElementById('lightboxImage');
-        const lightboxCloseBtn = document.getElementById('lightboxClose');
-        const lightboxPrevBtn = document.getElementById('lightboxPrev');
-        const lightboxNextBtn = document.getElementById('lightboxNext');
-        const lightboxCounter = document.getElementById('lightboxCounter');
-        let lightboxImages = [];
-        let lightboxIndex = 0;
-
-        function openLightbox(images, index) {
-            lightboxImages = images;
-            lightboxIndex = index;
-            updateLightbox();
-            lightbox.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeLightbox() {
-            lightbox.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        function updateLightbox() {
-            lightboxImage.src = lightboxImages[lightboxIndex];
-            if (lightboxImages.length > 1) {
-                lightboxCounter.textContent = (lightboxIndex + 1) + '/' + lightboxImages.length;
-                lightboxPrevBtn.style.display = 'flex';
-                lightboxNextBtn.style.display = 'flex';
-            } else {
-                lightboxCounter.textContent = '';
-                lightboxPrevBtn.style.display = 'none';
-                lightboxNextBtn.style.display = 'none';
+            function getCurrentTime() {
+                const now = new Date();
+                const options = { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit', hour12: true };
+                return 'Today at ' + now.toLocaleString('en-US', options);
             }
-        }
 
-        function lightboxNavigate(direction) {
-            lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
-            updateLightbox();
-        }
+            // Lightbox functionality
+            const lightbox = document.getElementById('messageLightbox');
+            const lightboxImage = document.getElementById('lightboxImage');
+            const lightboxCloseBtn = document.getElementById('lightboxClose');
+            const lightboxPrevBtn = document.getElementById('lightboxPrev');
+            const lightboxNextBtn = document.getElementById('lightboxNext');
+            const lightboxCounter = document.getElementById('lightboxCounter');
+            let lightboxImages = [];
+            let lightboxIndex = 0;
 
-        if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
-        if (lightboxPrevBtn) lightboxPrevBtn.addEventListener('click', function() { lightboxNavigate(-1); });
-        if (lightboxNextBtn) lightboxNextBtn.addEventListener('click', function() { lightboxNavigate(1); });
+            function openLightbox(images, index) {
+                lightboxImages = images;
+                lightboxIndex = index;
+                updateLightbox();
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
 
-        if (lightbox) {
-            lightbox.addEventListener('click', function(e) {
-                if (e.target === lightbox) closeLightbox();
+            function closeLightbox() {
+                lightbox.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            function updateLightbox() {
+                lightboxImage.src = lightboxImages[lightboxIndex];
+                if (lightboxImages.length > 1) {
+                    lightboxCounter.textContent = (lightboxIndex + 1) + '/' + lightboxImages.length;
+                    lightboxPrevBtn.style.display = 'flex';
+                    lightboxNextBtn.style.display = 'flex';
+                } else {
+                    lightboxCounter.textContent = '';
+                    lightboxPrevBtn.style.display = 'none';
+                    lightboxNextBtn.style.display = 'none';
+                }
+            }
+
+            function lightboxNavigate(direction) {
+                lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+                updateLightbox();
+            }
+
+            if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
+            if (lightboxPrevBtn) lightboxPrevBtn.addEventListener('click', function() { lightboxNavigate(-1); });
+            if (lightboxNextBtn) lightboxNextBtn.addEventListener('click', function() { lightboxNavigate(1); });
+
+            if (lightbox) {
+                lightbox.addEventListener('click', function(e) {
+                    if (e.target === lightbox) closeLightbox();
+                });
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (!lightbox || !lightbox.classList.contains('active')) return;
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowLeft') lightboxNavigate(-1);
+                if (e.key === 'ArrowRight') lightboxNavigate(1);
             });
-        }
 
-        document.addEventListener('keydown', function(e) {
-            if (!lightbox || !lightbox.classList.contains('active')) return;
-            if (e.key === 'Escape') closeLightbox();
-            if (e.key === 'ArrowLeft') lightboxNavigate(-1);
-            if (e.key === 'ArrowRight') lightboxNavigate(1);
-        });
-
-        // Event delegation for image clicks
-        if (chatMessages) {
+            // Event delegation for image clicks
             chatMessages.addEventListener('click', function(e) {
                 var img = null;
                 if (e.target.classList.contains('message-image')) {
@@ -2532,7 +2535,9 @@ function formatMessageTime($timestamp) {
 
                 openLightbox(images, idx);
             });
-        }
+        });
+
+
     </script>
 
     <!-- Delete Confirmation Modal -->
