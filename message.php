@@ -345,11 +345,13 @@ function formatMessageTime($timestamp) {
 
     .message-container {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        align-items: center;
         margin-bottom: 15px;
         max-width: 80%;
         transition: all 0.3s ease;
         position: relative;
+        gap: 4px;
     }
 
     .message-container:hover {
@@ -362,7 +364,20 @@ function formatMessageTime($timestamp) {
 
     .message-container.sent {
         align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .message-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sent .message-content {
         align-items: flex-end;
+    }
+
+    .received .message-content {
+        align-items: flex-start;
     }
 
     .message {
@@ -975,9 +990,6 @@ function formatMessageTime($timestamp) {
 
     /* Add new styles for message menu */
     .message-menu {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
         opacity: 0;
         transition: opacity 0.2s ease;
         cursor: pointer;
@@ -986,14 +998,13 @@ function formatMessageTime($timestamp) {
         background: rgba(255, 255, 255, 0.9);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         z-index: 1;
+        flex-shrink: 0;
+        align-self: center;
+        position: relative;
     }
 
     .message-container:hover .message-menu {
         opacity: 1;
-    }
-
-    .message-container.sent .message-menu {
-        left: -8px;
     }
 
     .message-container.received .message-menu {
@@ -1030,15 +1041,13 @@ function formatMessageTime($timestamp) {
     }
 
     .message-container.sent .message-dropdown {
-        left: -108px;
-        top: 50%;
-        transform: translateY(-50%);
+        right: 0;
+        top: calc(100% + 4px);
     }
 
     .message-container.received .message-dropdown {
-        right: -108px;
-        top: 50%;
-        transform: translateY(-50%);
+        left: 0;
+        top: calc(100% + 4px);
     }
 
     .dropdown-item {
@@ -1465,6 +1474,7 @@ function formatMessageTime($timestamp) {
                                         </div>
                                     </div>
                                     <?php endif; ?>
+                                    <div class="message-content">
                                     <div class="message">
                                         <?php if (isset($message['deleted']) && $message['deleted'] == 1): ?>
                                             <i class="bi bi-trash-fill" style="margin-right: 5px; font-size: 12px;"></i> This message was deleted
@@ -1499,6 +1509,7 @@ function formatMessageTime($timestamp) {
                                         <?php if (!empty($message['updated_at']) && (!isset($message['deleted']) || $message['deleted'] != 1)): ?>
                                         <span class="edited">(edited)</span>
                                         <?php endif; ?>
+                                    </div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -1808,8 +1819,12 @@ function formatMessageTime($timestamp) {
                     timestampDiv.classList.add('timestamp');
                     timestampDiv.textContent = getCurrentTime();
                     
-                    messageContainer.appendChild(messageDiv);
-                    messageContainer.appendChild(timestampDiv);
+                    const messageContent = document.createElement('div');
+                    messageContent.classList.add('message-content');
+                    messageContent.appendChild(messageDiv);
+                    messageContent.appendChild(timestampDiv);
+                    
+                    messageContainer.appendChild(messageContent);
                     
                     chatMessages.appendChild(messageContainer);
                     messageInput.value = '';
@@ -1897,8 +1912,12 @@ function formatMessageTime($timestamp) {
                                     timestampDiv.classList.add('timestamp');
                                     timestampDiv.textContent = message.time;
                                     
-                                    messageContainer.appendChild(messageDiv);
-                                    messageContainer.appendChild(timestampDiv);
+                                    const messageContent = document.createElement('div');
+                                    messageContent.classList.add('message-content');
+                                    messageContent.appendChild(messageDiv);
+                                    messageContent.appendChild(timestampDiv);
+                                    
+                                    messageContainer.appendChild(messageContent);
                                     
                                     chatMessages.appendChild(messageContainer);
                                     
