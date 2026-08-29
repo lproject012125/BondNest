@@ -400,7 +400,6 @@ function formatMessageTime($timestamp) {
 
     .message-container.sent {
         align-self: flex-end;
-        flex-direction: row-reverse;
     }
 
     .message-content {
