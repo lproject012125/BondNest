@@ -833,8 +833,11 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                         changePhotoBtn.disabled = false;
                         changePhotoBtn.innerHTML = '<i class="bi bi-camera"></i> Change Photo';
                         if (data.success) {
-                            avatarPreviewContainer.innerHTML = `<img src="${data.profile_picture}?t=${Date.now()}" alt="Profile Picture" id="currentAvatarImg">`;
+                            const imgSrc = data.profile_picture + '?t=' + Date.now();
+                            avatarPreviewContainer.innerHTML = `<img src="${imgSrc}" alt="Profile Picture" id="currentAvatarImg">`;
                             showToast(data.message, 'success');
+                            // Sync navbar + sidebar
+                            updateNavAvatarsFromUpload(data.profile_picture + '?t=' + Date.now());
                             // Add delete button if not already present
                             if (!document.getElementById('deletePhotoBtn')) {
                                 const actionsDiv = document.querySelector('.settings-avatar-actions');
@@ -891,6 +894,8 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                             avatarPreviewContainer.innerHTML = `<div class="initials-avatar" style="width:100px;height:100px;border-radius:50%;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:2.2rem;font-family:Poppins,sans-serif;">${initials}</div>`;
                             showToast(data.message, 'success');
                             btn.remove();
+                            // Update navbar and sidebar avatars
+                            updateNavAvatars(firstName, lastName);
                         } else {
                             showToast(data.error || 'Failed to remove picture.', 'error');
                         }
@@ -901,6 +906,31 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                         showToast('Error removing profile picture.', 'error');
                     });
             };
+        }
+
+        // Update navbar + sidebar avatars after profile pic change/delete
+        function updateNavAvatars(firstName, lastName) {
+            const initials = (firstName[0] || '').toUpperCase() + (lastName[0] || '').toUpperCase();
+            const colors = ['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50'];
+            let hash = 0;
+            const name = firstName + lastName;
+            for (let i = 0; i < name.length; i++) { hash = (hash * 31 + name.charCodeAt(i)) & 0x7FFFFFFF; }
+            const bg = colors[hash % colors.length];
+            const initialsHtml = `<div class="initials-avatar" style="width:40px;height:40px;border-radius:50%;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;font-family:Poppins,sans-serif;">${initials}</div>`;
+            // Navbar avatar
+            const navProfilePic = document.querySelector('.navbar-right .profile-picture');
+            if (navProfilePic) navProfilePic.innerHTML = initialsHtml;
+            // Sidebar avatar
+            const sidebarProfilePic = document.querySelector('.left .profile .profile_picture');
+            if (sidebarProfilePic) sidebarProfilePic.innerHTML = initialsHtml;
+        }
+
+        // Also update avatars after successful upload
+        function updateNavAvatarsFromUpload(imgSrc) {
+            const navProfilePic = document.querySelector('.navbar-right .profile-picture');
+            if (navProfilePic) navProfilePic.innerHTML = `<img src="${imgSrc}" alt="Profile Picture" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`;
+            const sidebarProfilePic = document.querySelector('.left .profile .profile_picture');
+            if (sidebarProfilePic) sidebarProfilePic.innerHTML = `<img src="${imgSrc}" alt="Profile Picture" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
         }
         setupDeletePhotoBtn();
 
