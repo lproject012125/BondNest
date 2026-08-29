@@ -62,7 +62,7 @@ body {
     font-family: "Poppins", sans-serif;
     color: var(--color-dark);
     background: var(--color-light);
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 @keyframes gradientFlow {
@@ -215,14 +215,18 @@ body {
     grid-template-columns: 370px 1fr;
     gap: 30px;
     padding: 20px 0;
+    align-items: start;
 }
 
-/* Left Sidebar - New Card Design */
+/* Left Sidebar - Sticky */
 .profile-sidebar {
     display: flex;
     flex-direction: column;
     gap: 25px;
     transition: all 0.3s ease;
+    position: sticky;
+    top: 90px;
+    align-self: start;
 }
 
 .profile-card {
@@ -330,7 +334,7 @@ body {
 .profile-main-column {
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 15px;
     min-width: 0;
     width: 100%;
 }
@@ -412,33 +416,51 @@ body {
     font-size: 1rem;
 }
 
-/* Activity Feed Card (Your Activity) */
+/* Activity Feed (Your Activity) */
 .activity-feed {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
     transition: all 0.3s ease;
     width: 100%;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .feed-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e4e6eb;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
     width: 100%;
 }
 
 .feed-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     color: var(--primary);
     font-weight: 600;
     margin-right: 20px;
     flex-shrink: 0;
+}
+
+.feeds {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.feed.post-item {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 0;
 }
 
 /* Create Post Modal on Profile Page - Exactly matching homepage.php */
@@ -474,6 +496,9 @@ body {
     border-radius: 10px !important;
     width: 100% !important;
     max-width: 500px !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: 90vh !important;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3) !important;
     padding: 20px !important;
     overflow: hidden !important;
@@ -924,7 +949,10 @@ transform: translateX(-300px); /* Moves the button left when sidebar is collapse
     to { opacity: 1; }
 }
 
-.modal-content {
+.edit-profile-modal .modal-content,
+.edit-details-modal .modal-content,
+#editProfileModal .modal-content,
+#editDetailsModal .modal-content {
     background-color: #fff;
     margin: 5% auto; /* Adjust top margin for better centering */
     width: 100%;

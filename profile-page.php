@@ -1031,39 +1031,48 @@ unset($_SESSION['form_data']);
             }
         }
         
-        /* Make sure the activity feed has proper styling */
+        /* Activity Feed container without extra outer box */
         .activity-feed {
-            padding: 20px;
-            background: var(--color-white);
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
         
         .feed-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--color-light);
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
         }
         
         .feed-title {
-            color: var(--color-primary); /* Change to teal color */
-            font-size: 1.5rem;
+            color: var(--color-primary);
+            font-size: 1.4rem;
             font-weight: 600;
-            /* Removed border-bottom and padding-bottom to eliminate the visible line */
+            margin: 0;
         }
         
         /* Additional fixes for post display */
         .activity-feed .feeds {
             margin-top: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
         
         .activity-feed .feed {
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: var(--color-white);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
         }
         
         /* Ensure consistent post content styling */
