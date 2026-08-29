@@ -2695,7 +2695,7 @@ unset($_SESSION['form_data']);
                                                     title="<?php echo ($post['status'] === 'approved') ? 'Approved by admin' : 'On hold'; ?>"></span>
                                             <?php endif; ?>
                                             <i class="bi bi-globe"></i> BondNest &middot; 
-                                            <span class="time-ago" data-timestamp="<?php echo strtotime($post['created_at']); ?>" data-original-date="<?php echo htmlspecialchars($post['created_at']); ?>">
+                                            <span class="time-ago" data-timestamp="<?php echo htmlspecialchars($post['created_at']); ?>">
                                                 <?php echo time_elapsed_string($post['created_at']); ?>
                                             </span>
                                             <?php if (isset($post['status']) && $post['status'] !== 'posted'): ?>
@@ -2823,8 +2823,45 @@ unset($_SESSION['form_data']);
 </div>
 
 <script>
-// Sidebar menu item functionality
+// TIME AGO FUNCTIONS - Exactly matching homepage.php
+function formatTimeAgo(dateString) {
+    let dateStr = dateString;
+    if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/T.*[+-]/)) {
+        dateStr = dateStr.replace(' ', 'T') + 'Z';
+    }
+    const date = new Date(dateStr);
+    const now = new Date();
+    const secondsPast = (now - date) / 1000;
+
+    if (secondsPast < 1) return 'just now';
+    if (secondsPast < 60) return `${Math.round(secondsPast)} seconds ago`;
+    if (secondsPast < 3600) return `${Math.round(secondsPast / 60)} minutes ago`;
+    if (secondsPast < 86400) return `${Math.round(secondsPast / 3600)} hours ago`;
+    if (secondsPast < 604800) return `${Math.round(secondsPast / 86400)} days ago`;
+    if (secondsPast < 2419200) return `${Math.round(secondsPast / 604800)} weeks ago`;
+    if (secondsPast < 29030400) return `${Math.round(secondsPast / 2419200)} months ago`;
+    return `${Math.round(secondsPast / 29030400)} years ago`;
+}
+
+function updateAllTimeAgo() {
+    document.querySelectorAll('.time-ago').forEach(element => {
+        const dateString = element.getAttribute('data-timestamp') || element.dataset.originalDate;
+        if (dateString) {
+            element.textContent = formatTimeAgo(dateString);
+        }
+    });
+}
+
+function timeElapsedString(dateString) {
+    return formatTimeAgo(dateString);
+}
+
+// Sidebar menu item functionality & Relative Timestamps
 document.addEventListener('DOMContentLoaded', function() {
+    // Initial dynamic timestamp update
+    updateAllTimeAgo();
+    setInterval(updateAllTimeAgo, 60000);
+
     // Get all menu items
     const menuItems = document.querySelectorAll('.left .sidebar .menu-item');
     
@@ -2838,13 +2875,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add click event to each menu item
     menuItems.forEach(item => {
         item.addEventListener('click', function(e) {
-            // Handle active state but don't prevent navigation
             removeActiveClass();
             this.classList.add('active');
-            
-            // The active class will be applied before navigation occurs
-            // The page will load with the correct active class from PHP
-            // No need to prevent default as we want navigation to occur
         });
     });
 });
@@ -3438,246 +3470,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to create a comment element
     function createCommentElement(comment) {
-        // Format the comment content by replacing newlines with <br> tags
-        const formattedContent = comment.content.replace(/\r\n|\r|\n/g, '<br>');
-        
-        // Debug output to console
+        const formattedContent = (comment.content || '').replace(/\r\n|\r|\n/g, '<br>');
         console.log('Creating comment element for:', comment);
         
-        // Check if current user is the comment author
-        const isCommentAuthor = <?php echo $_SESSION['user_id']; ?> === parseInt(comment.user_id);
-        
-        const div = document.createElement('div');
-        div.className = 'comment-item new-comment';
-        div.dataset.commentId = comment.id;
-        
-        div.innerHTML = `
-                                <div class="comment-content">
-                <img src="${comment.profile_picture || './web-images/default_profile.png'}" 
-                    class="comment-avatar" alt="User avatar">
-                                    <div class="comment-body">
-                    <div style="display: flex; width: 100%; background: transparent;">
-                        <h4 class="comment-author" style="background: transparent; margin: 0; padding: 0;">${comment.first_name} ${comment.last_name}</h4>
-                                    </div>
-                    <p class="comment-text">${formattedContent}</p>
-                    <small class="comment-time" style="font-size: 0.75rem; color: #999; display: block; margin-top: 2px;">${timeElapsedString(comment.created_at)}</small>
-                                </div>
-                ${isCommentAuthor ? `
-                <div class="comment-actions" style="position: absolute; right: 5px; top: 5px; z-index: 100;">
-                    <i class="bi bi-three-dots-vertical comment-menu-trigger" data-comment-id="${comment.id}" style="cursor: pointer; padding: 8px; border-radius: 50%; transition: background-color 0.2s;"></i>
-                </div>
-                ` : ''}
-                            </div>
-                        `;
-        
-        // Apply styles directly to ensure they're applied
-        const commentText = div.querySelector('.comment-text');
-        if (commentText) {
-            commentText.style.cssText = `
-                position: relative !important;
-                background: #f0f2f5 !important;
-                padding: 8px 12px !important;
-                border-radius: 18px !important;
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-                width: fit-content !important;
-                max-width: 100% !important;
-                margin: 2px 0 !important;
-                line-height: 1.4 !important;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-            `;
-        }
-        
-        // Ensure the comment content is properly styled with position relative
-        const commentContent = div.querySelector('.comment-content');
-        if (commentContent) {
-            commentContent.style.cssText = `
-                display: flex !important;
-                align-items: flex-start !important;
-                width: 100% !important;
-                background: transparent !important;
-                position: relative !important;
-            `;
-        }
-        
-        // Ensure comment item has transparent background
-        div.style.background = 'transparent';
-        
-        // Ensure comment body is styled correctly
-        const commentBody = div.querySelector('.comment-body');
-        if (commentBody) {
-            commentBody.style.cssText = `
-                flex: 1 !important;
-                max-width: calc(100% - 50px) !important;
-                display: flex !important;
-                flex-direction: column !important;
-                background: transparent !important;
-            `;
-        }
-        
-        return div;
-    }
-    
-    // Update click handler for comment-trigger
-    document.addEventListener('click', function(e) {
-        // Handle comment button clicks
-        if (e.target.closest('.comment-trigger')) {
-            const commentButton = e.target.closest('.comment-trigger');
-            const postId = commentButton.dataset.postId;
-            
-            // Show comment modal
-            const commentModal = document.getElementById('commentModal');
-            if (commentModal) {
-                // Position the modal properly
-                commentModal.style.cssText = `
-                    display: flex !important;
-                    z-index: 9999 !important;
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    background: rgba(0, 0, 0, 0.7) !important;
-                    backdrop-filter: blur(4px) !important;
-                    justify-content: center !important;
-                    align-items: center !important;
-                `;
-                
-                // Load comments for this post
-                loadComments(postId);
-            }
-        }
-        
-        // Close comment modal when clicking close button
-        if (e.target.classList.contains('close-comment')) {
-            const commentModal = document.getElementById('commentModal');
-            if (commentModal) {
-                commentModal.style.display = 'none';
-            }
-        }
-        
-        // Close comment modal when clicking outside
-        if (e.target.classList.contains('comment-modal')) {
-            e.target.style.display = 'none';
-        }
-    });
-    
-    // Handle comment form submission
-    document.getElementById('commentForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const postId = this.querySelector('input[name="post_id"]').value;
-        const content = this.querySelector('textarea[name="comment-content"]').value.trim();
-        
-        if (!content) {
-            alert('Please enter a comment');
-            return;
-        }
-        
-        // Create FormData and append post_id and content
-        const formData = new FormData();
-        formData.append('post_id', postId);
-        formData.append('content', content);
-        
-        // Send AJAX request
-        fetch('add_comment.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Clear textarea
-                this.querySelector('textarea[name="comment-content"]').value = '';
-                
-                // Reload comments to see the new comment
-                loadComments(postId);
-            } else {
-                alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            alert('An error occurred while adding your comment');
-            });
-    });
-    
-    // Update relative timestamps
-    function updateTimestamps() {
-        document.querySelectorAll('.time-ago').forEach(timeElement => {
-            const timestamp = parseInt(timeElement.dataset.timestamp);
-            const originalDate = timeElement.dataset.originalDate;
-            
-            if (timestamp) {
-                // Create date object and use timeAgo function
-                const date = new Date(timestamp * 1000);
-                timeElement.textContent = timeAgo(date);
-            }
-        });
-    }
-    
-    function timeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        
-        // Use the same calculation logic as in homepage.php for consistency
-        const intervals = {
-            year: 31536000,
-            month: 2592000,
-            week: 604800,
-            day: 86400,
-            hour: 3600,
-            minute: 60,
-            second: 1
-        };
-        
-        for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-            const interval = Math.floor(seconds / secondsInUnit);
-            if (interval >= 1) {
-                return interval === 1 ? `${interval} ${unit} ago` : `${interval} ${unit}s ago`;
-            }
-        }
-        
-        return 'just now';
-    }
-    
-    // formatTimeAgo — matches homepage.php implementation exactly
-    function formatTimeAgo(dateString) {
-        let dateStr = dateString;
-        if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/T.*[+-]/)) {
-            dateStr = dateStr.replace(' ', 'T') + 'Z';
-        }
-        const date = new Date(dateStr);
-        const now = new Date();
-        const secondsPast = (now - date) / 1000;
-        if (secondsPast < 1) return 'just now';
-        if (secondsPast < 60) return `${Math.round(secondsPast)} seconds ago`;
-        if (secondsPast < 3600) return `${Math.round(secondsPast / 60)} minutes ago`;
-        if (secondsPast < 86400) return `${Math.round(secondsPast / 3600)} hours ago`;
-        if (secondsPast < 604800) return `${Math.round(secondsPast / 86400)} days ago`;
-        if (secondsPast < 2419200) return `${Math.round(secondsPast / 604800)} weeks ago`;
-        if (secondsPast < 29030400) return `${Math.round(secondsPast / 2419200)} months ago`;
-        return `${Math.round(secondsPast / 29030400)} years ago`;
-    }
-
-    // Helper function to format time for comments
-    function timeElapsedString(dateString) {
-        return formatTimeAgo(dateString);
-    }
-    
-    // Variables to track current comment
-    let commentToEdit = null;
-    let commentToDelete = null;
-    let currentPostId = null;
-
-    // Function to create a comment element
-    function createCommentElement(comment) {
-        // Format the comment content by replacing newlines with <br> tags
-        const formattedContent = comment.content.replace(/\r\n|\r|\n/g, '<br>');
-        
-        // Debug output to console
-        console.log('Creating comment element for:', comment);
-        
-        // Check if current user is the comment author
         const isCommentAuthor = <?php echo $_SESSION['user_id']; ?> === parseInt(comment.user_id);
         
         const div = document.createElement('div');
@@ -3686,14 +3481,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         div.innerHTML = `
             <div class="comment-content">
-                <img src="${comment.profile_picture || './web-images/default_profile.png'}" 
-                    class="comment-avatar" alt="User avatar">
+                ${comment.profile_picture 
+                    ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
+                    : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
+                }
                 <div class="comment-body">
                     <div style="display: flex; width: 100%; background: transparent;">
                         <h4 class="comment-author" style="background: transparent; margin: 0; padding: 0;">${comment.first_name} ${comment.last_name}</h4>
                     </div>
                     <p class="comment-text">${formattedContent}</p>
-                    <small class="comment-time" style="font-size: 0.75rem; color: #999; display: block; margin-top: 2px;">${timeElapsedString(comment.created_at)}</small>
+                    <small class="comment-time" style="font-size: 0.75rem; color: #999; display: block; margin-top: 2px;" data-timestamp="${comment.created_at}">${formatTimeAgo(comment.created_at)}</small>
                 </div>
                 ${isCommentAuthor ? `
                 <div class="comment-actions" style="position: absolute; right: 5px; top: 5px; z-index: 100;">
@@ -3703,7 +3500,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Apply styles directly to ensure they're applied
         const commentText = div.querySelector('.comment-text');
         if (commentText) {
             commentText.style.cssText = `
@@ -3721,7 +3517,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
         
-        // Ensure the comment content is properly styled with position relative
         const commentContent = div.querySelector('.comment-content');
         if (commentContent) {
             commentContent.style.cssText = `
@@ -3733,10 +3528,8 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
         
-        // Ensure comment item has transparent background
         div.style.background = 'transparent';
         
-        // Ensure comment body is styled correctly
         const commentBody = div.querySelector('.comment-body');
         if (commentBody) {
             commentBody.style.cssText = `
@@ -3748,7 +3541,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
         
-        // Apply hover effect to the menu trigger icon
         const menuTrigger = div.querySelector('.comment-menu-trigger');
         if (menuTrigger) {
             menuTrigger.addEventListener('mouseenter', () => {
@@ -3757,7 +3549,69 @@ document.addEventListener('DOMContentLoaded', function() {
             menuTrigger.addEventListener('mouseleave', () => {
                 menuTrigger.style.backgroundColor = 'transparent';
             });
-            
+        }
+        
+        return div;
+    }
+    
+    // Handle comment form submission
+    document.addEventListener('DOMContentLoaded', function() {
+        const commentForm = document.getElementById('commentForm');
+        if (commentForm) {
+            commentForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const postId = this.querySelector('input[name="post_id"]').value;
+                const textarea = this.querySelector('textarea[name="comment-content"]');
+                const content = textarea.value.trim();
+                
+                if (!content) {
+                    alert('Please enter a comment');
+                    return;
+                }
+                
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const origBtnText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Posting...';
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('post_id', postId);
+                    formData.append('content', content);
+                    
+                    const response = await fetch('add_comment.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        textarea.value = '';
+                        const commentList = document.getElementById('commentList');
+                        if (commentList) {
+                            const noMsg = commentList.querySelector('.no-comments');
+                            if (noMsg) noMsg.remove();
+                            const newCommentEl = createCommentElement(data.comment);
+                            commentList.insertBefore(newCommentEl, commentList.firstChild);
+                            newCommentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                        const countEl = document.querySelector(`.comment-trigger[data-post-id="${postId}"] .comment-count`);
+                        if (countEl && data.new_count !== undefined) {
+                            countEl.textContent = data.new_count;
+                        }
+                    } else {
+                        alert('Error: ' + (data.error || data.message || 'Unknown error'));
+                    }
+                } catch (err) {
+                    console.error('Error adding comment:', err);
+                    alert('An error occurred while posting your comment.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = origBtnText;
+                }
+            });
+        }
+    });
             // Add click event to show the floating menu
             menuTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -5740,195 +5594,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Run the setup
     setupCommentMenuHandlers();
     
-    // Set current post ID when opening comments
-    document.querySelectorAll('.comment-trigger').forEach(trigger => {
-        trigger.addEventListener('click', function() {
-            window.currentPostId = this.dataset.postId;
-            console.log('Set current post ID:', window.currentPostId);
-        });
-    });
-    
     console.log('Comment functionality fix loaded');
-});
-</script>
-
-
-</script>
-
-<!-- After all modals but before the closing body tag -->
-<script>
-// Enhanced comment functionality
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Setting up enhanced comment functionality...');
-    
-    // Get comment modal elements
-    const commentModal = document.getElementById('commentModal');
-    const commentForm = document.getElementById('commentForm');
-    const commentList = document.getElementById('commentList');
-    
-    if (!commentModal || !commentForm || !commentList) {
-        console.error('Comment modal elements not found!');
-        return;
-    }
-    
-    // Handle comment form submission
-    commentForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        console.log('Comment form submitted');
-        
-        const postId = this.querySelector('input[name="post_id"]').value;
-        const content = this.querySelector('textarea[name="comment-content"]').value.trim();
-        
-        if (!content) {
-            alert('Please enter a comment');
-            return;
-        }
-        
-        // Disable form during submission
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Posting...';
-        
-        try {
-            // Create FormData and append post_id and content
-            const formData = new FormData();
-            formData.append('post_id', postId);
-            formData.append('content', content);
-            
-            console.log('Sending comment to server for post ID:', postId);
-            
-            // Send AJAX request
-            const response = await fetch('add_comment.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Server responded with status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                console.log('Comment added successfully:', data.comment);
-                
-                // Clear textarea
-                this.querySelector('textarea[name="comment-content"]').value = '';
-                
-                // Create and add new comment element
-                const newComment = createCommentElement(data.comment);
-                
-                // Check if there are no comments message and remove it
-                const noCommentsMsg = commentList.querySelector('.no-comments');
-                if (noCommentsMsg) {
-                    commentList.innerHTML = '';
-                }
-                
-                // Add the new comment at the top
-                commentList.insertBefore(newComment, commentList.firstChild);
-                
-                // Scroll to the new comment
-                newComment.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                
-                // Update comment count in feed
-                const commentCountElement = document.querySelector(`.comment-trigger[data-post-id="${postId}"] .comment-count`);
-                if (commentCountElement) {
-                    commentCountElement.textContent = data.new_count;
-                }
-            } else {
-                console.error('Server error:', data.error);
-                alert('Error: ' + (data.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Error posting comment:', error);
-            alert('An error occurred while adding your comment. Please try again.');
-        } finally {
-            // Re-enable form
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalBtnText;
-        }
-    });
-    
-    // Make sure clicking X on comment modal closes it properly
-    const closeCommentBtn = commentModal.querySelector('.close-comment');
-    if (closeCommentBtn) {
-        closeCommentBtn.addEventListener('click', function() {
-            commentModal.style.display = 'none';
-            document.body.style.overflow = '';
-        });
-    }
-    
-    // Handle click outside comment modal to close
-    commentModal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.style.display = 'none';
-            document.body.style.overflow = '';
-        }
-    });
-    
-    console.log('Enhanced comment functionality setup complete');
-});
-</script>
-
-<!-- Update the comment trigger event handler to ensure proper modal display -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle comment trigger clicks to show the comment modal
-    document.querySelectorAll('.comment-trigger').forEach(trigger => {
-        trigger.addEventListener('click', function(e) {
-            e.preventDefault();
-            const postId = this.dataset.postId;
-            console.log('Comment trigger clicked for post ID:', postId);
-            
-            // Show and style the comment modal
-            const commentModal = document.getElementById('commentModal');
-            if (commentModal) {
-                commentModal.style.cssText = `
-                    display: flex !important;
-                    z-index: 9999 !important;
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    background: rgba(0, 0, 0, 0.7) !important;
-                    backdrop-filter: blur(4px) !important;
-                    justify-content: center !important;
-                    align-items: center !important;
-                `;
-                
-                // Style the modal content properly
-                const modalContent = commentModal.querySelector('.comment-modal-content');
-                if (modalContent) {
-                    modalContent.style.cssText = `
-                        background: white !important;
-                        border-radius: 12px !important;
-                        width: 100% !important;
-                        max-width: 600px !important;
-                        max-height: 80vh !important;
-                        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2) !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        overflow: hidden !important;
-                    `;
-                }
-                
-                // Load comments for this post
-                loadComments(postId);
-                
-                // Set the post_id in the form
-                const postIdInput = commentModal.querySelector('input[name="post_id"]');
-                if (postIdInput) {
-                    postIdInput.value = postId;
-                    console.log('Set post ID in comment form:', postId);
-                }
-                
-                // Disable scrolling on the body
-                document.body.style.overflow = 'hidden';
-            }
-        });
-    });
 });
 </script>
 

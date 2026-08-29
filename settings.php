@@ -378,6 +378,19 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
     <link rel="stylesheet" href="homepage2.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="sidebar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="settings.css?v=<?php echo time(); ?>">
+    <style>
+    :root {
+        --primary-color-hue: 180;
+        --color-primary: #008080;
+        --color-primary-light: rgba(0, 128, 128, 0.1);
+        --color-primary-dark: #006666;
+    }
+    main {
+        position: relative;
+        top: 0.5rem;
+        margin-top: 10px;
+    }
+    </style>
 </head>
 <body class="settings-page">
     <?php include 'navbar.php'; ?>

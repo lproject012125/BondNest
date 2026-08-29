@@ -1,5 +1,9 @@
 /* Settings Page Styles for BondNest */
 :root {
+    --primary-color-hue: 180; /* Teal hue value matching homepage.php */
+    --color-primary: #008080;
+    --color-primary-light: rgba(0, 128, 128, 0.1);
+    --color-primary-dark: #006666;
     --primary-color: #008080;
     --primary-hover: #006666;
     --primary-light: rgba(0, 128, 128, 0.1);
@@ -24,6 +28,9 @@ body.settings-page {
 }
 
 main {
+    position: relative;
+    top: 0.5rem;
+    margin-top: 10px;
     padding-bottom: 50px;
 }
 
