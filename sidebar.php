@@ -47,6 +47,16 @@ if (!function_exists('getInitialsHtml')) {
 ?>
 
 <style>
+/* Global initials-avatar override - force to fill parent container */
+.initials-avatar {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
 /* Sidebar Styles */
 
 /* LEFT SECTION */
