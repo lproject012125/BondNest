@@ -375,6 +375,20 @@ function formatMessageTime($timestamp) {
         position: relative;
     }
 
+    .message:has(.message-image),
+    .message:has(.message-image-grid) {
+        background: transparent !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: inherit !important;
+    }
+
+    .message:has(.message-image) .message-image,
+    .message:has(.message-image-grid) .message-image-grid {
+        border-radius: 12px;
+    }
+
     .received .message {
         background-color: var(--color-white);
         border-bottom-left-radius: 5px;
@@ -403,6 +417,11 @@ function formatMessageTime($timestamp) {
         margin-right: -10px;
     }
 
+    .sent .message:has(.message-image)::after,
+    .sent .message:has(.message-image-grid)::after {
+        display: none;
+    }
+
     .received .message::before {
         content: '';
         position: absolute;
@@ -415,6 +434,11 @@ function formatMessageTime($timestamp) {
         border-left: 0;
         margin-top: -10px;
         margin-left: -10px;
+    }
+
+    .received .message:has(.message-image)::before,
+    .received .message:has(.message-image-grid)::before {
+        display: none;
     }
 
     .timestamp {
@@ -480,41 +504,48 @@ function formatMessageTime($timestamp) {
         transform: translateY(0);
     }
 
-    .message-image {
-        max-width: 280px;
-        max-height: 300px;
-        border-radius: 12px;
-        display: block;
-        margin-bottom: 4px;
-        cursor: pointer;
-    }
-
     .message-image-grid {
         display: grid;
-        gap: 3px;
-        max-width: 300px;
+        gap: 2px;
+        max-width: 320px;
         border-radius: 12px;
         overflow: hidden;
     }
     .message-image-grid.grid-1 { grid-template-columns: 1fr; }
     .message-image-grid.grid-2 { grid-template-columns: 1fr 1fr; }
-    .message-image-grid.grid-3 { grid-template-columns: 1fr 1fr; }
+    .message-image-grid.grid-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
     .message-image-grid.grid-3 .message-image-cell:first-child { grid-row: span 2; }
-    .message-image-grid.grid-4 { grid-template-columns: 1fr 1fr; }
-    .message-image-grid.grid-5 { grid-template-columns: 1fr 1fr; }
+    .message-image-grid.grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .message-image-grid.grid-5 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
     .message-image-grid.grid-5 .message-image-cell:first-child { grid-row: span 2; }
 
     .message-image-cell {
         overflow: hidden;
         cursor: pointer;
         position: relative;
+        min-height: 100px;
     }
     .message-image-cell img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
-        min-height: 80px;
+        transition: transform 0.2s;
+    }
+    .message-image-cell img:hover {
+        transform: scale(1.02);
+    }
+
+    .message-image {
+        max-width: 280px;
+        max-height: 300px;
+        border-radius: 12px;
+        display: block;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .message-image:hover {
+        transform: scale(1.01);
     }
 
     /* Lightbox */
@@ -526,6 +557,9 @@ function formatMessageTime($timestamp) {
         background: rgba(0,0,0,0.92);
         z-index: 10000;
         justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
         align-items: center;
         flex-direction: column;
     }
@@ -1587,6 +1621,10 @@ function formatMessageTime($timestamp) {
             
             // Initial scroll to bottom
             scrollToBottom();
+            // Also scroll after images load to account for their height
+            window.addEventListener('load', function() {
+                setTimeout(scrollToBottom, 100);
+            });
             
             // Update current user activity status
             function updateActivity(status = 'active') {
@@ -2406,8 +2444,8 @@ function formatMessageTime($timestamp) {
 
         function getCurrentTime() {
             const now = new Date();
-            const options = { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
-            return now.toLocaleString('en-US', options).replace(',', '').replace(/(\d+:\d+ [AP]M)/, 'at $1');
+            const options = { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit', hour12: true };
+            return 'Today at ' + now.toLocaleString('en-US', options);
         }
 
         // Lightbox functionality
@@ -2471,7 +2509,12 @@ function formatMessageTime($timestamp) {
         // Event delegation for image clicks
         if (chatMessages) {
             chatMessages.addEventListener('click', function(e) {
-                var img = e.target.closest('.message-image, .message-image-cell img');
+                var img = null;
+                if (e.target.classList.contains('message-image')) {
+                    img = e.target;
+                } else if (e.target.closest('.message-image-cell')) {
+                    img = e.target.closest('.message-image-cell').querySelector('img');
+                }
                 if (!img) return;
 
                 var images = [];
