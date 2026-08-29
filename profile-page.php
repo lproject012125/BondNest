@@ -2802,16 +2802,9 @@ unset($_SESSION['form_data']);
                 </div> -->
             </div>
             
-            <!-- Right Content - Activity Feed -->
-            <div class="activity-feed">
-                <!-- Your Activity Header card -->
-                <div class="feed-header-card">
-                    <div class="feed-header">
-                        <h2 class="feed-title">Your Activity</h2>
-                    </div>
-                </div>
-
-                <!-- Create Post Composer -->
+            <!-- Right Column - Composer + Activity Feed -->
+            <div class="profile-main-column">
+                <!-- 1. What's on your mind Composer Container (Top Container) -->
                 <div class="profile-create-post">
                     <div class="profile-create-post-input-area" id="profileCreatePostTrigger">
                         <div class="profile-post-avatar">
@@ -2835,145 +2828,148 @@ unset($_SESSION['form_data']);
                     </div>
                 </div>
 
-                <!-- Create Post Modal (Profile Page) -->
-                <div class="modal-container" id="profileCreatePostModal">
-                    <div class="modal-backdrop" style="position:fixed; top:0; left:0; width:100vw; height:100vh; cursor:pointer; z-index:1000;" onclick="document.getElementById('profileCreatePostModal').style.display='none';"></div>
-                    <form id="profilePostForm" method="POST" enctype="multipart/form-data" action="create_post.php" style="position:relative; z-index:1001;">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h2>Create post</h2>
-                                <span class="close-button" id="profilePostCloseBtn">&times;</span>
-                            </div>
-                            <div class="modal-body">
-                                <div class="user-info">
-                                    <div class="profile-picture">
-                                        <?php if (!empty($user['profile_picture'])): ?>
-                                            <img src="<?php echo $user['profile_picture']; ?>" alt="Profile Picture">
-                                        <?php else: ?>
-                                            <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 44); ?>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="user-details">
-                                        <span><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></span>
-                                    </div>
-                                </div>
-                                <textarea placeholder="What's on your mind, <?php echo htmlspecialchars($user['first_name']); ?>?" name="post-content" id="profilePostContent"></textarea>
-                                <div class="add-to-post">
-                                    <span>Add to your post</span>
-                                    <div class="icons">
-                                        <label for="profile-post-image" style="cursor: pointer;">
-                                            <i class="bi bi-plus-square-dotted" style="color: teal;"></i>
-                                        </label>
-                                        <input type="file" id="profile-post-image" name="post-image" accept="image/*" style="display: none;">
-                                        <i class="fa-regular fa-face-smile-beam" style="color: teal; vertical-align: middle; margin-top: 5px; display: inline-block;"></i>
-                                        <i class="bi bi-file-gif" style="color: purple;"></i>
-                                    </div>
-                                </div>
-                                <div class="image-preview-container" id="profileImagePreviewContainer"></div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="submit" class="post-button">Post</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                <!-- 2. Your Activity Container (Below Composer) -->
+                <div class="activity-feed">
+                    <div class="feed-header">
+                        <h2 class="feed-title">Your Activity</h2>
+                    </div>
 
-                <!-- Display user posts -->
-                <div class="profile-feed-card">
-                <div class="feeds">
-                    <?php if (empty($posts)): ?>
-                        <div class="empty-feed">
-                            <p>You haven't posted anything yet.</p>
-                        </div>
-                    <?php else: ?>
+                    <!-- Display user posts -->
+                    <div class="feeds">
+                        <?php if (empty($posts)): ?>
+                            <div class="empty-feed">
+                                <p>You haven't posted anything yet.</p>
+                            </div>
+                        <?php else: ?>
                             <?php foreach ($posts as $post): ?>
-    <div class="feed post-item" data-post-id="<?php echo $post['id']; ?>" data-status="<?php echo htmlspecialchars($post['status'] ?? 'posted'); ?>">
-        <?php /* Removed static notification to avoid duplication with dynamic JS notification */ ?>
-        <div class="post-header">
-                                <div class="post-avatar">
-                                    <img src="<?php echo !empty($post['profile_picture']) ? $post['profile_picture'] : './web-images/default_profile.png'; ?>">
-                                </div>
-                                <div>
-                                    <div class="post-user"><?php echo htmlspecialchars($post['first_name'] . ' ' . $post['last_name']); ?></div>
-                                    <div class="post-meta">
-                                        <?php if (isset($post['status']) && $post['status'] !== 'posted'): ?>
-                                            <span class="status-indicator <?php echo htmlspecialchars($post['status']); ?>" 
-                                                title="<?php echo ($post['status'] === 'approved') ? 'Approved by admin' : 'On hold'; ?>"></span>
-                                        <?php endif; ?>
-                                        <i class="bi bi-globe"></i> BondNest &middot; 
-                                        <span class="time-ago" data-timestamp="<?php echo strtotime($post['created_at']); ?>" data-original-date="<?php echo htmlspecialchars($post['created_at']); ?>">
-                                            <?php echo time_elapsed_string($post['created_at']); ?>
-                                        </span>
-                                        <?php if (isset($post['status']) && $post['status'] !== 'posted'): ?>
-                                            <span class="status-badge <?php echo htmlspecialchars($post['status']); ?>">
-                                                <?php echo ucfirst(htmlspecialchars($post['status'])); ?>
+                            <div class="feed post-item" data-post-id="<?php echo $post['id']; ?>" data-status="<?php echo htmlspecialchars($post['status'] ?? 'posted'); ?>">
+                                <div class="post-header">
+                                    <div class="post-avatar">
+                                        <img src="<?php echo !empty($post['profile_picture']) ? $post['profile_picture'] : './web-images/default_profile.png'; ?>">
+                                    </div>
+                                    <div>
+                                        <div class="post-user"><?php echo htmlspecialchars($post['first_name'] . ' ' . $post['last_name']); ?></div>
+                                        <div class="post-meta">
+                                            <?php if (isset($post['status']) && $post['status'] !== 'posted'): ?>
+                                                <span class="status-indicator <?php echo htmlspecialchars($post['status']); ?>" 
+                                                    title="<?php echo ($post['status'] === 'approved') ? 'Approved by admin' : 'On hold'; ?>"></span>
+                                            <?php endif; ?>
+                                            <i class="bi bi-globe"></i> BondNest &middot; 
+                                            <span class="time-ago" data-timestamp="<?php echo strtotime($post['created_at']); ?>" data-original-date="<?php echo htmlspecialchars($post['created_at']); ?>">
+                                                <?php echo time_elapsed_string($post['created_at']); ?>
                                             </span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <div class="post-actions-menu">
-                                    <i class="bi bi-three-dots-vertical post-menu-trigger" data-post-id="<?php echo $post['id']; ?>"></i>
-                                    <div class="post-menu-dropdown" data-post-id="<?php echo $post['id']; ?>">
-                                        <div class="post-menu-item edit-post" data-post-id="<?php echo $post['id']; ?>">
-                                            <i class="bi bi-pencil"></i> Edit Post
-                                        </div>
-                                        <div class="post-menu-item delete-post" data-post-id="<?php echo $post['id']; ?>">
-                                            <i class="bi bi-trash"></i> Delete Post
+                                            <?php if (isset($post['status']) && $post['status'] !== 'posted'): ?>
+                                                <span class="status-badge <?php echo htmlspecialchars($post['status']); ?>">
+                                                    <?php echo ucfirst(htmlspecialchars($post['status'])); ?>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="post-content">
-                                <p><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
-            </div>
-
-                            <?php if (!empty($post['image_path'])): ?>
-                            <div class="post-media" style="border-radius: 10px !important; overflow: hidden !important;">
-                                <img src="<?php echo $post['image_path']; ?>" style="width: 100%; height: auto; border-radius: 10px !important;">
-                            </div>
-                            <?php endif; ?>
-
-                            <div class="post-actions">
-                                <div class="post-action like-button" data-post-id="<?php echo $post['id']; ?>" data-liked="<?php echo $post['user_has_liked'] ? 'true' : 'false'; ?>">
-                                    <i class="bi bi-heart<?php echo $post['user_has_liked'] ? '-fill' : ''; ?>"></i>
-                                    <span><?php echo $post['user_has_liked'] ? 'Liked' : 'Like'; ?></span>
-                                    <small class="text-muted like-count" style="margin-left: 5px;">
-                                        <?php echo $post['likes']; ?>
-                                    </small>
-                                </div>
-                                <div class="post-action comment-trigger" data-post-id="<?php echo $post['id']; ?>">
-                                    <i class="bi bi-chat-dots"></i>
-                                    <span>Comment</span>
-                                    <small class="text-muted comment-count" style="margin-left: 5px;">
-                                        <?php echo $post['comment_count']; ?>
-                                    </small>
-                                </div>
-                            </div>
-
-                            <div class="liked-by">
-                                <?php if ($post['likes'] > 0): ?>
-                                    <div style="display: flex; align-items: center; margin-top: 10px;">
-                                        <p style="font-size: 0.8rem; color: var(--text-medium);">
-                                            <?php 
-                                            echo $post['likes'] . ' ' . ($post['likes'] === 1 ? 'person' : 'people') . ' liked this';
-                                            ?>
-                                        </p>
+                                    <div class="post-actions-menu">
+                                        <i class="bi bi-three-dots-vertical post-menu-trigger" data-post-id="<?php echo $post['id']; ?>"></i>
+                                        <div class="post-menu-dropdown" data-post-id="<?php echo $post['id']; ?>">
+                                            <div class="post-menu-item edit-post" data-post-id="<?php echo $post['id']; ?>">
+                                                <i class="bi bi-pencil"></i> Edit Post
+                                            </div>
+                                            <div class="post-menu-item delete-post" data-post-id="<?php echo $post['id']; ?>">
+                                                <i class="bi bi-trash"></i> Delete Post
+                                            </div>
+                                        </div>
                                     </div>
-                                <?php else: ?>
-                                    <div style="display: flex; align-items: center; margin-top: 10px;">
-                                        <p style="font-size: 0.8rem; color: var(--text-medium);">Be the first to like this</p>
-                                    </div>
+                                </div>
+
+                                <div class="post-content">
+                                    <p><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+                                </div>
+
+                                <?php if (!empty($post['image_path'])): ?>
+                                <div class="post-media" style="border-radius: 10px !important; overflow: hidden !important;">
+                                    <img src="<?php echo $post['image_path']; ?>" style="width: 100%; height: auto; border-radius: 10px !important;">
+                                </div>
                                 <?php endif; ?>
-                            </div>
-                        </div> <!-- Closing feed div -->
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div> <!-- Closing feeds div -->
-                </div> <!-- Closing profile-feed-card div -->
+
+                                <div class="post-actions">
+                                    <div class="post-action like-button" data-post-id="<?php echo $post['id']; ?>" data-liked="<?php echo $post['user_has_liked'] ? 'true' : 'false'; ?>">
+                                        <i class="bi bi-heart<?php echo $post['user_has_liked'] ? '-fill' : ''; ?>"></i>
+                                        <span><?php echo $post['user_has_liked'] ? 'Liked' : 'Like'; ?></span>
+                                        <small class="text-muted like-count" style="margin-left: 5px;">
+                                            <?php echo $post['likes']; ?>
+                                        </small>
+                                    </div>
+                                    <div class="post-action comment-trigger" data-post-id="<?php echo $post['id']; ?>">
+                                        <i class="bi bi-chat-dots"></i>
+                                        <span>Comment</span>
+                                        <small class="text-muted comment-count" style="margin-left: 5px;">
+                                            <?php echo $post['comment_count']; ?>
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="liked-by">
+                                    <?php if ($post['likes'] > 0): ?>
+                                        <div style="display: flex; align-items: center; margin-top: 10px;">
+                                            <p style="font-size: 0.8rem; color: var(--text-medium);">
+                                                <?php 
+                                                echo $post['likes'] . ' ' . ($post['likes'] === 1 ? 'person' : 'people') . ' liked this';
+                                                ?>
+                                            </p>
+                                        </div>
+                                    <?php else: ?>
+                                        <div style="display: flex; align-items: center; margin-top: 10px;">
+                                            <p style="font-size: 0.8rem; color: var(--text-medium);">Be the first to like this</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div> <!-- Closing feed div -->
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div> <!-- Closing feeds div -->
+                </div> <!-- Closing activity-feed div -->
+            </div> <!-- Closing profile-main-column div -->
+        </div> <!-- Closing profile-content div -->
+    </div> <!-- Closing profile-app div -->
+
+    <!-- Create Post Modal -->
+    <div class="modal-container" id="createPostModal">
+        <div class="modal-backdrop" style="position:fixed; top:0; left:0; width:100vw; height:100vh; cursor:pointer; z-index:1000;" onclick="document.getElementById('createPostModal').style.display='none';"></div>
+        <form id="postForm" method="POST" enctype="multipart/form-data" action="create_post.php" style="position:relative; z-index:1001;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create post</h2>
+                    <span class="close-button" id="createPostCloseBtn">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="user-info">
+                        <div class="profile-picture">
+                            <?php if (!empty($user['profile_picture'])): ?>
+                                <img src="<?php echo $user['profile_picture']; ?>" alt="Profile Picture">
+                            <?php else: ?>
+                                <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 44); ?>
+                            <?php endif; ?>
+                        </div>
+                        <div class="user-details">
+                            <span><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></span>
+                        </div>
+                    </div>
+                    <textarea placeholder="What's on your mind, <?php echo htmlspecialchars($user['first_name']); ?>?" name="post-content" id="postContent"></textarea>
+                    <div class="add-to-post">
+                        <span>Add to your post</span>
+                        <div class="icons">
+                            <label for="post-image" style="cursor: pointer;">
+                                <i class="bi bi-plus-square-dotted" style="color: teal;"></i>
+                            </label>
+                            <input type="file" id="post-image" name="post-image" accept="image/*" style="display: none;">
+                            <i class="fa-regular fa-face-smile-beam" style="color: teal; vertical-align: middle; margin-top: 5px; display: inline-block;"></i>
+                            <i class="bi bi-file-gif" style="color: purple;"></i>
+                        </div>
+                    </div>
+                    <div class="image-preview-container" id="imagePreviewContainer"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="post-button">Post</button>
+                </div>
             </div>
-            </div>
-        </div>
+        </form>
     </div>
   
 
@@ -6685,50 +6681,50 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Profile page create-post modal JS -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const profileModal = document.getElementById('profileCreatePostModal');
-    const profileTrigger = document.getElementById('profileCreatePostTrigger');
-    const profilePhotoOption = document.getElementById('profilePhotoOption');
-    const profileFeelingOption = document.getElementById('profileFeelingOption');
-    const profileCloseBtn = document.getElementById('profilePostCloseBtn');
+    const modal = document.getElementById('createPostModal');
+    const trigger = document.getElementById('profileCreatePostTrigger');
+    const photoOption = document.getElementById('profilePhotoOption');
+    const feelingOption = document.getElementById('profileFeelingOption');
+    const closeBtn = document.getElementById('createPostCloseBtn');
 
-    function openProfilePostModal() {
-        if (profileModal) {
-            profileModal.style.display = 'flex';
+    function openModal() {
+        if (modal) {
+            modal.style.display = 'flex';
         }
     }
 
-    function closeProfilePostModal() {
-        if (profileModal) {
-            profileModal.style.display = 'none';
+    function closeModal() {
+        if (modal) {
+            modal.style.display = 'none';
         }
     }
 
-    if (profileTrigger) profileTrigger.addEventListener('click', openProfilePostModal);
-    if (profilePhotoOption) profilePhotoOption.addEventListener('click', openProfilePostModal);
-    if (profileFeelingOption) profileFeelingOption.addEventListener('click', openProfilePostModal);
-    if (profileCloseBtn) profileCloseBtn.addEventListener('click', closeProfilePostModal);
+    if (trigger) trigger.addEventListener('click', openModal);
+    if (photoOption) photoOption.addEventListener('click', openModal);
+    if (feelingOption) feelingOption.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
-    if (profileModal) {
-        profileModal.addEventListener('click', function(e) {
-            if (e.target === profileModal) {
-                closeProfilePostModal();
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
+                closeModal();
             }
         });
     }
 
-    // Image preview for profile post modal
-    const profileImageInput = document.getElementById('profile-post-image');
-    const profileImagePreview = document.getElementById('profileImagePreviewContainer');
-    if (profileImageInput && profileImagePreview) {
-        profileImageInput.addEventListener('change', function() {
-            profileImagePreview.innerHTML = '';
+    // Image preview for create post modal
+    const imageInput = document.getElementById('post-image');
+    const imagePreview = document.getElementById('imagePreviewContainer');
+    if (imageInput && imagePreview) {
+        imageInput.addEventListener('change', function() {
+            imagePreview.innerHTML = '';
             if (this.files && this.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    img.style.cssText = 'max-width:100%;max-height:300px;border-radius:8px;margin-top:10px;';
-                    profileImagePreview.appendChild(img);
+                    img.style.cssText = 'max-width:100%;max-height:300px;border-radius:8px;margin-top:10px;display:block;';
+                    imagePreview.appendChild(img);
                 };
                 reader.readAsDataURL(this.files[0]);
             }
