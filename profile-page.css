@@ -374,6 +374,13 @@ body {
     object-fit: cover;
 }
 
+.profile-post-avatar .initials-avatar {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    font-size: 0.9rem !important;
+}
+
 .profile-create-post-input-area input[type="text"] {
     flex: 1;
     border: none;
@@ -574,6 +581,13 @@ body {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
+}
+
+#createPostModal .user-info .profile-picture .initials-avatar {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    font-size: 1rem !important;
 }
 
 #createPostModal .user-info .user-details span {
