@@ -55,13 +55,20 @@ main .container .left {
 }
 
 main .container .left .profile {
-    padding: var(--card-padding);
-    background: var(--color-white);
-    border-radius: var(--card-border-radius);
+    padding: 1.2rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fafa 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(0, 128, 128, 0.12);
     display: flex;
     align-items: center;
     column-gap: 1rem;
     width: 100%;
+    box-shadow: 0 2px 12px rgba(0, 128, 128, 0.08);
+    transition: box-shadow 0.25s ease;
+}
+
+main .container .left .profile:hover {
+    box-shadow: 0 4px 18px rgba(0, 128, 128, 0.14);
 }
 
 /* Ensure profile picture in left sidebar displays correctly */
@@ -70,6 +77,8 @@ main .container .left .profile .profile_picture {
     height: 2.7rem;
     overflow: hidden;
     border-radius: 50%;
+    border: 2px solid rgba(0, 128, 128, 0.25);
+    flex-shrink: 0;
 }
 
 main .container .left .profile .profile_picture img {
@@ -81,28 +90,37 @@ main .container .left .profile .profile_picture img {
 /* SIDEBAR SECTION */
 .left .sidebar {
     margin-top: 1rem;
-    background: var(--color-white);
-    border-radius: var(--card-border-radius);
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbfb 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(0, 128, 128, 0.1);
+    box-shadow: 0 2px 12px rgba(0, 128, 128, 0.06);
+    overflow: hidden;
 }
 
 .left .sidebar .menu-item {
     display: flex;
     align-items: center;
-    height: 4rem;
+    height: 3.5rem;
     cursor: pointer;
-    transition: all 300ms ease;
+    transition: all 0.2s ease;
     position: relative;
+    border-left: 3px solid transparent;
 }
 
 .left .sidebar .menu-item:hover {
-    background: var(--color-light);
+    background: rgba(0, 128, 128, 0.06);
+}
+
+.left .sidebar .menu-item:hover i {
+    color: var(--color-primary, #008080);
 }
 
 .left .sidebar i {
-    font-size: 1.4rem;
-    color: var(--color-gray);
-    margin-left: 2rem;
+    font-size: 1.3rem;
+    color: #5a6a6a;
+    margin-left: 1.4rem;
     position: relative;
+    transition: color 0.2s ease;
 }
 
 .left .sidebar i .notification-count {
@@ -118,45 +136,41 @@ main .container .left .profile .profile_picture img {
 }
 
 .left .sidebar h3 {
-    margin-left: 1.5rem;
-    font-size: 1rem;
-    color: #000000 !important;
+    margin-left: 1rem;
+    font-size: 0.92rem;
+    color: #3a4a4a !important;
+    font-weight: 500;
 }
 
 .left .sidebar .menu-item:not(.active) h3 {
-    color: #000000 !important;
+    color: #3a4a4a !important;
 }
 
 .left .sidebar .active {
-    background: var(--color-light);
+    background: rgba(0, 128, 128, 0.08);
+    border-left: 3px solid var(--color-primary, #008080);
 }
 
 .left .sidebar .active i {
-    color: var(--color-primary);
+    color: var(--color-primary, #008080);
 }
 
 .left .sidebar .active h3 {
-    color: #000000 !important;
+    color: var(--color-primary, #008080) !important;
     font-weight: 600;
 }
 
 .left .sidebar .active::before {
-    content: "";
-    display: block;
-    width: 0.5rem;
-    height: 100%;
-    position: absolute;
-    background: var(--color-primary);
-    left: 0;
+    display: none;
 }
 
 .left .sidebar .menu-item:first-child.active {
-    border-top-left-radius: var(--card-border-radius);
+    border-top-left-radius: 0;
     overflow: hidden;
 }
 
 .left .sidebar .menu-item:last-child.active {
-    border-bottom-left-radius: var(--card-border-radius);
+    border-bottom-left-radius: 0;
     overflow: hidden;
 }
 

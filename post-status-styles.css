@@ -189,7 +189,7 @@
 }
 
 .toast.toast-success {
-    border-left-color: #4cc9f0;
+    border-left-color: #008080;
 }
 
 .toast.toast-error {
@@ -233,7 +233,7 @@
 }
 
 .toast.toast-success i {
-    color: #4cc9f0;
+    color: #008080;
 }
 
 .toast.toast-error i {

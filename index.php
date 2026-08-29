@@ -556,7 +556,7 @@ $loggedIn = isset($_SESSION['user_id']);
         var span = toast.querySelector('span');
         if (span) span.textContent = String(message || '');
         toast.style.cssText = 'position:fixed;top:24px;right:24px;padding:14px 20px;border-radius:10px;display:flex;align-items:center;gap:10px;font-weight:500;font-size:.88rem;z-index:13000;box-shadow:0 4px 20px rgba(0,0,0,0.15);transform:translateX(calc(100% + 28px));transition:transform .3s ease,opacity .3s ease;max-width:400px;word-wrap:break-word;opacity:0;font-family:Poppins,sans-serif;';
-        if (kind === 'success') { toast.style.backgroundColor = '#2B9E9E'; toast.style.color = '#fff'; }
+        if (kind === 'success') { toast.style.backgroundColor = '#008080'; toast.style.color = '#fff'; }
         else if (kind === 'error') { toast.style.backgroundColor = '#e74c3c'; toast.style.color = '#fff'; }
         else { toast.style.backgroundColor = '#5a9068'; toast.style.color = '#fff'; }
         document.body.appendChild(toast);

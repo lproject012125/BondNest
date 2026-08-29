@@ -275,7 +275,7 @@ function formatDate($date) {
             --light: #f8f9fa;
             --gray: #6c757d;
             --light-gray: #e9ecef;
-            --success: #4cc9f0;
+            --success: #008080;
             --warning: #f8961e;
             --danger: #ef233c;
             --info: #4895ef;
