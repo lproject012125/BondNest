@@ -276,6 +276,27 @@ function runMigration($pdo) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
     }
 
+    // ── email_change_challenges ──
+    if ($isPg) {
+        $tables['email_change_challenges'] = "CREATE TABLE IF NOT EXISTS email_change_challenges (
+            user_id INTEGER PRIMARY KEY,
+            new_email VARCHAR(255) NOT NULL,
+            otp_code VARCHAR(6) NOT NULL,
+            otp_expires_at TIMESTAMP NOT NULL,
+            pending_payload TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )";
+    } else {
+        $tables['email_change_challenges'] = "CREATE TABLE IF NOT EXISTS email_change_challenges (
+            user_id INT(11) PRIMARY KEY,
+            new_email VARCHAR(255) NOT NULL,
+            otp_code VARCHAR(6) NOT NULL,
+            otp_expires_at TIMESTAMP NOT NULL,
+            pending_payload TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+    }
+
     foreach ($tables as $name => $sql) {
         try {
             $pdo->exec($sql);

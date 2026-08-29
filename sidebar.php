@@ -297,6 +297,10 @@ main .container .left .profile .profile_picture img {
             <i class="bi bi-chat-dots"></i>
             <h3>Message</h3>
         </a>
+        <a class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : ''; ?>" href="settings.php">
+            <i class="bi bi-gear"></i>
+            <h3>Settings</h3>
+        </a>
     </div>
 </div>
 
@@ -313,6 +317,10 @@ main .container .left .profile .profile_picture img {
     <a class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'message.php' ? 'active' : ''; ?>" href="message.php">
         <i class="bi bi-chat-dots"></i>
         <h3>Message</h3>
+    </a>
+    <a class="menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : ''; ?>" href="settings.php">
+        <i class="bi bi-gear"></i>
+        <h3>Settings</h3>
     </a>
     <?php if (basename($_SERVER['PHP_SELF']) !== 'message.php'): ?>
     <label for="create_post" class="menu-item create-post-btn" onclick="showCreatePostModal()">

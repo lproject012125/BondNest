@@ -112,6 +112,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <i class="bi bi-chat-dots"></i>
         <h3>Message</h3>
     </a>
+    <a class="menu-item <?php echo $current_page == 'settings.php' ? 'active' : ''; ?>" href="settings.php">
+        <i class="bi bi-gear"></i>
+        <h3>Settings</h3>
+    </a>
 </div>
 
 <script>
