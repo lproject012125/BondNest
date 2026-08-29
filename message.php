@@ -38,7 +38,11 @@ if (isset($_GET['search'])) {
         ob_start();
         foreach ($search_results as $user): ?>
             <a href="message.php?user_id=<?php echo $user['id']; ?>" class="user-item">
-                <img src="<?php echo !empty($user['profile_picture']) ? $user['profile_picture'] : './web-images/default_profile.png'; ?>" class="user-avatar">
+                <?php if (!empty($user['profile_picture'])): ?>
+                    <img src="<?php echo $user['profile_picture']; ?>" class="user-avatar">
+                <?php else: ?>
+                    <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?>
+                <?php endif; ?>
                 <div class="user-details">
                     <div class="user-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></div>
                     <div class="user-username">@<?php echo htmlspecialchars($user['username']); ?></div>
@@ -558,7 +562,11 @@ function formatMessageTime($timestamp) {
         border-radius: 50%;
         object-fit: cover;
         margin-right: 12px;
-        /* Removed border */
+        flex-shrink: 0;
+    }
+
+    .user-avatar.initials-avatar {
+        object-fit: unset;
     }
 
     .user-details {
@@ -1208,7 +1216,11 @@ function formatMessageTime($timestamp) {
                 <div class="chat-area">
                     <?php if ($selected_user): ?>
                         <div class="chat-header">
-                            <img src="<?php echo !empty($selected_user['profile_picture']) ? $selected_user['profile_picture'] : './web-images/default_profile.png'; ?>" class="chat-header-avatar">
+                            <?php if (!empty($selected_user['profile_picture'])): ?>
+                                <img src="<?php echo $selected_user['profile_picture']; ?>" class="chat-header-avatar">
+                            <?php else: ?>
+                                <?php echo getInitialsHtml($selected_user['first_name'], $selected_user['last_name'], 44); ?>
+                            <?php endif; ?>
                             <div class="chat-user-info">
                                 <div class="chat-user"><?php echo htmlspecialchars($selected_user['first_name'] . ' ' . $selected_user['last_name']); ?></div>
                                 <div class="chat-status" id="userStatus">Active recently</div>
@@ -1282,7 +1294,11 @@ function formatMessageTime($timestamp) {
                         <h4>Search Results</h4>
                         <?php foreach ($search_results as $user): ?>
                             <a href="message.php?user_id=<?php echo $user['id']; ?>" class="user-item <?php echo $selected_user_id == $user['id'] ? 'active' : ''; ?>">
-                                <img src="<?php echo !empty($user['profile_picture']) ? $user['profile_picture'] : './web-images/default_profile.png'; ?>" class="user-avatar">
+                                <?php if (!empty($user['profile_picture'])): ?>
+                                    <img src="<?php echo $user['profile_picture']; ?>" class="user-avatar">
+                                <?php else: ?>
+                                    <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?>
+                                <?php endif; ?>
                                 <div class="user-details">
                                     <div class="user-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></div>
                                     <div class="user-username">@<?php echo htmlspecialchars($user['username']); ?></div>
@@ -1293,7 +1309,11 @@ function formatMessageTime($timestamp) {
                         <h4>Recent Conversations</h4>
                         <?php foreach ($conversations as $conversation): ?>
                             <a href="message.php?user_id=<?php echo $conversation['id']; ?>" class="user-item <?php echo $selected_user_id == $conversation['id'] ? 'active' : ''; ?>">
-                                <img src="<?php echo !empty($conversation['profile_picture']) ? $conversation['profile_picture'] : './web-images/default_profile.png'; ?>" class="user-avatar">
+                                <?php if (!empty($conversation['profile_picture'])): ?>
+                                    <img src="<?php echo $conversation['profile_picture']; ?>" class="user-avatar">
+                                <?php else: ?>
+                                    <?php echo getInitialsHtml($conversation['first_name'], $conversation['last_name'], 40); ?>
+                                <?php endif; ?>
                                 <div class="user-details">
                                     <div class="user-name"><?php echo htmlspecialchars($conversation['first_name'] . ' ' . $conversation['last_name']); ?></div>
                                     <div class="user-username">@<?php echo htmlspecialchars($conversation['username']); ?></div>

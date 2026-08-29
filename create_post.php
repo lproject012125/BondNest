@@ -86,7 +86,7 @@ try {
                 'first_name' => htmlspecialchars($user['first_name']),
                 'last_name' => htmlspecialchars($user['last_name']),
                 'username' => htmlspecialchars($user['username']),
-                'profile_picture' => $user['profile_picture'] ?: './web-images/default_pfp.jpg'
+                'profile_picture' => $user['profile_picture'] ?: ''
             ]
         ]
     ];

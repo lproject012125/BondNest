@@ -2319,7 +2319,11 @@ unset($_SESSION['form_data']);
                     </div>
                     
                     <div class="profile-avatar">
-                        <img src="<?php echo !empty($user['profile_picture']) ? $user['profile_picture'] : './web-images/default_profile.png'; ?>">
+                        <?php if (!empty($user['profile_picture'])): ?>
+                            <img src="<?php echo $user['profile_picture']; ?>">
+                        <?php else: ?>
+                            <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 100); ?>
+                        <?php endif; ?>
                     </div>
                     
                     <h1 class="profile-name"><?php echo $full_name; ?></h1>
@@ -2685,7 +2689,11 @@ unset($_SESSION['form_data']);
                             <div class="feed post-item" data-post-id="<?php echo $post['id']; ?>" data-status="<?php echo htmlspecialchars($post['status'] ?? 'posted'); ?>">
                                 <div class="post-header">
                                     <div class="post-avatar">
-                                        <img src="<?php echo !empty($post['profile_picture']) ? $post['profile_picture'] : './web-images/default_profile.png'; ?>">
+                                        <?php if (!empty($post['profile_picture'])): ?>
+                                            <img src="<?php echo $post['profile_picture']; ?>">
+                                        <?php else: ?>
+                                            <?php echo getInitialsHtml($post['first_name'], $post['last_name'], 44); ?>
+                                        <?php endif; ?>
                                     </div>
                                     <div>
                                         <div class="post-user"><?php echo htmlspecialchars($post['first_name'] . ' ' . $post['last_name']); ?></div>

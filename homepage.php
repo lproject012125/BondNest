@@ -1422,8 +1422,8 @@ if (menuTrigger) {
 }
 
 .user-info .user-details {
-    margin-left: 15px;
-    padding-left: 5px;
+    margin-left: 10px;
+    padding-left: 0;
 }
 
 .modal-body .profile-picture img {

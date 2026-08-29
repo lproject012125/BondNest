@@ -119,6 +119,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // 2b. Delete Profile Picture
+    if ($action === 'delete_photo') {
+        header('Content-Type: application/json');
+        $stmt = $pdo->prepare("UPDATE users SET profile_picture = NULL WHERE id = ?");
+        $stmt->execute([$user_id]);
+        echo json_encode(['success' => true, 'message' => 'Profile picture removed.']);
+        exit;
+    }
+
     // 3. Save Personal Information
     if ($action === 'save_personal') {
         header('Content-Type: application/json');
@@ -445,9 +454,16 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                     <h3 class="settings-avatar-name"><?php echo $full_name; ?></h3>
                                     <p class="settings-avatar-hint">JPG, PNG, GIF, or WebP. Max 5MB.</p>
                                     <input type="file" id="profilePictureInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display: none;">
-                                    <button type="button" class="settings-change-photo-btn" id="changePhotoBtn">
-                                        <i class="bi bi-camera"></i> Change Photo
-                                    </button>
+                                    <div class="settings-avatar-actions">
+                                        <button type="button" class="settings-change-photo-btn" id="changePhotoBtn">
+                                            <i class="bi bi-camera"></i> Change Photo
+                                        </button>
+                                        <?php if (!empty($profile_picture)): ?>
+                                        <button type="button" class="settings-delete-photo-btn" id="deletePhotoBtn">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
 
@@ -794,6 +810,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
         const changePhotoBtn = document.getElementById('changePhotoBtn');
         const profilePictureInput = document.getElementById('profilePictureInput');
         const avatarPreviewContainer = document.getElementById('avatarPreviewContainer');
+        const deletePhotoBtn = document.getElementById('deletePhotoBtn');
 
         if (changePhotoBtn && profilePictureInput) {
             changePhotoBtn.addEventListener('click', () => profilePictureInput.click());
@@ -818,6 +835,19 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                         if (data.success) {
                             avatarPreviewContainer.innerHTML = `<img src="${data.profile_picture}?t=${Date.now()}" alt="Profile Picture" id="currentAvatarImg">`;
                             showToast(data.message, 'success');
+                            // Add delete button if not already present
+                            if (!document.getElementById('deletePhotoBtn')) {
+                                const actionsDiv = document.querySelector('.settings-avatar-actions');
+                                if (actionsDiv) {
+                                    const delBtn = document.createElement('button');
+                                    delBtn.type = 'button';
+                                    delBtn.className = 'settings-delete-photo-btn';
+                                    delBtn.id = 'deletePhotoBtn';
+                                    delBtn.innerHTML = '<i class="bi bi-trash"></i> Delete';
+                                    actionsDiv.appendChild(delBtn);
+                                    setupDeletePhotoBtn();
+                                }
+                            }
                         } else {
                             showToast(data.error || 'Upload failed.', 'error');
                         }
@@ -830,6 +860,49 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                 }
             });
         }
+
+        // ── Delete Profile Picture ──
+        function setupDeletePhotoBtn() {
+            const btn = document.getElementById('deletePhotoBtn');
+            if (!btn) return;
+            btn.onclick = function() {
+                if (!confirm('Are you sure you want to remove your profile picture?')) return;
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing...';
+
+                const fd = new FormData();
+                fd.append('action', 'delete_photo');
+
+                fetch('settings.php', { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-trash"></i> Delete';
+                        if (data.success) {
+                            const firstName = document.getElementById('firstName').value.trim();
+                            const lastName = document.getElementById('lastName').value.trim();
+                            const initials = (firstName[0] || '').toUpperCase() + (lastName[0] || '').toUpperCase();
+                            const colors = ['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50'];
+                            let hash = 0;
+                            const name = firstName + lastName;
+                            for (let i = 0; i < name.length; i++) { hash = (hash * 31 + name.charCodeAt(i)) & 0x7FFFFFFF; }
+                            const bg = colors[hash % colors.length];
+                            avatarPreviewContainer.innerHTML = `<div class="initials-avatar" style="width:100px;height:100px;border-radius:50%;background:${bg};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:2.2rem;font-family:Poppins,sans-serif;">${initials}</div>`;
+                            showToast(data.message, 'success');
+                            btn.remove();
+                        } else {
+                            showToast(data.error || 'Failed to remove picture.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-trash"></i> Delete';
+                        showToast('Error removing profile picture.', 'error');
+                    });
+            };
+        }
+        setupDeletePhotoBtn();
 
         // ── Bio Character Counter ──
         const bioInput = document.getElementById('bio');

@@ -181,6 +181,20 @@ main .container .left .profile .profile_picture img {
     padding: 1rem 0;
 }
 
+/* INITIALS AVATAR - fits properly in circular containers */
+.initials-avatar {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
 /* Mobile Navigation Styles */
 .mobile-nav {
     display: none;

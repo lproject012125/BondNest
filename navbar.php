@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Get fresh user info from database if logged in
-$profile_picture = './web-images/default_profile.png';
+$profile_picture = '';
 
 if (isset($_SESSION['user_id'])) {
         include 'db_connection.php';
@@ -15,14 +15,16 @@ if (isset($_SESSION['user_id'])) {
     
     // Get updated user profile picture
     $user_id = $_SESSION['user_id'];
-    $sql = "SELECT profile_picture FROM users WHERE id = ?";
+    $sql = "SELECT profile_picture, first_name, last_name FROM users WHERE id = ?";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$user_id]);
     $row = $stmt->fetch();
     
     if ($row) {
-        $profile_picture = !empty($row['profile_picture']) ? $row['profile_picture'] : './web-images/default_profile.png';
-        $_SESSION['profile_picture'] = $profile_picture; // Update session
+        $profile_picture = !empty($row['profile_picture']) ? $row['profile_picture'] : '';
+        $_SESSION['profile_picture'] = $profile_picture;
+        $_SESSION['first_name'] = $row['first_name'] ?? '';
+        $_SESSION['last_name'] = $row['last_name'] ?? '';
     }
 
 ?>
@@ -77,7 +79,11 @@ if (isset($_SESSION['user_id'])) {
             <div class="profile-dropdown">
                 <a href="#" class="profile-link" id="profileDropdownToggle">
                     <div class="profile-picture">
-                        <img src="<?php echo $profile_picture; ?>" alt="Profile Picture">
+                        <?php if (!empty($profile_picture)): ?>
+                            <img src="<?php echo $profile_picture; ?>" alt="Profile Picture">
+                        <?php else: ?>
+                            <?php echo getInitialsHtml($_SESSION['first_name'] ?? '', $_SESSION['last_name'] ?? '', 40); ?>
+                        <?php endif; ?>
                     </div>
                 </a>
                 
