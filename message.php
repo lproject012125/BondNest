@@ -405,6 +405,8 @@ function formatMessageTime($timestamp) {
     .message-content {
         display: flex;
         flex-direction: column;
+        flex: 0 1 auto;
+        min-width: 0;
     }
 
     .sent .message-content {
@@ -420,6 +422,7 @@ function formatMessageTime($timestamp) {
         border-radius: 18px;
         font-size: 15px;
         max-width: 100%;
+        width: fit-content;
         word-wrap: break-word;
         line-height: 1.4;
         position: relative;
