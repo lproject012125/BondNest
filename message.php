@@ -389,6 +389,11 @@ function formatMessageTime($timestamp) {
         transition: all 0.3s ease;
         position: relative;
         gap: 4px;
+        z-index: 1;
+    }
+
+    .message-container:has(.message-dropdown.show) {
+        z-index: 10;
     }
 
     .message-container:hover {
@@ -424,6 +429,10 @@ function formatMessageTime($timestamp) {
         top: 100%;
         right: 0;
         white-space: nowrap;
+    }
+
+    .sent .message-content {
+        margin-bottom: 20px;
     }
 
     .message {
