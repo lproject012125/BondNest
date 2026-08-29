@@ -1065,15 +1065,15 @@ unset($_SESSION['form_data']);
             margin-top: 0;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 8px;
         }
         
         .activity-feed .feed {
             background: var(--color-white);
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 15px;
             margin-bottom: 0;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
         
         /* Ensure consistent post content styling */
@@ -2514,52 +2514,6 @@ unset($_SESSION['form_data']);
                     </div>
                 </div>
 
-                <!-- Edit Profile Modal (hidden by default) -->
-<div class="modal edit-profile-modal" id="editProfileModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Edit Profile</h2>
-            <button type="button" class="close-modal">&times;</button>
-        </div>
-        
-<form method="post" enctype="multipart/form-data" autocomplete="off">            <div class="form-section">
-                <h3>Profile Picture</h3>
-                <div class="current-avatar" style="display: flex; justify-content: center; align-items: center; margin: 20px 0;">
-                    <img id="currentProfilePic" src="<?php echo !empty($user['profile_picture']) ? $user['profile_picture'] : './web-images/default_profile.png'; ?>" autocomplete="off" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f8f8; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);">
-                </div>
-                <input type="file" name="profile_picture" id="profilePictureInput" accept="image/jpeg,image/png,image/gif" style="display: none;">
-                <button type="button" class="btn-secondary" onclick="document.getElementById('profilePictureInput').click()">
-                    <i class="fas fa-camera"></i> Change Profile Picture
-                </button>
-                <div class="file-info" id="profilePictureInfo" style="display: none; margin-top: 10px; font-size: 0.8em;"></div>
-            </div>
-            
-            <!-- Personal Information Section -->
-            <div class="form-section">
-                <h3>Personal Information</h3>
-                <div class="form-group">
-                    <label for="firstName">First Name</label>
-                    <input type="text" id="firstName" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label for="lastName">Last Name</label>
-                    <input type="text" id="lastName" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required autocomplete="off">
-                    <div class="username-feedback" id="usernameFeedback" style="font-size: 0.8em; margin-top: 5px;"></div>
-                </div>
-            </div>
-            
-            <div class="modal-actions">
-                <button type="button" class="btn-cancel">Cancel</button>
-                <button type="submit" name="profile_submit" class="btn-save">Save Profile</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- EDIT DETAILS DISPLAY              -->
 <div class="profile-card">
     <h2 class="card-title"><i class="fas fa-info-circle"></i> Bio</h2>
@@ -2643,103 +2597,6 @@ unset($_SESSION['form_data']);
         <div class="profile-actions" style="margin-top: 15px;">
             <button class="profile-btn btn-primary">
                 <i class="fas fa-edit"></i> Edit Details
-            </button>
-        </div>
-    </div>
-</div>
-<!-- EDIT DETAILS MODAL -->
-<div class="modal edit-details-modal" id="editDetailsModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Edit Details</h2>
-            <button type="button" class="close-modal">&times;</button>
-        </div>
-        
-<form method="post" enctype="multipart/form-data">            <!-- Bio Information Section -->
-            <div class="form-section">
-                <h3>Add your bio</h3>
-                <div class="form-group">
-                    <label for="bio">Bio <small>(Minimum 10 characters)</small></label>
-                    <textarea id="bio" name="bio" rows="5" minlength="10" required autocomplete="off"><?php echo $bio; ?></textarea>
-                    <div class="char-counter"><span id="bioCharCount"><?php echo strlen($bio); ?></span>/10 characters</div>
-                </div>
-            </div>
-            
-            <!-- Demographic Information Section -->
-            <div class="form-section">
-                <div class="form-group">
-                    <label for="age">Age</label>
-                    <input type="number" id="age" name="age" max="120" value="<?php echo $age; ?>" autocomplete="off">
-                </div>
-                
-                <div class="form-group">
-    <label for="gender">Gender</label>
-    <select id="gender" name="gender" required autocomplete="off">
-        <option value="" disabled <?php echo empty($gender) ? 'selected' : ''; ?>>Select gender</option>
-        <option value="Male" <?php echo $gender === 'Male' ? 'selected' : ''; ?>>Male</option>
-        <option value="Female" <?php echo $gender === 'Female' ? 'selected' : ''; ?>>Female</option>
-        <option value="Non-binary" <?php echo $gender === 'Non-binary' ? 'selected' : ''; ?>>Non-binary</option>
-        <option value="Other" <?php echo $gender === 'Other' ? 'selected' : ''; ?>>Other</option>
-        <option value="Prefer not to say" <?php echo $gender === 'Prefer not to say' ? 'selected' : ''; ?>>Prefer not to say</option>
-    </select>
-</div>
-                
-                <div class="form-group">
-                    <label for="birthday">Birthday</label>
-                    <input type="date" id="birthday" name="birthday" value="<?php echo $birthday; ?>" autocomplete="off">
-                </div>
-            </div>
-
-            <!-- Personal Details Section -->
-            <div class="form-section">
-                <h3>Personal Details</h3>
-                <div class="form-group">
-                    <label for="location">Location</label>
-                    <input type="text" id="location" name="location" value="<?php echo $location; ?>" autocomplete="off">
-                </div>
-                
-                <div class="form-group">
-                    <label for="interests">Interests</label>
-                    <input type="text" id="interests" name="interests" value="<?php echo $interests; ?>" autocomplete="off">
-                </div>
-                
-                <div class="form-group">
-    <label for="website">Website</label>
-    <input type="text" id="website" name="website" 
-           value="<?php echo htmlspecialchars($user['website'] ?? ''); ?>"
-           placeholder="https://example.com/path" autocomplete="off">
-</div>
-            </div>
-            
-            <div class="modal-actions">
-                <button type="button" class="btn-cancel">Cancel</button>
-                <button type="submit" name="details_submit" class="btn-save">Save Details</button>
-            </div>
-        </form>
-    </div>
-</div>
-<!-- Success Notification for Profile (hidden by default) -->
-<div class="success-notification" id="profileSuccessNotification">
-    <div class="notification-content">
-        <div class="notification-icon">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="notification-text">
-            <h3>Profile Updated Successfully!</h3>
-            <p>Your changes have been saved.</p>
-        </div>
-    </div>
-</div>
-
-<!-- Success Notification for Details (hidden by default) -->
-<div class="success-notification" id="detailsSuccessNotification">
-    <div class="notification-content">
-        <div class="notification-icon">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="notification-text">
-            <h3>Details Updated Successfully!</h3>
-            <p>Your changes have been saved.</p>
         </div>
     </div>
 </div>
@@ -2977,9 +2834,152 @@ unset($_SESSION['form_data']);
             </div>
         </form>
     </div>
-  
 
-    <div class="error-notification" id="neggyErrorNotification">
+    <!-- Edit Profile Modal -->
+    <div class="modal edit-profile-modal" id="editProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Profile</h2>
+                <button type="button" class="close-modal">&times;</button>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data" autocomplete="off">
+                <div class="form-section">
+                    <h3>Profile Picture</h3>
+                    <div class="current-avatar" style="display: flex; justify-content: center; align-items: center; margin: 20px 0;">
+                        <img id="currentProfilePic" src="<?php echo !empty($user['profile_picture']) ? $user['profile_picture'] : './web-images/default_profile.png'; ?>" autocomplete="off" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f8f8; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);">
+                    </div>
+                    <input type="file" name="profile_picture" id="profilePictureInput" accept="image/jpeg,image/png,image/gif" style="display: none;">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('profilePictureInput').click()">
+                        <i class="fas fa-camera"></i> Change Profile Picture
+                    </button>
+                    <div class="file-info" id="profilePictureInfo" style="display: none; margin-top: 10px; font-size: 0.8em;"></div>
+                </div>
+                
+                <!-- Personal Information Section -->
+                <div class="form-section">
+                    <h3>Personal Information</h3>
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required autocomplete="off">
+                        <div class="username-feedback" id="usernameFeedback" style="font-size: 0.8em; margin-top: 5px;"></div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="submit" name="profile_submit" class="btn-save">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT DETAILS MODAL -->
+    <div class="modal edit-details-modal" id="editDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Details</h2>
+                <button type="button" class="close-modal">&times;</button>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                <!-- Bio Information Section -->
+                <div class="form-section">
+                    <h3>Add your bio</h3>
+                    <div class="form-group">
+                        <label for="bio">Bio <small>(Minimum 10 characters)</small></label>
+                        <textarea id="bio" name="bio" rows="5" minlength="10" required autocomplete="off"><?php echo $bio; ?></textarea>
+                        <div class="char-counter"><span id="bioCharCount"><?php echo strlen($bio); ?></span>/10 characters</div>
+                    </div>
+                </div>
+                
+                <!-- Demographic Information Section -->
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" name="age" max="120" value="<?php echo $age; ?>" autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required autocomplete="off">
+                            <option value="" disabled <?php echo empty($gender) ? 'selected' : ''; ?>>Select gender</option>
+                            <option value="Male" <?php echo $gender === 'Male' ? 'selected' : ''; ?>>Male</option>
+                            <option value="Female" <?php echo $gender === 'Female' ? 'selected' : ''; ?>>Female</option>
+                            <option value="Non-binary" <?php echo $gender === 'Non-binary' ? 'selected' : ''; ?>>Non-binary</option>
+                            <option value="Other" <?php echo $gender === 'Other' ? 'selected' : ''; ?>>Other</option>
+                            <option value="Prefer not to say" <?php echo $gender === 'Prefer not to say' ? 'selected' : ''; ?>>Prefer not to say</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="birthday">Birthday</label>
+                        <input type="date" id="birthday" name="birthday" value="<?php echo $birthday; ?>" autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- Personal Details Section -->
+                <div class="form-section">
+                    <h3>Personal Details</h3>
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" value="<?php echo $location; ?>" autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="interests">Interests</label>
+                        <input type="text" id="interests" name="interests" value="<?php echo $interests; ?>" autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="website">Website</label>
+                        <input type="text" id="website" name="website" 
+                               value="<?php echo htmlspecialchars($user['website'] ?? ''); ?>"
+                               placeholder="https://example.com/path" autocomplete="off">
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="submit" name="details_submit" class="btn-save">Save Details</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Notification for Profile (hidden by default) -->
+    <div class="success-notification" id="profileSuccessNotification">
+        <div class="notification-content">
+            <div class="notification-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="notification-text">
+                <h3>Profile Updated Successfully!</h3>
+                <p>Your changes have been saved.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Notification for Details (hidden by default) -->
+    <div class="success-notification" id="detailsSuccessNotification">
+        <div class="notification-content">
+            <div class="notification-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="notification-text">
+                <h3>Details Updated Successfully!</h3>
+                <p>Your changes have been saved.</p>
+            </div>
+        </div>
+    </div>
     <div class="notification-content">
         <div class="notification-icon">
             <i class="fas fa-exclamation-circle"></i>
@@ -3072,7 +3072,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (modalId === 'editProfileModal' || modalId === 'editDetailsModal') {
                     modal.style.cssText = `
                         display: flex !important;
-                        z-index: 9999 !important;
+                        z-index: 100000 !important;
                         position: fixed !important;
                         top: 0 !important;
                         left: 0 !important;
@@ -3307,7 +3307,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (modal) {
                     modal.style.cssText = `
                         display: flex !important;
-                        z-index: 9999 !important;
+                        z-index: 100000 !important;
                         position: fixed !important;
                         top: 0 !important;
                         left: 0 !important;
@@ -3342,7 +3342,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (modal) {
                     modal.style.cssText = `
                         display: flex !important;
-                        z-index: 9999 !important;
+                        z-index: 100000 !important;
                         position: fixed !important;
                         top: 0 !important;
                         left: 0 !important;
