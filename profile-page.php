@@ -2318,12 +2318,6 @@ unset($_SESSION['form_data']);
 
     <!-- Main Profile Container -->
     <div class="profile-app">
-        <!-- Sidebar Toggle Button Container -->
-        <div class="sidebar-toggle-container">
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
 
         <!-- Profile Content - Split Layout -->
         <div class="profile-content" id="profileContent">
@@ -2408,9 +2402,10 @@ unset($_SESSION['form_data']);
                                 font-size: 0.78rem;
                                 color: #333333;
                                 font-weight: 500;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
+                                white-space: normal;
+                                overflow: visible;
+                                text-overflow: unset;
+                                word-break: break-word;
                             }
                             
                             /* Admin-style animation for stats */
@@ -2995,59 +2990,6 @@ unset($_SESSION['form_data']);
     </div>
 </div>
 
-<script>
-// Sidebar toggle functionality
-const sidebarToggle = document.getElementById('sidebarToggle');
-const profileSidebar = document.getElementById('profileSidebar');
-const profileContent = document.getElementById('profileContent');
-
-if (sidebarToggle && profileSidebar && profileContent) {
-    sidebarToggle.addEventListener('click', function() {
-        // Get the profile sections and posts container
-        const profileHeader = document.querySelector('.profile-header');
-        const profileCard = document.querySelector('.profile-card');
-        const postsContainer = document.querySelector('.posts-container');
-        
-        // Toggle state
-        if (!profileSidebar.classList.contains('hidden')) {
-            // Hide profile sidebar sections
-            profileSidebar.classList.add('hidden');
-            
-            // Hide profile sections
-            if (profileHeader) profileHeader.style.display = 'none';
-            if (profileCard) profileCard.style.display = 'none';
-            
-            // Make posts container take full width
-            if (postsContainer) {
-                postsContainer.style.width = '100%';
-                postsContainer.style.maxWidth = '100%';
-            }
-            
-            // Change the icon
-            const icon = this.querySelector('i');
-            icon.classList.remove('fa-bars');
-            icon.classList.add('fa-chevron-right');
-        } else {
-            // Show profile sidebar
-            profileSidebar.classList.remove('hidden');
-            
-            // Show profile sections
-            if (profileHeader) profileHeader.style.display = 'block';
-            if (profileCard) profileCard.style.display = 'block';
-            
-            // Restore posts container original width
-            if (postsContainer) {
-                postsContainer.style.width = '';
-                postsContainer.style.maxWidth = '';
-            }
-            
-            // Change the icon back
-            const icon = this.querySelector('i');
-            icon.classList.remove('fa-chevron-right');
-            icon.classList.add('fa-bars');
-        }
-    });
-}
 
 // Sidebar menu item functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -6624,60 +6566,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Hide Sidebar by Default in Mobile View
-    const profileSidebar = document.getElementById('profileSidebar');
-    const profileContent = document.getElementById('profileContent');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    
-    // Remove logout button related JavaScript
-    // const logoutButton = document.getElementById('logoutButton');
-    // const logoutConfirmationOverlay = document.getElementById('logoutConfirmationOverlay');
-    // const cancelLogoutButton = document.getElementById('cancelLogout');
-    
-    // if (logoutButton && logoutConfirmationOverlay && cancelLogoutButton) {
-    //     logoutButton.addEventListener('click', function(e) {
-    //         e.preventDefault();
-    //         logoutConfirmationOverlay.style.display = 'flex';
-    //     });
-        
-    //     cancelLogoutButton.addEventListener('click', function() {
-    //         logoutConfirmationOverlay.style.display = 'none';
-    //     });
-        
-    //     logoutConfirmationOverlay.addEventListener('click', function(event) {
-    //         if (event.target === logoutConfirmationOverlay) {
-    //             logoutConfirmationOverlay.style.display = 'none';
-    //         }
-    //     });
-    // }
-    
-    // Toggle Sidebar (on mobile)
-    if (sidebarToggle && profileSidebar && profileContent) {
-        // Initial state based on screen size
-        if (window.innerWidth < 768) {
-            profileSidebar.classList.add('hidden');
-            profileContent.classList.add('full-width');
-        }
 
-        sidebarToggle.addEventListener('click', function() {
-            profileSidebar.classList.toggle('collapsed');
-            profileContent.classList.toggle('expanded');
-            
-            // Change the icon based on state
-            const icon = this.querySelector('i');
-            if (profileSidebar.classList.contains('collapsed')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-chevron-right');
-            } else {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-bars');
-            }
-        });
-    }
-});
-</script>
 <!-- Post Status Updates Scripts -->
 <script src="post_sync.js?v=<?php echo time(); ?>"></script>
 <script src="toast-notification.js?v=<?php echo time(); ?>"></script>

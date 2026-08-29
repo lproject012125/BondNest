@@ -212,7 +212,7 @@ body {
 /* Profile Content - New Card Layout */
 .profile-content {
     display: grid;
-    grid-template-columns: 370px 1fr;
+    grid-template-columns: 420px 1fr;
     gap: 30px;
     padding: 20px 0;
     align-items: start;
@@ -222,7 +222,7 @@ body {
 .profile-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 15px;
     transition: all 0.3s ease;
     position: sticky;
     top: 90px;
@@ -239,10 +239,7 @@ body {
     word-wrap: break-word;
 }
 
-.profile-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-}
+/* No hover effect on profile-card; hover only on edit buttons */
 
 .card-title {
     font-size: 1.2rem;
@@ -776,67 +773,11 @@ margin-left: auto; /* Pushes button to the right */
 
 /* Updated Sidebar Toggle Styles */
 .sidebar-toggle-container {
-    position: absolute;
-    top: 35px;
-    left: 15px;
-    z-index: 100;
-    transform: translateX(0);
-    transition: transform 0.3s ease;
+    display: none;
 }
-
 
 .sidebar-toggle {
-background: white; /* Default state - white circle */
-width: 40px;
-height: 40px;
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-cursor: pointer;
-box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-transition: all 0.3s ease;
-border: 2px solid black; /* Black border */
-color: var(--primary); /* Icon color - primary (teal) by default */
-font-size: 1rem;
-}
-
-.sidebar-toggle:hover {
-transform: scale(1.1);
-box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.profile-sidebar.collapsed {
-    transform: translateX(-100%);
-    opacity: 0;
-    width: 0;
-    padding: 0;
-    margin: 0;
-    overflow: hidden;
-    position: absolute;
-}
-.profile-sidebar.collapsed .sidebar-toggle {
-background: var(--primary); /* Green circle */
-color: white; /* White icon */
-}
-
-.profile-sidebar:not(.collapsed) .sidebar-toggle:hover {
-background: var(--primary);
-color: white;
-}
-
-.profile-sidebar.collapsed .sidebar-toggle:hover {
-background: var(--primary-dark); /* Slightly darker green on hover */
-}
-
-.profile-content.expanded {
-    grid-template-columns: 1fr;
-}
-
-/* New style for expanded profile main column */
-.profile-content.expanded .profile-main-column {
-    grid-column: 1 / -1;
-    width: 100%;
+    display: none;
 }
 
 .profile-content.expanded .profile-create-post {
