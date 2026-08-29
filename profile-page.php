@@ -435,6 +435,9 @@ unset($_SESSION['form_data']);
         /* Account for new navbar */
         .profile-app {
             margin-top: -60px;
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
         }
         
         /* Update button styles */
@@ -2355,7 +2358,7 @@ unset($_SESSION['form_data']);
                             .profile-stats {
                                 display: flex;
                                 justify-content: space-between;
-                                padding: 10px;
+                                padding: 10px 8px;
                                 background: #ffffff;
                                 border-radius: 8px;
                                 margin: 15px 0;
@@ -2367,7 +2370,7 @@ unset($_SESSION['form_data']);
                             
                             .stat-item {
                                 text-align: center;
-                                padding: 8px 5px;
+                                padding: 8px 4px;
                                 margin: 0 2px;
                                 flex: 1;
                                 background: #f8f9fa;
@@ -2393,7 +2396,7 @@ unset($_SESSION['form_data']);
                             }
                             
                             .stat-label {
-                                font-size: 0.8rem;
+                                font-size: 0.78rem;
                                 color: #333333;
                                 font-weight: 500;
                                 white-space: nowrap;

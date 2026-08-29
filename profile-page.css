@@ -75,10 +75,10 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     top: 70px;
-    background: white;
+    background: transparent;
     border-radius: 0;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
+    box-shadow: none;
+    overflow: visible;
     position: relative;
     z-index: 5;
 }
@@ -88,11 +88,12 @@ body {
     position: relative;
     text-align: center;
     padding-top: 50px; /* Added space for the toggle button */
-    padding: 20px;
+    padding: 20px 16px;
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
     color: white;
     border-radius: 15px;
     margin-bottom: 25px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
 }
 
 .profile-banner {
@@ -211,9 +212,9 @@ body {
 /* Profile Content - New Card Layout */
 .profile-content {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 370px 1fr;
     gap: 30px;
-    padding: 30px;
+    padding: 20px 0;
 }
 
 /* Left Sidebar - New Card Design */
@@ -472,8 +473,8 @@ margin-left: auto; /* Pushes button to the right */
 /* Updated Sidebar Toggle Styles */
 .sidebar-toggle-container {
     position: absolute;
-    top: 50px;
-    left: 40px;
+    top: 35px;
+    left: 15px;
     z-index: 100;
     transform: translateX(0);
     transition: transform 0.3s ease;
