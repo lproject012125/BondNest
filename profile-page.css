@@ -328,21 +328,117 @@ body {
 
 /* Right Content - Activity Feed */
 .activity-feed {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
     transition: all 0.3s ease;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Profile page feed header card */
+.feed-header-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px 25px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Create Post Composer on Profile Page */
+.profile-create-post {
+    background: white;
+    border-radius: 15px;
+    padding: 15px 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.profile-create-post-input-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e4e6eb;
+    cursor: pointer;
+}
+
+.profile-post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.profile-post-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-create-post-input-area input[type="text"] {
+    flex: 1;
+    border: none;
+    background: #f0f2f5;
+    border-radius: 30px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    color: #65676b;
+    outline: none;
+    cursor: pointer;
+}
+
+.profile-create-post-input-area input[type="text"]:hover {
+    background: #e4e6eb;
+}
+
+.profile-post-options {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+}
+
+.profile-post-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #65676b;
+    flex: 1;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.profile-post-option:hover {
+    background: #f0f2f5;
+}
+
+.profile-post-option i {
+    font-size: 1rem;
+}
+
+/* Activity feed cards wrapper */
+.profile-feed-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px 25px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
 }
 
 .feed-header {
 display: flex;
 justify-content: space-between;
 align-items: center;
-margin-bottom: 25px;
-padding-bottom: 15px;
-border-bottom: 1px solid #e4e6eb;
+margin-bottom: 0;
+padding-bottom: 0;
+border-bottom: none;
 width: 100%; /* Ensure it takes full width */
 }
 
@@ -534,7 +630,7 @@ background: var(--primary-dark); /* Slightly darker green on hover */
     grid-column: 1 / -1;
     width: 100%;
 }
-.profile-content.expanded .feed-header {
+.profile-content.expanded .feed-header-card {
 padding-left: 70px; /* Makes space for the toggle button */
 transition: padding-left 0.3s ease;
 }

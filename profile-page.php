@@ -2804,11 +2804,82 @@ unset($_SESSION['form_data']);
             
             <!-- Right Content - Activity Feed -->
             <div class="activity-feed">
-                <div class="feed-header">
-                    <h2 class="feed-title">Your Activity</h2>
+                <!-- Your Activity Header card -->
+                <div class="feed-header-card">
+                    <div class="feed-header">
+                        <h2 class="feed-title">Your Activity</h2>
+                    </div>
                 </div>
-                
+
+                <!-- Create Post Composer -->
+                <div class="profile-create-post">
+                    <div class="profile-create-post-input-area" id="profileCreatePostTrigger">
+                        <div class="profile-post-avatar">
+                            <?php if (!empty($user['profile_picture'])): ?>
+                                <img src="<?php echo $user['profile_picture']; ?>" alt="Profile Picture">
+                            <?php else: ?>
+                                <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?>
+                            <?php endif; ?>
+                        </div>
+                        <input type="text" placeholder="What's on your mind, <?php echo htmlspecialchars($user['first_name']); ?>?" readonly style="cursor:pointer;">
+                    </div>
+                    <div class="profile-post-options">
+                        <div class="profile-post-option" id="profilePhotoOption">
+                            <i class="bi bi-plus-square-dotted" style="color: teal;"></i>
+                            <span>Photo/Image</span>
+                        </div>
+                        <div class="profile-post-option" id="profileFeelingOption">
+                            <i class="fa-regular fa-face-smile-beam" style="color: teal; vertical-align: middle;"></i>
+                            <span>Feeling/Activity</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Post Modal (Profile Page) -->
+                <div class="modal-container" id="profileCreatePostModal">
+                    <div class="modal-backdrop" style="position:fixed; top:0; left:0; width:100vw; height:100vh; cursor:pointer; z-index:1000;" onclick="document.getElementById('profileCreatePostModal').style.display='none';"></div>
+                    <form id="profilePostForm" method="POST" enctype="multipart/form-data" action="create_post.php" style="position:relative; z-index:1001;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Create post</h2>
+                                <span class="close-button" id="profilePostCloseBtn">&times;</span>
+                            </div>
+                            <div class="modal-body">
+                                <div class="user-info">
+                                    <div class="profile-picture">
+                                        <?php if (!empty($user['profile_picture'])): ?>
+                                            <img src="<?php echo $user['profile_picture']; ?>" alt="Profile Picture">
+                                        <?php else: ?>
+                                            <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 44); ?>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="user-details">
+                                        <span><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></span>
+                                    </div>
+                                </div>
+                                <textarea placeholder="What's on your mind, <?php echo htmlspecialchars($user['first_name']); ?>?" name="post-content" id="profilePostContent"></textarea>
+                                <div class="add-to-post">
+                                    <span>Add to your post</span>
+                                    <div class="icons">
+                                        <label for="profile-post-image" style="cursor: pointer;">
+                                            <i class="bi bi-plus-square-dotted" style="color: teal;"></i>
+                                        </label>
+                                        <input type="file" id="profile-post-image" name="post-image" accept="image/*" style="display: none;">
+                                        <i class="fa-regular fa-face-smile-beam" style="color: teal; vertical-align: middle; margin-top: 5px; display: inline-block;"></i>
+                                        <i class="bi bi-file-gif" style="color: purple;"></i>
+                                    </div>
+                                </div>
+                                <div class="image-preview-container" id="profileImagePreviewContainer"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="post-button">Post</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <!-- Display user posts -->
+                <div class="profile-feed-card">
                 <div class="feeds">
                     <?php if (empty($posts)): ?>
                         <div class="empty-feed">
@@ -2899,6 +2970,7 @@ unset($_SESSION['form_data']);
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div> <!-- Closing feeds div -->
+                </div> <!-- Closing profile-feed-card div -->
             </div>
             </div>
         </div>
@@ -6608,6 +6680,60 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     // Add profile-page class to body for specific CSS targeting
     document.body.classList.add('profile-page');
+});
+</script>
+<!-- Profile page create-post modal JS -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const profileModal = document.getElementById('profileCreatePostModal');
+    const profileTrigger = document.getElementById('profileCreatePostTrigger');
+    const profilePhotoOption = document.getElementById('profilePhotoOption');
+    const profileFeelingOption = document.getElementById('profileFeelingOption');
+    const profileCloseBtn = document.getElementById('profilePostCloseBtn');
+
+    function openProfilePostModal() {
+        if (profileModal) {
+            profileModal.style.display = 'flex';
+        }
+    }
+
+    function closeProfilePostModal() {
+        if (profileModal) {
+            profileModal.style.display = 'none';
+        }
+    }
+
+    if (profileTrigger) profileTrigger.addEventListener('click', openProfilePostModal);
+    if (profilePhotoOption) profilePhotoOption.addEventListener('click', openProfilePostModal);
+    if (profileFeelingOption) profileFeelingOption.addEventListener('click', openProfilePostModal);
+    if (profileCloseBtn) profileCloseBtn.addEventListener('click', closeProfilePostModal);
+
+    if (profileModal) {
+        profileModal.addEventListener('click', function(e) {
+            if (e.target === profileModal) {
+                closeProfilePostModal();
+            }
+        });
+    }
+
+    // Image preview for profile post modal
+    const profileImageInput = document.getElementById('profile-post-image');
+    const profileImagePreview = document.getElementById('profileImagePreviewContainer');
+    if (profileImageInput && profileImagePreview) {
+        profileImageInput.addEventListener('change', function() {
+            profileImagePreview.innerHTML = '';
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'max-width:100%;max-height:300px;border-radius:8px;margin-top:10px;';
+                    profileImagePreview.appendChild(img);
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
 });
 </script>
 <!-- Include post status checker for real-time updates from admin actions -->
