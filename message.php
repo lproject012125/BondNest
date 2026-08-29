@@ -976,7 +976,7 @@ function formatMessageTime($timestamp) {
     /* Add new styles for message menu */
     .message-menu {
         position: absolute;
-        top: 35%;
+        top: 50%;
         transform: translateY(-50%);
         opacity: 0;
         transition: opacity 0.2s ease;
@@ -993,11 +993,11 @@ function formatMessageTime($timestamp) {
     }
 
     .message-container.sent .message-menu {
-        left: -30px;
+        left: -8px;
     }
 
     .message-container.received .message-menu {
-        right: -30px;
+        display: none;
     }
 
     .message-menu i {
@@ -1030,13 +1030,13 @@ function formatMessageTime($timestamp) {
     }
 
     .message-container.sent .message-dropdown {
-        left: -130px;
+        left: -108px;
         top: 50%;
         transform: translateY(-50%);
     }
 
     .message-container.received .message-dropdown {
-        right: -130px;
+        right: -108px;
         top: 50%;
         transform: translateY(-50%);
     }
@@ -1448,10 +1448,11 @@ function formatMessageTime($timestamp) {
                         <div class="chat-messages" id="chatMessages">
                             <?php foreach ($messages as $message): ?>
                                 <div class="message-container <?php echo $message['sender_id'] == $current_user_id ? 'sent' : 'received'; ?> <?php echo isset($message['deleted']) && $message['deleted'] == 1 ? 'deleted' : ''; ?>" data-message-id="<?php echo $message['id']; ?>">
+                                    <?php if ($message['sender_id'] == $current_user_id): ?>
                                     <div class="message-menu">
                                         <i class="bi bi-three-dots-vertical"></i>
                                         <div class="message-dropdown">
-                                            <?php if ($message['sender_id'] == $current_user_id && empty($message['image_path'])): ?>
+                                            <?php if (empty($message['image_path'])): ?>
                                             <div class="dropdown-item edit-message" data-message-id="<?php echo $message['id']; ?>">
                                                 <i class="bi bi-pencil"></i>
                                                 Edit
@@ -1463,6 +1464,7 @@ function formatMessageTime($timestamp) {
                                             </div>
                                         </div>
                                     </div>
+                                    <?php endif; ?>
                                     <div class="message">
                                         <?php if (isset($message['deleted']) && $message['deleted'] == 1): ?>
                                             <i class="bi bi-trash-fill" style="margin-right: 5px; font-size: 12px;"></i> This message was deleted
@@ -1907,24 +1909,6 @@ function formatMessageTime($timestamp) {
                                 if (message.sender_id != <?php echo $current_user_id; ?>) {
                                     const messageContainer = document.createElement('div');
                                     messageContainer.classList.add('message-container', 'received');
-                                    
-                                    // Add message menu with dropdown
-                                    const messageMenu = document.createElement('div');
-                                    messageMenu.classList.add('message-menu');
-                                    messageMenu.innerHTML = `
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                        <div class="message-dropdown">
-                                            <div class="dropdown-item edit-message">
-                                                <i class="bi bi-pencil"></i>
-                                                Edit
-                                            </div>
-                                            <div class="dropdown-item delete delete-message">
-                                                <i class="bi bi-trash"></i>
-                                                Delete
-                                            </div>
-                                        </div>
-                                    `;
-                                    messageContainer.appendChild(messageMenu);
                                     
                                     const messageDiv = document.createElement('div');
                                     messageDiv.classList.add('message');
