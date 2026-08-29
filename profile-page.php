@@ -6686,16 +6686,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoOption = document.getElementById('profilePhotoOption');
     const feelingOption = document.getElementById('profileFeelingOption');
     const closeBtn = document.getElementById('createPostCloseBtn');
+    const postForm = document.getElementById('postForm');
 
     function openModal() {
         if (modal) {
             modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
     }
 
     function closeModal() {
         if (modal) {
             modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
     }
 
@@ -6728,6 +6731,62 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 reader.readAsDataURL(this.files[0]);
             }
+        });
+    }
+
+    // AJAX form submission for create post (matches homepage.php)
+    if (postForm) {
+        postForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn ? submitBtn.textContent : 'Post';
+            const postContentInput = this.querySelector('#postContent');
+            const postContent = postContentInput ? postContentInput.value.trim() : '';
+            const imageInput = this.querySelector('#post-image');
+
+            // Validate: must have either content or image
+            if (postContent === '' && (!imageInput || !imageInput.files || imageInput.files.length === 0)) {
+                alert('Please add some text or an image to your post.');
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Posting...';
+            }
+
+            // Create FormData object
+            const formData = new FormData(this);
+
+            // Make AJAX request
+            fetch('create_post.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Close the modal and restore scroll
+                    closeModal();
+
+                    // Reload the page to show the new post
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Could not create post'));
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalBtnText;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while posting');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                }
+            });
         });
     }
 });
