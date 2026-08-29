@@ -153,7 +153,8 @@ function runMigration($pdo) {
             id SERIAL PRIMARY KEY,
             sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            content TEXT NOT NULL,
+            content TEXT,
+            image_path TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             is_read SMALLINT DEFAULT 0,
             updated_at TIMESTAMP DEFAULT NULL,
@@ -164,7 +165,8 @@ function runMigration($pdo) {
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
             sender_id INT(11) NOT NULL,
             receiver_id INT(11) NOT NULL,
-            content TEXT NOT NULL,
+            content TEXT,
+            image_path TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             is_read TINYINT(1) DEFAULT 0,
             updated_at TIMESTAMP DEFAULT NULL,
@@ -330,5 +332,21 @@ function runMigration($pdo) {
         $pdo->exec("UPDATE posts SET image_path = REPLACE(image_path, '/data/uploads/', 'uploads/') WHERE image_path LIKE '/data/uploads/%'");
     } catch (PDOException $e) {
         // Ignore if columns don't exist yet
+    }
+
+    // Add image_path column to messages table if missing
+    try {
+        if ($isPg) {
+            $pdo->exec("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_path TEXT");
+            $pdo->exec("ALTER TABLE messages ALTER COLUMN content DROP NOT NULL");
+        } else {
+            $check = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME='messages' AND COLUMN_NAME='image_path'");
+            $exists = $check && $check->fetch();
+            if (!$exists) {
+                $pdo->exec("ALTER TABLE messages ADD COLUMN image_path TEXT DEFAULT NULL");
+            }
+        }
+    } catch (PDOException $e) {
+        error_log("Migration messages image_path: " . $e->getMessage());
     }
 }

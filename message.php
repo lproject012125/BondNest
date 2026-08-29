@@ -92,57 +92,80 @@ if ($selected_user_id) {
 }
 
 // Handle sending a new message
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message']) && $selected_user_id) {
-    $message = $_POST['message'];
-    
-    $sql = "INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$current_user_id, $selected_user_id, $message]);
-    
-    // Return JSON response for AJAX
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-        $new_message_id = $pdo->lastInsertId();
-        
-        // Get the newly inserted message
-        $sql = "SELECT m.*, u.first_name, u.last_name, u.profile_picture
-                FROM messages m
-                JOIN users u ON m.sender_id = u.id
-                WHERE m.id = ?";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $selected_user_id) {
+    $message = isset($_POST['message']) ? trim($_POST['message']) : '';
+    $image_path = null;
+
+    // Handle image upload
+    if (isset($_FILES['message_image']) && $_FILES['message_image']['error'] === UPLOAD_ERR_OK) {
+        $allowed = ['image/jpeg','image/png','image/gif','image/webp'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $_FILES['message_image']['tmp_name']);
+        finfo_close($finfo);
+
+        if (in_array($mime, $allowed, true)) {
+            $ext = match($mime) {
+                'image/jpeg' => 'jpg',
+                'image/png'  => 'png',
+                'image/gif'  => 'gif',
+                'image/webp' => 'webp',
+                default      => 'jpg'
+            };
+            $dir = __DIR__ . '/uploads/message_images';
+            if (!is_dir($dir)) mkdir($dir, 0777, true);
+            $filename = 'msg_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+            $filepath = $dir . '/' . $filename;
+            if (move_uploaded_file($_FILES['message_image']['tmp_name'], $filepath)) {
+                $image_path = 'uploads/message_images/' . $filename;
+            }
+        }
+    }
+
+    if ($message !== '' || $image_path !== null) {
+        $sql = "INSERT INTO messages (sender_id, receiver_id, content, image_path) VALUES (?, ?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$new_message_id]);
-        $new_message = $stmt->fetch();
-        
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'message' => $new_message
-        ]);
-        exit();
-    } else {
-        header("Location: message.php?user_id=" . $selected_user_id);
-        exit();
+        $stmt->execute([$current_user_id, $selected_user_id, $message ?: null, $image_path]);
+
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            $new_message_id = $pdo->lastInsertId();
+
+            $sql = "SELECT m.*, u.first_name, u.last_name, u.profile_picture
+                    FROM messages m
+                    JOIN users u ON m.sender_id = u.id
+                    WHERE m.id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$new_message_id]);
+            $new_message = $stmt->fetch();
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => $new_message
+            ]);
+            exit();
+        } else {
+            header("Location: message.php?user_id=" . $selected_user_id);
+            exit();
+        }
     }
 }
 
 // Helper function to format time
 function formatMessageTime($timestamp) {
-    $tz = new DateTimeZone('UTC');
+    $tz = new DateTimeZone('Asia/Manila');
     $now = new DateTime('now', $tz);
-    $time = new DateTime($timestamp, $tz);
+    $time = new DateTime($timestamp, new DateTimeZone('UTC'));
+    $time->setTimezone($tz);
     $diff = $now->diff($time);
     
     if ($diff->d == 0) {
-        // Same day, show time
-        return $time->format('g:i A');
+        return 'Today at ' . $time->format('g:i A');
     } elseif ($diff->d == 1) {
-        // Yesterday
         return 'Yesterday at ' . $time->format('g:i A');
     } elseif ($diff->d < 7) {
-        // Within a week
         return $time->format('l') . ' at ' . $time->format('g:i A');
     } else {
-        // Older than a week
-        return $time->format('M j') . ' at ' . $time->format('g:i A');
+        return $time->format('M j, Y') . ' at ' . $time->format('g:i A');
     }
 }
 ?>
@@ -440,6 +463,59 @@ function formatMessageTime($timestamp) {
 
     .send-button:active {
         transform: translateY(0);
+    }
+
+    .message-image {
+        max-width: 280px;
+        max-height: 300px;
+        border-radius: 12px;
+        display: block;
+        margin-bottom: 4px;
+        cursor: pointer;
+    }
+
+    .image-upload-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        color: var(--color-primary);
+        font-size: 1.3rem;
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+
+    .image-upload-btn:hover {
+        background: rgba(0, 128, 128, 0.1);
+    }
+
+    .image-preview-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0f2f5;
+        border-radius: 8px;
+        padding: 4px 8px;
+    }
+
+    .image-preview-bar img {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    .remove-image-btn {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #e74c3c;
+        cursor: pointer;
+        padding: 0 2px;
+        line-height: 1;
     }
 
     /* Right section - Enhanced Design */
@@ -1255,7 +1331,12 @@ function formatMessageTime($timestamp) {
                                         <?php if (isset($message['deleted']) && $message['deleted'] == 1): ?>
                                             <i class="bi bi-trash-fill" style="margin-right: 5px; font-size: 12px;"></i> This message was deleted
                                         <?php else: ?>
-                                            <?php echo htmlspecialchars($message['content']); ?>
+                                            <?php if (!empty($message['image_path'])): ?>
+                                                <img src="<?php echo htmlspecialchars($message['image_path']); ?>" class="message-image" alt="Sent image">
+                                            <?php endif; ?>
+                                            <?php if (!empty($message['content'])): ?>
+                                                <?php echo htmlspecialchars($message['content']); ?>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                     <div class="timestamp">
@@ -1269,6 +1350,14 @@ function formatMessageTime($timestamp) {
                         </div>
                         
                         <div class="chat-input-container">
+                            <label for="messageImageInput" class="image-upload-btn" title="Send image">
+                                <i class="bi bi-image"></i>
+                            </label>
+                            <input type="file" id="messageImageInput" accept="image/*" style="display:none;">
+                            <div class="image-preview-bar" id="imagePreviewBar" style="display:none;">
+                                <img id="imagePreviewThumb" src="" alt="Preview">
+                                <button type="button" id="removeImageBtn" class="remove-image-btn">&times;</button>
+                            </div>
                             <input type="text" class="chat-input" id="messageInput" placeholder="Type a message...">
                             <button class="send-button" id="sendButton">
                                 <i class="bi bi-send-fill"></i>
@@ -1469,6 +1558,35 @@ function formatMessageTime($timestamp) {
             <?php endif; ?>
             
             if (sendButton && messageInput && chatMessages) {
+                const messageImageInput = document.getElementById('messageImageInput');
+                const imagePreviewBar = document.getElementById('imagePreviewBar');
+                const imagePreviewThumb = document.getElementById('imagePreviewThumb');
+                const removeImageBtn = document.getElementById('removeImageBtn');
+                let selectedImageFile = null;
+
+                if (messageImageInput) {
+                    messageImageInput.addEventListener('change', function() {
+                        if (this.files && this.files[0]) {
+                            selectedImageFile = this.files[0];
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                imagePreviewThumb.src = e.target.result;
+                                imagePreviewBar.style.display = 'flex';
+                            };
+                            reader.readAsDataURL(selectedImageFile);
+                        }
+                    });
+                }
+
+                if (removeImageBtn) {
+                    removeImageBtn.addEventListener('click', function() {
+                        selectedImageFile = null;
+                        messageImageInput.value = '';
+                        imagePreviewBar.style.display = 'none';
+                        imagePreviewThumb.src = '';
+                    });
+                }
+
                 sendButton.addEventListener('click', sendMessage);
                 messageInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
@@ -1480,69 +1598,86 @@ function formatMessageTime($timestamp) {
                     const messageText = messageInput.value.trim();
                     const receiverId = <?php echo $selected_user_id ?: 'null'; ?>;
                     
-                    if (messageText && receiverId) {
-                        // Create the message element immediately for better UX
-                        const messageContainer = document.createElement('div');
-                        messageContainer.classList.add('message-container', 'sent');
-                        messageContainer.setAttribute('data-message-id', 'temp-' + Date.now()); // Temporary ID until we get the real one
-                        
-                        // Add message menu with dropdown
-                        const messageMenu = document.createElement('div');
-                        messageMenu.classList.add('message-menu');
-                        messageMenu.innerHTML = `
-                            <i class="bi bi-three-dots-vertical"></i>
-                            <div class="message-dropdown">
-                                <div class="dropdown-item edit-message">
-                                    <i class="bi bi-pencil"></i>
-                                    Edit
-                                </div>
-                                <div class="dropdown-item delete delete-message">
-                                    <i class="bi bi-trash"></i>
-                                    Delete
-                                </div>
+                    if ((!messageText && !selectedImageFile) || !receiverId) return;
+
+                    const formData = new FormData();
+                    if (messageText) formData.append('message', messageText);
+                    if (selectedImageFile) formData.append('message_image', selectedImageFile);
+
+                    // Create the message element immediately for better UX
+                    const messageContainer = document.createElement('div');
+                    messageContainer.classList.add('message-container', 'sent');
+                    messageContainer.setAttribute('data-message-id', 'temp-' + Date.now());
+                    
+                    const messageMenu = document.createElement('div');
+                    messageMenu.classList.add('message-menu');
+                    messageMenu.innerHTML = `
+                        <i class="bi bi-three-dots-vertical"></i>
+                        <div class="message-dropdown">
+                            <div class="dropdown-item edit-message">
+                                <i class="bi bi-pencil"></i>
+                                Edit
                             </div>
-                        `;
-                        messageContainer.appendChild(messageMenu);
-                        
-                        const messageDiv = document.createElement('div');
-                        messageDiv.classList.add('message');
-                        messageDiv.textContent = messageText;
-                        
-                        const timestampDiv = document.createElement('div');
-                        timestampDiv.classList.add('timestamp');
-                        timestampDiv.textContent = getCurrentTime();
-                        
-                        messageContainer.appendChild(messageDiv);
-                        messageContainer.appendChild(timestampDiv);
-                        
-                        chatMessages.appendChild(messageContainer);
-                        messageInput.value = '';
-                        scrollToBottom(); // Scroll to bottom after sending
-                        
-                        // Send the message to the server
-                        fetch('message.php?user_id=' + receiverId, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: 'message=' + encodeURIComponent(messageText)
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Update last message ID if this is a new message
-                                if (data.message && data.message.id) {
-                                    lastReceivedMessageId = Math.max(lastReceivedMessageId, data.message.id);
-                                }
-                            } else {
-                                console.error('Failed to send message');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
+                            <div class="dropdown-item delete delete-message">
+                                <i class="bi bi-trash"></i>
+                                Delete
+                            </div>
+                        </div>
+                    `;
+                    messageContainer.appendChild(messageMenu);
+                    
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message');
+
+                    if (selectedImageFile) {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(selectedImageFile);
+                        img.classList.add('message-image');
+                        img.alt = 'Sent image';
+                        messageDiv.appendChild(img);
                     }
+                    if (messageText) {
+                        const textNode = document.createTextNode(messageText);
+                        messageDiv.appendChild(textNode);
+                    }
+                    
+                    const timestampDiv = document.createElement('div');
+                    timestampDiv.classList.add('timestamp');
+                    timestampDiv.textContent = getCurrentTime();
+                    
+                    messageContainer.appendChild(messageDiv);
+                    messageContainer.appendChild(timestampDiv);
+                    
+                    chatMessages.appendChild(messageContainer);
+                    messageInput.value = '';
+                    selectedImageFile = null;
+                    messageImageInput.value = '';
+                    imagePreviewBar.style.display = 'none';
+                    imagePreviewThumb.src = '';
+                    scrollToBottom();
+                    
+                    // Send the message to the server
+                    formData.append('X-Requested-With', 'XMLHttpRequest');
+                    fetch('message.php?user_id=' + receiverId, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.message && data.message.id) {
+                                lastReceivedMessageId = Math.max(lastReceivedMessageId, data.message.id);
+                            }
+                        } else {
+                            console.error('Failed to send message');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
                 }
                 
                 // Function to check for new messages periodically
@@ -1581,7 +1716,17 @@ function formatMessageTime($timestamp) {
                                     
                                     const messageDiv = document.createElement('div');
                                     messageDiv.classList.add('message');
-                                    messageDiv.textContent = message.content;
+                                    if (message.image_path) {
+                                        const img = document.createElement('img');
+                                        img.src = message.image_path;
+                                        img.classList.add('message-image');
+                                        img.alt = 'Sent image';
+                                        messageDiv.appendChild(img);
+                                    }
+                                    if (message.content) {
+                                        const textNode = document.createTextNode(message.content);
+                                        messageDiv.appendChild(textNode);
+                                    }
                                     
                                     const timestampDiv = document.createElement('div');
                                     timestampDiv.classList.add('timestamp');
@@ -2070,12 +2215,8 @@ function formatMessageTime($timestamp) {
 
         function getCurrentTime() {
             const now = new Date();
-            let hours = now.getHours();
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12;
-            return `${hours}:${minutes} ${ampm}`;
+            const options = { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+            return now.toLocaleString('en-US', options).replace(',', '').replace(/(\d+:\d+ [AP]M)/, 'at $1');
         }
     </script>
 

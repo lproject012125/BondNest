@@ -39,11 +39,16 @@ if (!empty($messages)) {
 
 // Format messages for response
 $formatted_messages = [];
+$tz_manila = new DateTimeZone('Asia/Manila');
 foreach ($messages as $message) {
+    $dt = new DateTime($message['created_at'], new DateTimeZone('UTC'));
+    $dt->setTimezone($tz_manila);
     $formatted_messages[] = [
         'id' => $message['id'],
-        'content' => htmlspecialchars($message['content']),
-        'time' => date('g:i A', strtotime($message['created_at']))
+        'sender_id' => $message['sender_id'],
+        'content' => htmlspecialchars($message['content'] ?? ''),
+        'time' => $dt->format('M j, Y \a\t g:i A'),
+        'image_path' => !empty($message['image_path']) ? $message['image_path'] : null
     ];
 }
 
