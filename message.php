@@ -94,32 +94,39 @@ if ($selected_user_id) {
 // Handle sending a new message
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $selected_user_id) {
     $message = isset($_POST['message']) ? trim($_POST['message']) : '';
-    $image_path = null;
+    $image_paths = [];
 
-    // Handle image upload
-    if (isset($_FILES['message_image']) && $_FILES['message_image']['error'] === UPLOAD_ERR_OK) {
+    // Handle multiple image uploads
+    if (!empty($_FILES['message_images']['name'][0])) {
         $allowed = ['image/jpeg','image/png','image/gif','image/webp'];
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mime = finfo_file($finfo, $_FILES['message_image']['tmp_name']);
-        finfo_close($finfo);
+        $dir = __DIR__ . '/uploads/message_images';
+        if (!is_dir($dir)) mkdir($dir, 0777, true);
 
-        if (in_array($mime, $allowed, true)) {
-            $ext = match($mime) {
-                'image/jpeg' => 'jpg',
-                'image/png'  => 'png',
-                'image/gif'  => 'gif',
-                'image/webp' => 'webp',
-                default      => 'jpg'
-            };
-            $dir = __DIR__ . '/uploads/message_images';
-            if (!is_dir($dir)) mkdir($dir, 0777, true);
-            $filename = 'msg_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
-            $filepath = $dir . '/' . $filename;
-            if (move_uploaded_file($_FILES['message_image']['tmp_name'], $filepath)) {
-                $image_path = 'uploads/message_images/' . $filename;
+        $fileCount = min(count($_FILES['message_images']['name']), 5);
+        for ($i = 0; $i < $fileCount; $i++) {
+            if ($_FILES['message_images']['error'][$i] !== UPLOAD_ERR_OK) continue;
+
+            $mime = finfo_file($finfo, $_FILES['message_images']['tmp_name'][$i]);
+            if (in_array($mime, $allowed, true)) {
+                $ext = match($mime) {
+                    'image/jpeg' => 'jpg',
+                    'image/png'  => 'png',
+                    'image/gif'  => 'gif',
+                    'image/webp' => 'webp',
+                    default      => 'jpg'
+                };
+                $filename = 'msg_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+                $filepath = $dir . '/' . $filename;
+                if (move_uploaded_file($_FILES['message_images']['tmp_name'][$i], $filepath)) {
+                    $image_paths[] = 'uploads/message_images/' . $filename;
+                }
             }
         }
+        finfo_close($finfo);
     }
+
+    $image_path = !empty($image_paths) ? json_encode($image_paths) : null;
 
     if ($message !== '' || $image_path !== null) {
         $sql = "INSERT INTO messages (sender_id, receiver_id, content, image_path) VALUES (?, ?, ?, ?)";
@@ -156,17 +163,25 @@ function formatMessageTime($timestamp) {
     $now = new DateTime('now', $tz);
     $time = new DateTime($timestamp, new DateTimeZone('UTC'));
     $time->setTimezone($tz);
-    $diff = $now->diff($time);
     
-    if ($diff->d == 0) {
+    $today = $now->format('Y-m-d');
+    $msgDate = $time->format('Y-m-d');
+    
+    if ($today === $msgDate) {
         return 'Today at ' . $time->format('g:i A');
-    } elseif ($diff->d == 1) {
-        return 'Yesterday at ' . $time->format('g:i A');
-    } elseif ($diff->d < 7) {
-        return $time->format('l') . ' at ' . $time->format('g:i A');
-    } else {
-        return $time->format('M j, Y') . ' at ' . $time->format('g:i A');
     }
+    
+    $yesterday = (clone $now)->modify('-1 day')->format('Y-m-d');
+    if ($yesterday === $msgDate) {
+        return 'Yesterday at ' . $time->format('g:i A');
+    }
+    
+    $diff = $now->diff($time);
+    if ($diff->d < 7) {
+        return $time->format('l') . ' at ' . $time->format('g:i A');
+    }
+    
+    return $time->format('M j, Y') . ' at ' . $time->format('g:i A');
 }
 ?>
 
@@ -472,6 +487,88 @@ function formatMessageTime($timestamp) {
         display: block;
         margin-bottom: 4px;
         cursor: pointer;
+    }
+
+    .message-image-grid {
+        display: grid;
+        gap: 3px;
+        max-width: 300px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .message-image-grid.grid-1 { grid-template-columns: 1fr; }
+    .message-image-grid.grid-2 { grid-template-columns: 1fr 1fr; }
+    .message-image-grid.grid-3 { grid-template-columns: 1fr 1fr; }
+    .message-image-grid.grid-3 .message-image-cell:first-child { grid-row: span 2; }
+    .message-image-grid.grid-4 { grid-template-columns: 1fr 1fr; }
+    .message-image-grid.grid-5 { grid-template-columns: 1fr 1fr; }
+    .message-image-grid.grid-5 .message-image-cell:first-child { grid-row: span 2; }
+
+    .message-image-cell {
+        overflow: hidden;
+        cursor: pointer;
+        position: relative;
+    }
+    .message-image-cell img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        min-height: 80px;
+    }
+
+    /* Lightbox */
+    .message-lightbox {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.92);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    .message-lightbox.active { display: flex; }
+    .message-lightbox img {
+        max-width: 90vw;
+        max-height: 80vh;
+        border-radius: 4px;
+        object-fit: contain;
+    }
+    .lightbox-close {
+        position: absolute;
+        top: 16px; right: 20px;
+        color: white;
+        font-size: 32px;
+        cursor: pointer;
+        z-index: 10001;
+        background: none;
+        border: none;
+    }
+    .lightbox-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-size: 40px;
+        cursor: pointer;
+        background: rgba(255,255,255,0.15);
+        border: none;
+        border-radius: 50%;
+        width: 50px; height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+    .lightbox-nav:hover { background: rgba(255,255,255,0.3); }
+    .lightbox-prev { left: 16px; }
+    .lightbox-next { right: 16px; }
+    .lightbox-counter {
+        color: white;
+        margin-top: 12px;
+        font-size: 14px;
     }
 
     .image-upload-btn {
@@ -1315,24 +1412,41 @@ function formatMessageTime($timestamp) {
                                     <div class="message-menu">
                                         <i class="bi bi-three-dots-vertical"></i>
                                         <div class="message-dropdown">
-                                            <?php if ($message['sender_id'] == $current_user_id): ?>
+                                            <?php if ($message['sender_id'] == $current_user_id && empty($message['image_path'])): ?>
                                             <div class="dropdown-item edit-message" data-message-id="<?php echo $message['id']; ?>">
                                                 <i class="bi bi-pencil"></i>
                                                 Edit
                                             </div>
+                                            <?php endif; ?>
                                             <div class="dropdown-item delete delete-message" data-message-id="<?php echo $message['id']; ?>">
                                                 <i class="bi bi-trash"></i>
                                                 Delete
                                             </div>
-                                            <?php endif; ?>
                                         </div>
                                     </div>
                                     <div class="message">
                                         <?php if (isset($message['deleted']) && $message['deleted'] == 1): ?>
                                             <i class="bi bi-trash-fill" style="margin-right: 5px; font-size: 12px;"></i> This message was deleted
                                         <?php else: ?>
-                                            <?php if (!empty($message['image_path'])): ?>
-                                                <img src="<?php echo htmlspecialchars($message['image_path']); ?>" class="message-image" alt="Sent image">
+                                            <?php
+                                            $imgPaths = null;
+                                            if (!empty($message['image_path'])) {
+                                                $decoded = json_decode($message['image_path'], true);
+                                                $imgPaths = is_array($decoded) ? $decoded : [$message['image_path']];
+                                            }
+                                            ?>
+                                            <?php if ($imgPaths): ?>
+                                                <?php if (count($imgPaths) === 1): ?>
+                                                    <img src="<?php echo htmlspecialchars($imgPaths[0]); ?>" class="message-image" alt="Sent image">
+                                                <?php else: ?>
+                                                    <div class="message-image-grid grid-<?php echo min(count($imgPaths), 5); ?>">
+                                                        <?php foreach (array_slice($imgPaths, 0, 5) as $imgPath): ?>
+                                                            <div class="message-image-cell">
+                                                                <img src="<?php echo htmlspecialchars($imgPath); ?>" alt="Sent image">
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                             <?php if (!empty($message['content'])): ?>
                                                 <?php echo htmlspecialchars($message['content']); ?>
@@ -1353,11 +1467,8 @@ function formatMessageTime($timestamp) {
                             <label for="messageImageInput" class="image-upload-btn" title="Send image">
                                 <i class="bi bi-image"></i>
                             </label>
-                            <input type="file" id="messageImageInput" accept="image/*" style="display:none;">
-                            <div class="image-preview-bar" id="imagePreviewBar" style="display:none;">
-                                <img id="imagePreviewThumb" src="" alt="Preview">
-                                <button type="button" id="removeImageBtn" class="remove-image-btn">&times;</button>
-                            </div>
+                            <input type="file" id="messageImageInput" accept="image/*" multiple style="display:none;">
+                            <div class="image-preview-bar" id="imagePreviewBar" style="display:none;"></div>
                             <input type="text" class="chat-input" id="messageInput" placeholder="Type a message...">
                             <button class="send-button" id="sendButton">
                                 <i class="bi bi-send-fill"></i>
@@ -1560,30 +1671,63 @@ function formatMessageTime($timestamp) {
             if (sendButton && messageInput && chatMessages) {
                 const messageImageInput = document.getElementById('messageImageInput');
                 const imagePreviewBar = document.getElementById('imagePreviewBar');
-                const imagePreviewThumb = document.getElementById('imagePreviewThumb');
-                const removeImageBtn = document.getElementById('removeImageBtn');
-                let selectedImageFile = null;
+                let selectedImageFiles = [];
+
+                function updateImagePreview() {
+                    imagePreviewBar.innerHTML = '';
+                    if (selectedImageFiles.length > 0) {
+                        imagePreviewBar.style.display = 'flex';
+                        selectedImageFiles.forEach(function(file, index) {
+                            const thumbContainer = document.createElement('div');
+                            thumbContainer.style.position = 'relative';
+                            thumbContainer.style.display = 'inline-flex';
+
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(file);
+                            img.style.width = '36px';
+                            img.style.height = '36px';
+                            img.style.borderRadius = '6px';
+                            img.style.objectFit = 'cover';
+
+                            const removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'remove-image-btn';
+                            removeBtn.innerHTML = '&times;';
+                            removeBtn.style.position = 'absolute';
+                            removeBtn.style.top = '-4px';
+                            removeBtn.style.right = '-4px';
+                            removeBtn.style.background = '#e74c3c';
+                            removeBtn.style.color = 'white';
+                            removeBtn.style.borderRadius = '50%';
+                            removeBtn.style.width = '18px';
+                            removeBtn.style.height = '18px';
+                            removeBtn.style.fontSize = '14px';
+                            removeBtn.style.padding = '0';
+                            removeBtn.style.lineHeight = '1';
+                            removeBtn.style.border = 'none';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.addEventListener('click', function() {
+                                selectedImageFiles.splice(index, 1);
+                                updateImagePreview();
+                            });
+
+                            thumbContainer.appendChild(img);
+                            thumbContainer.appendChild(removeBtn);
+                            imagePreviewBar.appendChild(thumbContainer);
+                        });
+                    } else {
+                        imagePreviewBar.style.display = 'none';
+                    }
+                }
 
                 if (messageImageInput) {
                     messageImageInput.addEventListener('change', function() {
-                        if (this.files && this.files[0]) {
-                            selectedImageFile = this.files[0];
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                imagePreviewThumb.src = e.target.result;
-                                imagePreviewBar.style.display = 'flex';
-                            };
-                            reader.readAsDataURL(selectedImageFile);
-                        }
-                    });
-                }
-
-                if (removeImageBtn) {
-                    removeImageBtn.addEventListener('click', function() {
-                        selectedImageFile = null;
-                        messageImageInput.value = '';
-                        imagePreviewBar.style.display = 'none';
-                        imagePreviewThumb.src = '';
+                        var newFiles = Array.from(this.files);
+                        var remaining = 5 - selectedImageFiles.length;
+                        var filesToAdd = newFiles.slice(0, remaining);
+                        selectedImageFiles = selectedImageFiles.concat(filesToAdd);
+                        updateImagePreview();
+                        this.value = '';
                     });
                 }
 
@@ -1598,11 +1742,13 @@ function formatMessageTime($timestamp) {
                     const messageText = messageInput.value.trim();
                     const receiverId = <?php echo $selected_user_id ?: 'null'; ?>;
                     
-                    if ((!messageText && !selectedImageFile) || !receiverId) return;
+                    if ((!messageText && selectedImageFiles.length === 0) || !receiverId) return;
 
                     const formData = new FormData();
                     if (messageText) formData.append('message', messageText);
-                    if (selectedImageFile) formData.append('message_image', selectedImageFile);
+                    selectedImageFiles.forEach(function(file) {
+                        formData.append('message_images[]', file);
+                    });
 
                     // Create the message element immediately for better UX
                     const messageContainer = document.createElement('div');
@@ -1611,30 +1757,55 @@ function formatMessageTime($timestamp) {
                     
                     const messageMenu = document.createElement('div');
                     messageMenu.classList.add('message-menu');
-                    messageMenu.innerHTML = `
-                        <i class="bi bi-three-dots-vertical"></i>
-                        <div class="message-dropdown">
-                            <div class="dropdown-item edit-message">
-                                <i class="bi bi-pencil"></i>
-                                Edit
+                    if (selectedImageFiles.length === 0) {
+                        messageMenu.innerHTML = `
+                            <i class="bi bi-three-dots-vertical"></i>
+                            <div class="message-dropdown">
+                                <div class="dropdown-item edit-message">
+                                    <i class="bi bi-pencil"></i>
+                                    Edit
+                                </div>
+                                <div class="dropdown-item delete delete-message">
+                                    <i class="bi bi-trash"></i>
+                                    Delete
+                                </div>
                             </div>
-                            <div class="dropdown-item delete delete-message">
-                                <i class="bi bi-trash"></i>
-                                Delete
+                        `;
+                    } else {
+                        messageMenu.innerHTML = `
+                            <i class="bi bi-three-dots-vertical"></i>
+                            <div class="message-dropdown">
+                                <div class="dropdown-item delete delete-message">
+                                    <i class="bi bi-trash"></i>
+                                    Delete
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    }
                     messageContainer.appendChild(messageMenu);
                     
                     const messageDiv = document.createElement('div');
                     messageDiv.classList.add('message');
 
-                    if (selectedImageFile) {
+                    if (selectedImageFiles.length === 1) {
                         const img = document.createElement('img');
-                        img.src = URL.createObjectURL(selectedImageFile);
+                        img.src = URL.createObjectURL(selectedImageFiles[0]);
                         img.classList.add('message-image');
                         img.alt = 'Sent image';
                         messageDiv.appendChild(img);
+                    } else if (selectedImageFiles.length > 1) {
+                        const grid = document.createElement('div');
+                        grid.classList.add('message-image-grid', 'grid-' + Math.min(selectedImageFiles.length, 5));
+                        selectedImageFiles.forEach(function(file) {
+                            const cell = document.createElement('div');
+                            cell.classList.add('message-image-cell');
+                            const img = document.createElement('img');
+                            img.src = URL.createObjectURL(file);
+                            img.alt = 'Sent image';
+                            cell.appendChild(img);
+                            grid.appendChild(cell);
+                        });
+                        messageDiv.appendChild(grid);
                     }
                     if (messageText) {
                         const textNode = document.createTextNode(messageText);
@@ -1650,10 +1821,8 @@ function formatMessageTime($timestamp) {
                     
                     chatMessages.appendChild(messageContainer);
                     messageInput.value = '';
-                    selectedImageFile = null;
-                    messageImageInput.value = '';
-                    imagePreviewBar.style.display = 'none';
-                    imagePreviewThumb.src = '';
+                    selectedImageFiles = [];
+                    updateImagePreview();
                     scrollToBottom();
                     
                     // Send the message to the server
@@ -1717,11 +1886,33 @@ function formatMessageTime($timestamp) {
                                     const messageDiv = document.createElement('div');
                                     messageDiv.classList.add('message');
                                     if (message.image_path) {
-                                        const img = document.createElement('img');
-                                        img.src = message.image_path;
-                                        img.classList.add('message-image');
-                                        img.alt = 'Sent image';
-                                        messageDiv.appendChild(img);
+                                        var imagePaths;
+                                        try {
+                                            imagePaths = JSON.parse(message.image_path);
+                                            if (!Array.isArray(imagePaths)) imagePaths = [message.image_path];
+                                        } catch (e) {
+                                            imagePaths = [message.image_path];
+                                        }
+                                        if (imagePaths.length === 1) {
+                                            var img = document.createElement('img');
+                                            img.src = imagePaths[0];
+                                            img.classList.add('message-image');
+                                            img.alt = 'Sent image';
+                                            messageDiv.appendChild(img);
+                                        } else {
+                                            var grid = document.createElement('div');
+                                            grid.classList.add('message-image-grid', 'grid-' + Math.min(imagePaths.length, 5));
+                                            imagePaths.forEach(function(path) {
+                                                var cell = document.createElement('div');
+                                                cell.classList.add('message-image-cell');
+                                                var gImg = document.createElement('img');
+                                                gImg.src = path;
+                                                gImg.alt = 'Sent image';
+                                                cell.appendChild(gImg);
+                                                grid.appendChild(cell);
+                                            });
+                                            messageDiv.appendChild(grid);
+                                        }
                                     }
                                     if (message.content) {
                                         const textNode = document.createTextNode(message.content);
@@ -2218,6 +2409,87 @@ function formatMessageTime($timestamp) {
             const options = { timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
             return now.toLocaleString('en-US', options).replace(',', '').replace(/(\d+:\d+ [AP]M)/, 'at $1');
         }
+
+        // Lightbox functionality
+        const lightbox = document.getElementById('messageLightbox');
+        const lightboxImage = document.getElementById('lightboxImage');
+        const lightboxCloseBtn = document.getElementById('lightboxClose');
+        const lightboxPrevBtn = document.getElementById('lightboxPrev');
+        const lightboxNextBtn = document.getElementById('lightboxNext');
+        const lightboxCounter = document.getElementById('lightboxCounter');
+        let lightboxImages = [];
+        let lightboxIndex = 0;
+
+        function openLightbox(images, index) {
+            lightboxImages = images;
+            lightboxIndex = index;
+            updateLightbox();
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function updateLightbox() {
+            lightboxImage.src = lightboxImages[lightboxIndex];
+            if (lightboxImages.length > 1) {
+                lightboxCounter.textContent = (lightboxIndex + 1) + '/' + lightboxImages.length;
+                lightboxPrevBtn.style.display = 'flex';
+                lightboxNextBtn.style.display = 'flex';
+            } else {
+                lightboxCounter.textContent = '';
+                lightboxPrevBtn.style.display = 'none';
+                lightboxNextBtn.style.display = 'none';
+            }
+        }
+
+        function lightboxNavigate(direction) {
+            lightboxIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+            updateLightbox();
+        }
+
+        if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
+        if (lightboxPrevBtn) lightboxPrevBtn.addEventListener('click', function() { lightboxNavigate(-1); });
+        if (lightboxNextBtn) lightboxNextBtn.addEventListener('click', function() { lightboxNavigate(1); });
+
+        if (lightbox) {
+            lightbox.addEventListener('click', function(e) {
+                if (e.target === lightbox) closeLightbox();
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!lightbox || !lightbox.classList.contains('active')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') lightboxNavigate(-1);
+            if (e.key === 'ArrowRight') lightboxNavigate(1);
+        });
+
+        // Event delegation for image clicks
+        if (chatMessages) {
+            chatMessages.addEventListener('click', function(e) {
+                var img = e.target.closest('.message-image, .message-image-cell img');
+                if (!img) return;
+
+                var images = [];
+                var idx = 0;
+
+                var grid = img.closest('.message-image-grid');
+                if (grid) {
+                    var cells = grid.querySelectorAll('.message-image-cell img');
+                    images = Array.from(cells).map(function(c) { return c.src; });
+                    idx = Array.from(cells).indexOf(img);
+                } else {
+                    images = [img.src];
+                    idx = 0;
+                }
+
+                openLightbox(images, idx);
+            });
+        }
     </script>
 
     <!-- Delete Confirmation Modal -->
@@ -2237,6 +2509,15 @@ function formatMessageTime($timestamp) {
                 <button class="delete-modal-confirm" id="confirmDelete">Delete</button>
             </div>
         </div>
+    </div>
+
+    <!-- Message Lightbox -->
+    <div class="message-lightbox" id="messageLightbox">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <button class="lightbox-nav lightbox-prev" id="lightboxPrev">&#10094;</button>
+        <button class="lightbox-nav lightbox-next" id="lightboxNext">&#10095;</button>
+        <img id="lightboxImage" src="" alt="Full size image">
+        <div class="lightbox-counter" id="lightboxCounter"></div>
     </div>
 </body>
 </html>
