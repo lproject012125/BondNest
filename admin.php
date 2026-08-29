@@ -1372,7 +1372,7 @@ function formatDate($date) {
     /* Toast Notifications */
     .toast {
         position: fixed;
-        bottom: 20px;
+        top: 80px;
         right: 20px;
         background: white;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -1384,14 +1384,14 @@ function formatDate($date) {
         min-width: 300px;
         max-width: 450px;
         z-index: 10000;
-        transform: translateY(100px);
+        transform: translateX(calc(100% + 24px));
         opacity: 0;
         transition: all 0.3s ease;
         border-left: 4px solid var(--primary);
     }
 
     .toast.show {
-        transform: translateY(0);
+        transform: translateX(0);
         opacity: 1;
     }
 

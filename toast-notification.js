@@ -30,6 +30,12 @@ window.showToast = function(message, type = 'info', duration = 5000) {
         }
     });
     
+    // Position upper-right
+    toast.style.position = 'fixed';
+    toast.style.top = '80px';
+    toast.style.right = '24px';
+    toast.style.zIndex = '13000';
+    
     // Add to document
     document.body.appendChild(toast);
     

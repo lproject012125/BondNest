@@ -304,8 +304,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $new_password = $_POST['new_password'] ?? '';
         $confirm_password = $_POST['confirm_password'] ?? '';
 
-        if (!$current_password || !$new_password || !$confirm_password) {
-            echo json_encode(['success' => false, 'error' => 'All password fields are required.']);
+        if (!$current_password) {
+            echo json_encode(['success' => false, 'error' => 'Current password is required.', 'field' => 'currentPassword']);
             exit;
         }
 
@@ -314,22 +314,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $userRow = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$userRow || !password_verify($current_password, $userRow['password'])) {
-            echo json_encode(['success' => false, 'error' => 'Current password is incorrect.']);
+            echo json_encode(['success' => false, 'error' => 'Current password is incorrect.', 'field' => 'currentPassword']);
             exit;
         }
 
-        if ($new_password !== $confirm_password) {
-            echo json_encode(['success' => false, 'error' => 'New passwords do not match.']);
+        if (!$new_password) {
+            echo json_encode(['success' => false, 'error' => 'New password is required.', 'field' => 'newPassword']);
             exit;
         }
 
-        if (strlen($new_password) < 8) {
-            echo json_encode(['success' => false, 'error' => 'New password must be at least 8 characters long.']);
+        if (strlen($new_password) < 12) {
+            echo json_encode(['success' => false, 'error' => 'Password must be at least 12 characters.', 'field' => 'newPassword']);
             exit;
         }
 
         if (!preg_match('/[A-Z]/', $new_password) || !preg_match('/[a-z]/', $new_password) || !preg_match('/[0-9]/', $new_password) || !preg_match('/[\W_]/', $new_password)) {
-            echo json_encode(['success' => false, 'error' => 'Password must include uppercase, lowercase, number, and special character.']);
+            echo json_encode(['success' => false, 'error' => 'Password must include uppercase, lowercase, number, and special character.', 'field' => 'newPassword']);
+            exit;
+        }
+
+        if ($new_password !== $confirm_password) {
+            echo json_encode(['success' => false, 'error' => 'Passwords do not match.', 'field' => 'confirmPassword']);
             exit;
         }
 
@@ -384,6 +389,8 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
         --color-primary: #008080;
         --color-primary-light: rgba(0, 128, 128, 0.1);
         --color-primary-dark: #006666;
+        --color-light: #f0f2f5;
+        --color-white: #ffffff;
     }
     main {
         position: relative;
@@ -453,6 +460,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                             <i class="bi bi-person settings-input-icon"></i>
                                             <input type="text" id="firstName" name="first_name" class="settings-input" value="<?php echo htmlspecialchars($user['first_name'] ?? ''); ?>" required>
                                         </div>
+                                        <div class="custom-error" id="firstName-error"></div>
                                     </div>
 
                                     <div class="settings-field">
@@ -461,6 +469,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                             <i class="bi bi-person settings-input-icon"></i>
                                             <input type="text" id="lastName" name="last_name" class="settings-input" value="<?php echo htmlspecialchars($user['last_name'] ?? ''); ?>" required>
                                         </div>
+                                        <div class="custom-error" id="lastName-error"></div>
                                     </div>
 
                                     <div class="settings-field">
@@ -469,7 +478,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                             <i class="bi bi-at settings-input-icon"></i>
                                             <input type="text" id="username" name="username" class="settings-input" value="<?php echo $username; ?>" required>
                                         </div>
-                                        <div class="username-feedback" id="usernameFeedback"></div>
+                                        <div class="custom-error" id="username-error"></div>
                                     </div>
 
                                     <div class="settings-field">
@@ -478,6 +487,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                             <i class="bi bi-envelope settings-input-icon"></i>
                                             <input type="email" id="email" name="email" class="settings-input" value="<?php echo $email; ?>" required>
                                         </div>
+                                        <div class="custom-error" id="email-error"></div>
                                     </div>
 
                                     <div class="settings-field">
@@ -539,6 +549,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                         <label class="settings-label" for="bio">Bio <small>(Minimum 10 characters)</small></label>
                                         <textarea id="bio" name="bio" class="settings-input no-icon" rows="4" minlength="10" placeholder="Tell us about yourself..."><?php echo $bio; ?></textarea>
                                         <div class="char-counter"><span id="bioCharCount"><?php echo strlen($bio); ?></span>/10 characters min</div>
+                                        <div class="custom-error" id="bio-error"></div>
                                     </div>
                                 </div>
 
@@ -575,6 +586,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                                 <i class="bi bi-eye-slash"></i>
                                             </button>
                                         </div>
+                                        <div class="custom-error" id="currentPassword-error"></div>
                                     </div>
 
                                     <div class="settings-field">
@@ -586,6 +598,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                                 <i class="bi bi-eye-slash"></i>
                                             </button>
                                         </div>
+                                        <div class="custom-error" id="newPassword-error"></div>
                                     </div>
 
                                     <div class="settings-field">
@@ -597,6 +610,7 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                                                 <i class="bi bi-eye-slash"></i>
                                             </button>
                                         </div>
+                                        <div class="custom-error" id="confirmPassword-error"></div>
                                     </div>
 
                                     <!-- Password Policy Checklist -->
@@ -664,9 +678,82 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
         </div>
     </div>
 
+    <!-- Password Change Success Modal (DiariCore-style) -->
+    <div class="settings-modal-overlay pwd-success-overlay" id="pwdSuccessModal" style="display: none;">
+        <div class="settings-modal-card pwd-success-card">
+            <div class="pwd-success-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h3 class="pwd-success-title">Password changed successfully.</h3>
+            <p class="pwd-success-lead">Your password has been updated. For security purposes, you will be logged out shortly.</p>
+            <div class="pwd-success-redirect">
+                <span class="pwd-success-redirect-label" id="pwdRedirectLabel">Redirecting to login in 5s...</span>
+                <div class="pwd-success-redirect-track">
+                    <div class="pwd-success-redirect-fill" id="pwdRedirectFill"></div>
+                </div>
+            </div>
+            <button type="button" class="pwd-success-login-now" id="pwdLoginNowBtn">
+                <i class="bi bi-box-arrow-in-right"></i> Log in now
+            </button>
+        </div>
+    </div>
+
     <!-- JavaScript logic -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ── Inline Validation Helpers (DiariCore-style) ──
+        function showErrorInline(inputElement, message) {
+            if (!inputElement) return;
+            inputElement.classList.add('error');
+            inputElement.classList.remove('success');
+            const errDiv = document.getElementById(inputElement.id + '-error');
+            if (errDiv) {
+                errDiv.textContent = message;
+                errDiv.classList.add('show');
+            }
+        }
+
+        function showSuccessInline(inputElement) {
+            if (!inputElement) return;
+            inputElement.classList.remove('error');
+            inputElement.classList.add('success');
+            const errDiv = document.getElementById(inputElement.id + '-error');
+            if (errDiv) {
+                errDiv.textContent = '';
+                errDiv.classList.remove('show');
+            }
+        }
+
+        function clearInlineError(inputElement) {
+            if (!inputElement) return;
+            inputElement.classList.remove('error', 'success');
+            const errDiv = document.getElementById(inputElement.id + '-error');
+            if (errDiv) {
+                errDiv.textContent = '';
+                errDiv.classList.remove('show');
+            }
+        }
+
+        function mapServerErrors(errors) {
+            // errors is an object like { fieldName: "message" }
+            // Map snake_case keys to camelCase input IDs
+            const keyMap = {
+                'first_name': 'firstName',
+                'last_name': 'lastName',
+                'username': 'username',
+                'email': 'email',
+                'bio': 'bio',
+                'current_password': 'currentPassword',
+                'new_password': 'newPassword',
+                'confirm_password': 'confirmPassword'
+            };
+            for (const [key, msg] of Object.entries(errors)) {
+                const inputId = keyMap[key] || key;
+                const input = document.getElementById(inputId);
+                if (input) showErrorInline(input, msg);
+            }
+        }
+
         // ── Tabs Switching ──
         const tabBtns = document.querySelectorAll('.settings-tab-btn');
         const personalPanel = document.getElementById('personalPanel');
@@ -755,15 +842,13 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
 
         // ── Username Real-time Check ──
         const usernameInput = document.getElementById('username');
-        const usernameFeedback = document.getElementById('usernameFeedback');
         let usernameTimer;
-        if (usernameInput && usernameFeedback) {
+        if (usernameInput) {
             usernameInput.addEventListener('input', function() {
                 clearTimeout(usernameTimer);
                 const val = this.value.trim();
                 if (val.length < 3) {
-                    usernameFeedback.textContent = 'Username must be at least 3 characters';
-                    usernameFeedback.style.color = '#e74c3c';
+                    showErrorInline(this, 'Username must be at least 3 characters');
                     return;
                 }
                 usernameTimer = setTimeout(() => {
@@ -774,10 +859,20 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                     fetch('settings.php', { method: 'POST', body: fd })
                         .then(r => r.json())
                         .then(d => {
-                            usernameFeedback.textContent = d.message;
-                            usernameFeedback.style.color = d.available ? '#27ae60' : '#e74c3c';
+                            if (d.available) {
+                                showSuccessInline(this);
+                            } else {
+                                showErrorInline(this, d.message);
+                            }
                         });
                 }, 300);
+            });
+
+            // Clear error on focus
+            usernameInput.addEventListener('focus', function() {
+                if (this.classList.contains('error')) {
+                    clearInlineError(this);
+                }
             });
         }
 
@@ -834,6 +929,42 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
             personalInfoForm.addEventListener('submit', function(e) {
                 e.preventDefault();
 
+                // Clear previous inline errors
+                ['firstName', 'lastName', 'username', 'email', 'bio'].forEach(id => {
+                    clearInlineError(document.getElementById(id));
+                });
+
+                // Client-side validation
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+                const username = document.getElementById('username').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const bio = document.getElementById('bio').value.trim();
+                let hasError = false;
+
+                if (!firstName) {
+                    showErrorInline(document.getElementById('firstName'), 'First name is required.');
+                    hasError = true;
+                }
+                if (!lastName) {
+                    showErrorInline(document.getElementById('lastName'), 'Last name is required.');
+                    hasError = true;
+                }
+                if (!username || username.length < 3) {
+                    showErrorInline(document.getElementById('username'), 'Username must be at least 3 characters.');
+                    hasError = true;
+                }
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showErrorInline(document.getElementById('email'), 'Please enter a valid email address.');
+                    hasError = true;
+                }
+                if (bio.length > 0 && bio.length < 10) {
+                    showErrorInline(document.getElementById('bio'), 'Bio must be at least 10 characters long.');
+                    hasError = true;
+                }
+
+                if (hasError) return;
+
                 const fd = new FormData(this);
                 fd.append('action', 'save_personal');
 
@@ -854,7 +985,14 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                     } else if (data.success) {
                         showToast(data.message, 'success');
                     } else {
-                        showToast(data.error || 'Failed to save changes.', 'error');
+                        // Show server error as inline on first field or as toast
+                        if (data.field) {
+                            const input = document.getElementById(data.field);
+                            if (input) showErrorInline(input, data.error);
+                            else showToast(data.error, 'error');
+                        } else {
+                            showToast(data.error || 'Failed to save changes.', 'error');
+                        }
                     }
                 })
                 .catch(() => {
@@ -1024,10 +1162,79 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
         // ── Security Form Submission ──
         const securityForm = document.getElementById('securityForm');
         const savePasswordBtn = document.getElementById('savePasswordBtn');
+        let pwdLogoutTimer = null;
+        let pwdLogoutInterval = null;
+
+        function openPasswordChangeSuccessThenLogout() {
+            const modal = document.getElementById('pwdSuccessModal');
+            const fill = document.getElementById('pwdRedirectFill');
+            const label = document.getElementById('pwdRedirectLabel');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            const totalMs = 5000;
+            const start = Date.now();
+
+            pwdLogoutInterval = setInterval(() => {
+                const elapsed = Date.now() - start;
+                const pct = Math.min((elapsed / totalMs) * 100, 100);
+                fill.style.width = pct + '%';
+                const remaining = Math.ceil((totalMs - elapsed) / 1000);
+                label.textContent = 'Redirecting to login in ' + remaining + 's...';
+            }, 100);
+
+            pwdLogoutTimer = setTimeout(() => {
+                clearInterval(pwdLogoutInterval);
+                window.location.href = 'index.php';
+            }, totalMs);
+        }
+
+        document.getElementById('pwdLoginNowBtn').addEventListener('click', function() {
+            clearTimeout(pwdLogoutTimer);
+            clearInterval(pwdLogoutInterval);
+            window.location.href = 'index.php';
+        });
 
         if (securityForm) {
             securityForm.addEventListener('submit', function(e) {
                 e.preventDefault();
+
+                // Clear previous inline errors
+                ['currentPassword', 'newPassword', 'confirmPassword'].forEach(id => {
+                    clearInlineError(document.getElementById(id));
+                });
+
+                const currentPw = document.getElementById('currentPassword').value;
+                const newPw = document.getElementById('newPassword').value;
+                const confirmPw = document.getElementById('confirmPassword').value;
+                let hasError = false;
+
+                if (!currentPw) {
+                    showErrorInline(document.getElementById('currentPassword'), 'Current password is required.');
+                    hasError = true;
+                }
+                if (!newPw) {
+                    showErrorInline(document.getElementById('newPassword'), 'New password is required.');
+                    hasError = true;
+                } else if (newPw.length < 12) {
+                    showErrorInline(document.getElementById('newPassword'), 'Password must be at least 12 characters.');
+                    hasError = true;
+                } else if (!/[A-Z]/.test(newPw) || !/[a-z]/.test(newPw) || !/[0-9]/.test(newPw) || !/[\W_]/.test(newPw)) {
+                    showErrorInline(document.getElementById('newPassword'), 'Password must include uppercase, lowercase, number, and special character.');
+                    hasError = true;
+                } else if (newPw.indexOf(' ') !== -1) {
+                    showErrorInline(document.getElementById('newPassword'), 'Password cannot contain spaces.');
+                    hasError = true;
+                }
+                if (!confirmPw) {
+                    showErrorInline(document.getElementById('confirmPassword'), 'Please confirm your new password.');
+                    hasError = true;
+                } else if (newPw && confirmPw !== newPw) {
+                    showErrorInline(document.getElementById('confirmPassword'), 'Passwords do not match.');
+                    hasError = true;
+                }
+
+                if (hasError) return;
 
                 savePasswordBtn.disabled = true;
                 savePasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
@@ -1042,11 +1249,18 @@ $profile_picture = !empty($user['profile_picture']) ? $user['profile_picture'] :
                         savePasswordBtn.innerHTML = '<i class="bi bi-lock-fill"></i> Update Password';
 
                         if (data.success) {
-                            showToast(data.message, 'success');
                             securityForm.reset();
                             validatePasswordRules();
+                            openPasswordChangeSuccessThenLogout();
                         } else {
-                            showToast(data.error || 'Password update failed.', 'error');
+                            // Map server error to appropriate field
+                            if (data.field) {
+                                const input = document.getElementById(data.field);
+                                if (input) showErrorInline(input, data.error);
+                                else showToast(data.error, 'error');
+                            } else {
+                                showToast(data.error || 'Password update failed.', 'error');
+                            }
                         }
                     })
                     .catch(() => {

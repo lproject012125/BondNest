@@ -600,6 +600,18 @@ if (isset($_SESSION['user_id'])) {
         top: 2px;
         right: 110px;
         margin-right: 0px !important;
+        border-radius: 50%;
+        transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+    }
+
+    .notification-icon:hover {
+        background-color: var(--color-primary-light, rgba(0, 128, 128, 0.1));
+        color: var(--color-primary, #008080);
+        transform: scale(1.12);
+    }
+
+    .notification-icon:active {
+        transform: scale(0.95);
     }
     
     .notification-badge {

@@ -20,7 +20,7 @@
 }
 
 body.settings-page {
-    background-color: #f6f8f8;
+    background-color: var(--color-light, #f0f2f5);
     font-family: 'Poppins', sans-serif;
     color: var(--color-dark);
     margin: 0;
@@ -593,7 +593,7 @@ textarea.settings-input {
 /* Toast Notifications */
 .settings-toast {
     position: fixed;
-    bottom: 25px;
+    top: 80px;
     right: 25px;
     padding: 14px 22px;
     border-radius: 10px;
@@ -628,4 +628,186 @@ textarea.settings-input {
 @keyframes slideInRight {
     from { opacity: 0; transform: translateX(50px); }
     to { opacity: 1; transform: translateX(0); }
+}
+
+/* ═══════════════════════════════════════════
+   Inline Validation (DiariCore-style)
+   ═══════════════════════════════════════════ */
+
+.custom-error {
+    background: #fef2f2;
+    border: 1px solid #f8b4bf;
+    color: #b84252;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: 1.25;
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.22s ease, transform 0.22s ease, max-height 0.22s ease, margin-top 0.22s ease, margin-bottom 0.22s ease;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.custom-error.show {
+    opacity: 1;
+    max-height: 80px;
+    transform: translateY(0);
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+.custom-success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: 1.25;
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.22s ease, transform 0.22s ease, max-height 0.22s ease, margin-top 0.22s ease, margin-bottom 0.22s ease;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.custom-success.show {
+    opacity: 1;
+    max-height: 80px;
+    transform: translateY(0);
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+/* Input error state */
+.settings-input.error,
+textarea.settings-input.error {
+    border-color: #f59ca8 !important;
+    box-shadow: 0 0 0 3px rgba(245, 156, 168, 0.16), inset 0 1px 2px rgba(47, 62, 54, 0.04) !important;
+}
+
+/* Input success state */
+.settings-input.success,
+textarea.settings-input.success {
+    border-color: #27ae60 !important;
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.12), inset 0 1px 2px rgba(47, 62, 54, 0.04) !important;
+}
+
+/* Password change success modal */
+.settings-modal-overlay.pwd-success-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    animation: fadeIn 0.25s ease;
+}
+
+.settings-modal-card.pwd-success-card {
+    background: white;
+    border-radius: 18px;
+    width: 90%;
+    max-width: 440px;
+    padding: 40px 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    position: relative;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+}
+
+.pwd-success-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #ecfdf5;
+    color: #27ae60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    margin: 0 auto 18px auto;
+    animation: successPulse 0.6s ease;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.pwd-success-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    margin: 0 0 8px 0;
+}
+
+.pwd-success-lead {
+    font-size: 0.92rem;
+    color: var(--color-gray);
+    margin: 0 0 22px 0;
+    line-height: 1.45;
+}
+
+.pwd-success-redirect {
+    margin-bottom: 22px;
+}
+
+.pwd-success-redirect-label {
+    font-size: 0.85rem;
+    color: var(--color-gray);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.pwd-success-redirect-track {
+    width: 100%;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.pwd-success-redirect-fill {
+    height: 100%;
+    background: var(--primary-color, #008080);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.pwd-success-login-now {
+    width: 100%;
+    padding: 13px;
+    background: var(--primary-color, #008080);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-btn, 8px);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.pwd-success-login-now:hover {
+    background: var(--primary-hover, #006666);
 }
