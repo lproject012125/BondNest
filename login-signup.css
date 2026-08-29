@@ -940,7 +940,7 @@ display: flex;
 justify-content: space-between;
 align-items: center;
 transition: all 0.3s ease;
-margin-top: 20px;
+margin-top: 0;
 }
 
 .forgot-password-form .create-account-button:hover {

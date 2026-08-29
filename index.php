@@ -387,7 +387,7 @@ $loggedIn = isset($_SESSION['user_id']);
  .forgot-password-title{font-size:2rem;line-height:1.2;margin-bottom:8px}
  .forgot-password-subtitle{line-height:1.5}
  .forgot-password-wrapper form{width:100%}
- .forgot-password-wrapper .form-group{width:100%;margin-bottom:18px}
+ .forgot-password-wrapper .form-group{width:100%;margin-bottom:14px}
  .forgot-password-wrapper .input-container{width:100%;height:52px;min-height:52px;position:relative;border:1px solid #D5DFD9;border-radius:8px;overflow:hidden;box-sizing:border-box;transition:border-color .2s,box-shadow .2s}
  .forgot-password-wrapper .input-container:focus-within{border-color:#2B9E9E;box-shadow:0 0 0 3px rgba(43,158,158,.11)}
  .forgot-password-wrapper .input-container.error,.forgot-password-wrapper .input-container:has(input.error){border-color:#f59ca8;box-shadow:0 0 0 3px rgba(245,156,168,.16)}
@@ -395,19 +395,19 @@ $loggedIn = isset($_SESSION['user_id']);
  .forgot-password-wrapper .input-container input{min-width:0;height:50px;padding:0 14px;font-size:.95rem}
  .forgot-password-wrapper .input-container input[type=password]{padding-right:56px}
  .forgot-password-wrapper .input-icon{position:absolute;right:22px !important;top:50%;transform:translateY(-50%);z-index:2;margin:0}
- .forgot-password-wrapper .custom-error{background:#fef2f2;border:1px solid #f8b4bf;color:#b84252;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;line-height:1.25;opacity:0;max-height:0;transform:translateY(-4px);transition:opacity .22s ease,transform .22s ease,max-height .22s ease,margin .22s ease;pointer-events:none;overflow:hidden;margin:0}
- .forgot-password-wrapper .custom-error.show{opacity:1;max-height:80px;transform:translateY(0);margin:6px 0 0}
+ .forgot-password-wrapper .custom-error{display:none;background:#fef2f2;border:1px solid #f8b4bf;color:#b84252;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;line-height:1.25;margin-top:6px;margin-bottom:0;box-sizing:border-box;width:100%;text-align:left}
+ .forgot-password-wrapper .custom-error.show{display:block}
  .forgot-password-wrapper .create-account-button{height:52px;margin-top:0;border-radius:26px;padding:0 18px;justify-content:center;text-align:center;text-transform:uppercase;font-size:.9rem;letter-spacing:.3px}
- #forgotRequestForm .form-group{margin-bottom:4px}
- #forgotRequestForm .forgot-alert{margin-top:6px;margin-bottom:6px}
+ #forgotRequestForm .form-group{margin-bottom:10px}
+ #forgotRequestForm .forgot-alert{margin-top:6px;margin-bottom:0}
  #forgotResetForm{width:100%}
- #forgotResetForm .form-group{width:100%;display:block;margin-bottom:6px}
+ #forgotResetForm .form-group{width:100%;display:block;margin-bottom:10px}
  #forgotResetForm .input-container{width:100%}
- #forgotResetForm .form-group--pwd-full{margin-top:0;margin-bottom:8px}
- #forgotResetForm .form-group--pwd-full:has(.pwd-live:not([hidden])),#forgotResetForm .form-group--pwd-full:has(.custom-error.show){margin-bottom:8px}
+ #forgotResetForm .form-group--pwd-full{margin-top:2px;margin-bottom:10px}
+ #forgotResetForm .form-group--pwd-full:has(.pwd-live:not([hidden])),#forgotResetForm .form-group--pwd-full:has(.custom-error.show){margin-bottom:10px}
  #forgotResetForm .form-group--pwd-full:has(.pwd-live[hidden]){display:none}
  #forgotResetForm .pwd-live[hidden]{display:none !important}
- #forgotResetForm .pwd-live{width:100%;margin:0}
+ #forgotResetForm .pwd-live{width:100%;margin:0 0 6px 0}
  #forgotResetForm .pwd-strength{display:flex;align-items:center;gap:.55rem;margin:0;width:100%}
  #forgotResetForm .pwd-strength__track{flex:1;min-width:0;height:6px;border-radius:6px;background:rgba(0,128,128,.12);overflow:hidden}
  #forgotResetForm .pwd-strength__fill{height:100%;width:0;border-radius:6px;transition:width .22s ease,background-color .25s ease}
@@ -665,7 +665,7 @@ $loggedIn = isset($_SESSION['user_id']);
             const em=document.getElementById('forgotEmail');
             if(em) em.value='';
             const eErr=document.getElementById('forgotEmail-error');
-            if(eErr) eErr.classList.remove('show');
+            if(eErr){ eErr.textContent=''; eErr.classList.remove('show'); }
             const inp=document.getElementById('forgotEmail');
             if(inp){ inp.classList.remove('error','success'); const c=inp.closest('.input-container'); if(c) c.classList.remove('error'); }
             clearForgotOtpInputs();
@@ -674,10 +674,16 @@ $loggedIn = isset($_SESSION['user_id']);
             const n=document.getElementById('forgotNewPassword');
             const c2=document.getElementById('forgotConfirmPassword');
             if(n) n.value=''; if(c2) c2.value='';
+            const nErr=document.getElementById('forgotNewPassword-error');
+            if(nErr){ nErr.textContent=''; nErr.classList.remove('show'); }
+            const c2Err=document.getElementById('forgotConfirmPassword-error');
+            if(c2Err){ c2Err.textContent=''; c2Err.classList.remove('show'); }
+            if(n){ n.classList.remove('error'); const c=n.closest('.input-container'); if(c) c.classList.remove('error'); }
+            if(c2){ c2.classList.remove('error'); const c=c2.closest('.input-container'); if(c) c.classList.remove('error'); }
             const pwLive=document.getElementById('forgotPwLive');
             if(pwLive) pwLive.hidden=true;
             const commonErr=document.getElementById('forgotPw-common-error');
-            if(commonErr) commonErr.classList.remove('show');
+            if(commonErr){ commonErr.textContent=''; commonErr.classList.remove('show'); }
             const rb=document.getElementById('forgotResetBtn');
             if(rb) rb.disabled=true;
             if(forgotResendInterval){ clearInterval(forgotResendInterval); forgotResendInterval=null; }
@@ -756,11 +762,11 @@ $loggedIn = isset($_SESSION['user_id']);
                     return;
                 }
                 if(!isValidEmailBond(email)){
-                    if(errEl){ errEl.textContent='Please enter a valid email address.'; errEl.classList.add('show'); }
+                    if(errEl){ errEl.textContent='Please enter a valid email.'; errEl.classList.add('show'); }
                     if(emailEl){ emailEl.classList.add('error'); const c=emailEl.closest('.input-container'); if(c) c.classList.add('error'); }
                     return;
                 }
-                if(errEl) errEl.classList.remove('show');
+                if(errEl){ errEl.textContent=''; errEl.classList.remove('show'); }
                 if(emailEl){ emailEl.classList.remove('error'); const c=emailEl.closest('.input-container'); if(c) c.classList.remove('error'); }
                 const btn=document.getElementById('forgotRequestBtn');
                 const orig=btn?btn.textContent:'';
@@ -770,7 +776,9 @@ $loggedIn = isset($_SESSION['user_id']);
                 .then(function(obj){
                     if(!obj.ok || !obj.d.success){
                         const msg=(obj.d && obj.d.error) || 'Failed to send reset code. Please try again.';
-                        showForgotAlert(msg,'error');
+                        if(errEl){ errEl.textContent=msg; errEl.classList.add('show'); }
+                        if(emailEl){ emailEl.classList.add('error'); const c=emailEl.closest('.input-container'); if(c) c.classList.add('error'); }
+                        showForgotAlert('','');
                         return;
                     }
                     forgotEmail=email;
@@ -782,7 +790,11 @@ $loggedIn = isset($_SESSION['user_id']);
                     const firstDigit=forgotOtpInputs?forgotOtpInputs.querySelector('.forgot-otp-digit'):null;
                     if(firstDigit) setTimeout(function(){ firstDigit.focus(); },100);
                 })
-                .catch(function(){ showForgotAlert('An error occurred. Please try again.','error'); })
+                .catch(function(){
+                    if(errEl){ errEl.textContent='An error occurred. Please try again.'; errEl.classList.add('show'); }
+                    if(emailEl){ emailEl.classList.add('error'); const c=emailEl.closest('.input-container'); if(c) c.classList.add('error'); }
+                    showForgotAlert('','');
+                })
                 .finally(function(){ if(btn){ btn.disabled=false; btn.textContent=orig; } });
             });
             const fe=document.getElementById('forgotEmail');
@@ -795,7 +807,7 @@ $loggedIn = isset($_SESSION['user_id']);
                     fe.classList.add('error');
                     if(cc) cc.classList.add('error');
                 } else {
-                    if(errEl) errEl.classList.remove('show');
+                    if(errEl){ errEl.textContent=''; errEl.classList.remove('show'); }
                     fe.classList.remove('error');
                     if(cc) cc.classList.remove('error');
                 }
@@ -885,7 +897,7 @@ $loggedIn = isset($_SESSION['user_id']);
             function refreshLive(){
                 const pw=np.value;
                 if(!liveWrap) return;
-                if(pw.length===0){ liveWrap.hidden=true; if(commonErr) commonErr.classList.remove('show'); if(submitBtn) submitBtn.disabled=true; return; }
+                if(pw.length===0){ liveWrap.hidden=true; if(commonErr){ commonErr.textContent=''; commonErr.classList.remove('show'); } if(submitBtn) submitBtn.disabled=true; return; }
                 liveWrap.hidden=false;
                 let score=0;
                 if(pw.length>=12) score++;
@@ -924,12 +936,26 @@ $loggedIn = isset($_SESSION['user_id']);
                         else if(pw.indexOf(' ')!==-1) msg='Password must not contain spaces.';
                         else if(pw!==cp.value && cp.value) msg='Passwords do not match.';
                     }
-                    if(msg && !getPolicyReady()){ commonErr.textContent=msg; commonErr.classList.add('show'); } else commonErr.classList.remove('show');
+                    if(msg && !getPolicyReady()){ commonErr.textContent=msg; commonErr.classList.add('show'); } else { commonErr.textContent=''; commonErr.classList.remove('show'); }
                 }
                 if(submitBtn) submitBtn.disabled=!getPolicyReady();
             }
-            np.addEventListener('input', function(){ const e=document.getElementById('forgotNewPassword-error'); if(e) e.classList.remove('show'); np.classList.remove('error'); const c=np.closest('.input-container'); if(c) c.classList.remove('error'); refreshLive(); });
-            cp.addEventListener('input', function(){ const e=document.getElementById('forgotConfirmPassword-error'); if(e) e.classList.remove('show'); cp.classList.remove('error'); const c=cp.closest('.input-container'); if(c) c.classList.remove('error'); refreshLive(); });
+            np.addEventListener('input', function(){
+                const e=document.getElementById('forgotNewPassword-error');
+                if(e){ e.textContent=''; e.classList.remove('show'); }
+                np.classList.remove('error');
+                const c=np.closest('.input-container');
+                if(c) c.classList.remove('error');
+                refreshLive();
+            });
+            cp.addEventListener('input', function(){
+                const e=document.getElementById('forgotConfirmPassword-error');
+                if(e){ e.textContent=''; e.classList.remove('show'); }
+                cp.classList.remove('error');
+                const c=cp.closest('.input-container');
+                if(c) c.classList.remove('error');
+                refreshLive();
+            });
         })();
         const forgotResetFormEl=document.getElementById('forgotResetForm');
         if(forgotResetFormEl){
@@ -958,6 +984,12 @@ $loggedIn = isset($_SESSION['user_id']);
                     setForgotPhase(1);
                     return;
                 }
+                // Clear any individual input errors before submitting
+                const nErr=document.getElementById('forgotNewPassword-error');
+                if(nErr){ nErr.textContent=''; nErr.classList.remove('show'); }
+                const cErr=document.getElementById('forgotConfirmPassword-error');
+                if(cErr){ cErr.textContent=''; cErr.classList.remove('show'); }
+
                 const btn=document.getElementById('forgotResetBtn');
                 const orig=btn?btn.textContent:'';
                 if(btn){ btn.disabled=true; btn.textContent='Updating...'; }
@@ -967,7 +999,14 @@ $loggedIn = isset($_SESSION['user_id']);
                     if(!obj.ok || !obj.d.success){
                         const field=obj.d && obj.d.field;
                         const msg=(obj.d && obj.d.error) || 'Password reset failed. Please try again.';
-                        if(field==='forgotNewPassword'){
+                        
+                        // Clear field errors to make sure error message only appears below the strength indicator
+                        const nErr2=document.getElementById('forgotNewPassword-error');
+                        if(nErr2){ nErr2.textContent=''; nErr2.classList.remove('show'); }
+                        const cErr2=document.getElementById('forgotConfirmPassword-error');
+                        if(cErr2){ cErr2.textContent=''; cErr2.classList.remove('show'); }
+
+                        if(field==='forgotNewPassword' || field==='password' || !field){
                             const inp=document.getElementById('forgotNewPassword');
                             if(inp){ inp.classList.add('error'); const c=inp.closest('.input-container'); if(c) c.classList.add('error'); }
                             const commonErr=document.getElementById('forgotPw-common-error');
@@ -984,7 +1023,11 @@ $loggedIn = isset($_SESSION['user_id']);
                     if(lw) lw.style.display='flex';
                     resetForgotModal();
                 })
-                .catch(function(){ showForgotAlert('An error occurred. Please try again.','error'); })
+                .catch(function(){
+                    const commonErr=document.getElementById('forgotPw-common-error');
+                    if(commonErr){ commonErr.textContent='An error occurred. Please try again.'; commonErr.classList.add('show'); }
+                    else { showForgotAlert('An error occurred. Please try again.','error'); }
+                })
                 .finally(function(){ if(btn){ btn.disabled=false; btn.textContent=orig; const personal={email:forgotEmail}; const ready=window.DiariPasswordPolicy?window.DiariPasswordPolicy.isPasswordSubmitReady(np.value,cp.value,personal):false; btn.disabled=!ready; } });
             });
         }
