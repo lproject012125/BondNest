@@ -607,6 +607,7 @@ unset($_SESSION['form_data']);
         .post-header {
             display: flex;
             align-items: center;
+            gap: 12px;
             margin-bottom: 1rem;
             position: relative;
         }
@@ -616,9 +617,12 @@ unset($_SESSION['form_data']);
             height: 50px;
             border-radius: 50%;
             overflow: hidden;
-            margin-right: 10px;
             border: 2px solid var(--color-light);
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
         
         .post-avatar:hover {
@@ -629,6 +633,13 @@ unset($_SESSION['form_data']);
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+        
+        .post-avatar .initials-avatar {
+            width: 100% !important;
+            height: 100% !important;
+            font-size: 1rem !important;
+            border-radius: 50% !important;
         }
         
         .post-user {
