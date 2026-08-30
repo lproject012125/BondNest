@@ -2438,34 +2438,12 @@ commentForm.addEventListener('submit', async (e) => {
         
         if (data.success) {
             form.querySelector('textarea').value = '';
-            
-            const commentList = document.getElementById('commentList');
-            const newComment = createCommentElement(data.comment);
-            
-            if (currentReplyToId) {
-                // It's a reply — find parent and append
-                const parentEl = commentList.querySelector(`[data-comment-id="${currentReplyToId}"]`);
-                if (parentEl) {
-                    let repliesContainer = parentEl.querySelector('.replies-container');
-                    if (!repliesContainer) {
-                        repliesContainer = document.createElement('div');
-                        repliesContainer.className = 'replies-container';
-                        parentEl.appendChild(repliesContainer);
-                    }
-                    repliesContainer.appendChild(newComment);
-                }
-                clearReply();
-            } else {
-                // Top-level comment
-                commentList.insertBefore(newComment, commentList.firstChild);
-            }
-            
-            newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
+            clearReply();
             const commentCountElement = document.querySelector(`[data-post-id="${currentPostId}"] .comment-count`);
             if (commentCountElement) {
                 commentCountElement.textContent = data.new_count;
             }
+            loadComments(currentPostId);
         }
     } catch (error) {
         console.error('Error:', error);

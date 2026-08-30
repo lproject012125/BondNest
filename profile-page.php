@@ -3511,28 +3511,10 @@ document.getElementById('commentForm').addEventListener('submit', async (e) => {
         const data = await response.json();
         if (data.success) {
             if (textarea) textarea.value = '';
-            const commentList = document.getElementById('commentList');
-            const newComment = createCommentElement(data.comment);
-
-            if (currentReplyToId) {
-                const parentEl = commentList.querySelector(`[data-comment-id="${currentReplyToId}"]`);
-                if (parentEl) {
-                    let repliesContainer = parentEl.querySelector('.replies-container');
-                    if (!repliesContainer) {
-                        repliesContainer = document.createElement('div');
-                        repliesContainer.className = 'replies-container';
-                        parentEl.appendChild(repliesContainer);
-                    }
-                    repliesContainer.appendChild(newComment);
-                }
-                clearReply();
-            } else {
-                commentList.insertBefore(newComment, commentList.firstChild);
-            }
-
-            newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            clearReply();
             const commentCountElement = document.querySelector(`[data-post-id="${currentPostId}"] .comment-count`);
             if (commentCountElement) commentCountElement.textContent = data.new_count;
+            loadComments(currentPostId);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -3902,24 +3884,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Post Status Updates Scripts -->
 <script>
-    let dateStr = dateString;
-    if (dateStr && !dateStr.includes('Z') && !dateStr.includes('+') && !dateStr.match(/T.*[+-]/)) {
-        dateStr = dateStr.replace(' ', 'T') + 'Z';
-    }
-    const date = new Date(dateStr);
-    const now = new Date();
-    const secondsPast = (now - date) / 1000;
-
-    if (secondsPast < 1) return 'just now';
-    if (secondsPast < 60) return `${Math.round(secondsPast)} seconds ago`;
-    if (secondsPast < 3600) return `${Math.round(secondsPast / 60)} minutes ago`;
-    if (secondsPast < 86400) return `${Math.round(secondsPast / 3600)} hours ago`;
-    if (secondsPast < 604800) return `${Math.round(secondsPast / 86400)} days ago`;
-    if (secondsPast < 2419200) return `${Math.round(secondsPast / 604800)} weeks ago`;
-    if (secondsPast < 29030400) return `${Math.round(secondsPast / 2419200)} months ago`;
-    return `${Math.round(secondsPast / 29030400)} years ago`;
-}
-
 function updateAllTimeAgo() {
     document.querySelectorAll('.time-ago').forEach(element => {
         const dateString = element.getAttribute('data-timestamp') || element.dataset.originalDate;
@@ -3933,12 +3897,7 @@ function timeElapsedString(dateString) {
     return formatTimeAgo(dateString);
 }
 
-// Global Tracking Variables
-let currentPostId = null;
-let currentEditingPostId = null;
-let postToDelete = null;
-let commentToEdit = null;
-let commentToDelete = null;
+// Global Tracking Variables (reuse declarations from first script block)
 
 // ==================== DOM READY INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', function() {
