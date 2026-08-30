@@ -488,8 +488,14 @@ main {
     padding: 15px;
     border-top: 1px solid var(--color-light);
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: center;
+}
+
+.comment-form-fixed .reply-indicator {
+    width: 100%;
+    justify-content: flex-start;
 }
 
 .comment-input {
@@ -548,6 +554,16 @@ main {
     border-bottom: 1px solid var(--color-light) !important;
     background: #f9f9f9 !important;
     border-radius: 8px !important;
+    display: block !important;
+}
+
+.replies-container .comment-item {
+    display: block !important;
+    padding: 6px 0 !important;
+    margin-bottom: 0 !important;
+    border-bottom: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
 }
 
 #commentList .comment-content {
@@ -1100,6 +1116,7 @@ main {
     border-bottom: 1px solid var(--color-light) !important;
     background: transparent !important; /* Changed from #f9f9f9 to transparent */
     border-radius: 8px !important;
+    display: block !important;
 }
 
 .comment-content {
@@ -2701,13 +2718,43 @@ function createCommentElement(comment) {
         });
     }
     
-    // If this comment has replies, render them nested
+    // If this comment has replies, render them nested with "View replies" toggle
     if (comment.replies && comment.replies.length > 0) {
         const repliesContainer = document.createElement('div');
         repliesContainer.className = 'replies-container';
-        comment.replies.forEach(reply => {
-            repliesContainer.appendChild(createCommentElement(reply));
-        });
+        
+        if (comment.replies.length > 2) {
+            // Show only first reply + "View replies" toggle
+            const firstReply = createCommentElement(comment.replies[0]);
+            repliesContainer.appendChild(firstReply);
+            
+            const hiddenReplies = document.createElement('div');
+            hiddenReplies.className = 'hidden-replies';
+            hiddenReplies.style.display = 'none';
+            comment.replies.slice(1).forEach(reply => {
+                hiddenReplies.appendChild(createCommentElement(reply));
+            });
+            repliesContainer.appendChild(hiddenReplies);
+            
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'view-replies-btn';
+            toggleBtn.textContent = `View ${comment.replies.length - 1} replies`;
+            toggleBtn.style.cssText = 'background:none;border:none;color:#008080;font-size:0.8rem;cursor:pointer;padding:4px 8px;margin-top:4px;font-weight:500;';
+            let expanded = false;
+            toggleBtn.addEventListener('click', () => {
+                expanded = !expanded;
+                hiddenReplies.style.display = expanded ? 'block' : 'none';
+                toggleBtn.textContent = expanded 
+                    ? 'Hide replies' 
+                    : `View ${comment.replies.length - 1} replies`;
+            });
+            repliesContainer.appendChild(toggleBtn);
+        } else {
+            comment.replies.forEach(reply => {
+                repliesContainer.appendChild(createCommentElement(reply));
+            });
+        }
+        
         div.appendChild(repliesContainer);
     }
     

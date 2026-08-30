@@ -954,8 +954,14 @@ unset($_SESSION['form_data']);
             padding: 15px;
             border-top: 1px solid var(--color-light);
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             align-items: center;
+        }
+
+        .comment-form-fixed .reply-indicator {
+            width: 100%;
+            justify-content: flex-start;
         }
         
         .comment-input {
@@ -2072,6 +2078,11 @@ unset($_SESSION['form_data']);
         }
         .replies-container .comment-item {
             padding: 6px 0;
+            display: block;
+            margin-bottom: 0;
+            border-bottom: none;
+            background: transparent;
+            border-radius: 0;
         }
         .replies-container .comment-avatar {
             width: 28px !important;
@@ -2332,6 +2343,7 @@ unset($_SESSION['form_data']);
         border-radius: 8px;
         background-color: #f9f9f9;
         position: relative;
+        display: block;
     }
 
     .comment-item.new-comment {
@@ -3680,13 +3692,42 @@ function createCommentElement(comment) {
         });
     }
 
-    // If this comment has replies, render them nested
+    // If this comment has replies, render them nested with "View replies" toggle
     if (comment.replies && comment.replies.length > 0) {
         const repliesContainer = document.createElement('div');
         repliesContainer.className = 'replies-container';
-        comment.replies.forEach(reply => {
-            repliesContainer.appendChild(createCommentElement(reply));
-        });
+        
+        if (comment.replies.length > 2) {
+            const firstReply = createCommentElement(comment.replies[0]);
+            repliesContainer.appendChild(firstReply);
+            
+            const hiddenReplies = document.createElement('div');
+            hiddenReplies.className = 'hidden-replies';
+            hiddenReplies.style.display = 'none';
+            comment.replies.slice(1).forEach(reply => {
+                hiddenReplies.appendChild(createCommentElement(reply));
+            });
+            repliesContainer.appendChild(hiddenReplies);
+            
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'view-replies-btn';
+            toggleBtn.textContent = `View ${comment.replies.length - 1} replies`;
+            toggleBtn.style.cssText = 'background:none;border:none;color:#008080;font-size:0.8rem;cursor:pointer;padding:4px 8px;margin-top:4px;font-weight:500;';
+            let expanded = false;
+            toggleBtn.addEventListener('click', () => {
+                expanded = !expanded;
+                hiddenReplies.style.display = expanded ? 'block' : 'none';
+                toggleBtn.textContent = expanded 
+                    ? 'Hide replies' 
+                    : `View ${comment.replies.length - 1} replies`;
+            });
+            repliesContainer.appendChild(toggleBtn);
+        } else {
+            comment.replies.forEach(reply => {
+                repliesContainer.appendChild(createCommentElement(reply));
+            });
+        }
+        
         div.appendChild(repliesContainer);
     }
 
