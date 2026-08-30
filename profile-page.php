@@ -2787,15 +2787,15 @@ unset($_SESSION['form_data']);
                                     <div>
                                         <div class="post-user"><?php echo htmlspecialchars($post['first_name'] . ' ' . $post['last_name']); ?></div>
                                         <div class="post-meta">
-                                            <?php if (isset($post['status']) && $post['status'] === 'on-hold'): ?>
+                                            <?php if (isset($post['status']) && $post['status'] !== 'posted'): ?>
                                                 <span class="status-indicator <?php echo htmlspecialchars($post['status']); ?>" 
-                                                    title="On hold"></span>
+                                                    title="<?php echo ($post['status'] === 'approved') ? 'Approved by admin' : 'On hold'; ?>"></span>
                                             <?php endif; ?>
                                             <i class="bi bi-globe"></i> BondNest &middot; 
                                             <span class="time-ago" data-timestamp="<?php echo htmlspecialchars($post['created_at']); ?>">
                                                 <?php echo time_elapsed_string($post['created_at']); ?>
                                             </span>
-                                            <?php if (isset($post['status']) && $post['status'] === 'on-hold'): ?>
+                                            <?php if (isset($post['status']) && $post['status'] !== 'posted'): ?>
                                                 <span class="status-badge <?php echo htmlspecialchars($post['status']); ?>">
                                                     <?php echo ucfirst(htmlspecialchars($post['status'])); ?>
                                                 </span>

@@ -587,13 +587,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Format date for display
     function formatDate(dateString) {
         try {
-            const date = new Date(dateString);
+            let dStr = dateString;
+            if (dStr && !dStr.includes('Z') && !dStr.includes('+') && !dStr.match(/T.*[+-]/)) {
+                dStr = dStr.replace(' ', 'T') + 'Z';
+            }
+            const date = new Date(dStr);
             const options = { 
                 year: 'numeric', 
                 month: 'short', 
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                timeZone: 'Asia/Manila'
             };
             return date.toLocaleDateString('en-US', options);
         } catch (e) {

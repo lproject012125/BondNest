@@ -883,7 +883,7 @@ function formatDate($date) {
             color: var(--gray);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
         }
 
         .post-time {
