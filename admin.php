@@ -2275,7 +2275,7 @@ function formatDate($date) {
                     // Handle image
                     if (post.image_path) {
                         modalImageContainer.style.display = 'block';
-                        modalImage.src = post.image_path;
+                        if (modalImage) modalImage.src = post.image_path;
                     } else {
                         modalImageContainer.style.display = 'none';
                     }
@@ -2785,7 +2785,6 @@ function formatDate($date) {
             // Use event delegation for view and warn buttons
             // This attaches a single event listener to the table body
             // which handles clicks on any buttons inside it
-            const postsTableBody = document.getElementById('posts-table-body');
             
             // Remove any existing event listener
             postsTableBody.removeEventListener('click', tableClickHandler);
@@ -3418,8 +3417,8 @@ function storePostStatusChange(postId, status) {
                  // Initial check
                  checkForNewPosts();
                  
-                 // Check very frequently (200ms) for near-instant updates
-                 setInterval(checkForNewPosts, 200);
+                 // Check for new posts every 5 seconds
+                 setInterval(checkForNewPosts, 5000);
              }
             
                          // Initial call to set up real-time updates

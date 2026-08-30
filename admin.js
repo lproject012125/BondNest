@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const postsTableBody = document.getElementById('posts-table-body');
     const modal = document.getElementById('postModal');
     const closeModal = document.querySelector('.close-modal');
-    const modalAvatar = document.getElementById('modalAvatar');
+    const modalAvatarContainer = document.getElementById('modalAvatarContainer');
     const modalAuthor = document.getElementById('modalAuthor');
     const modalUsername = document.getElementById('modalUsername');
     const modalCreatedAt = document.getElementById('modalCreatedAt');
@@ -258,8 +258,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayPostInModal(post, action = null) {
         if (!post) return;
         
-        // Set modal content
-        modalAvatar.src = post.profile_picture || './web-images/default_profile.png';
+        // Set modal content - handle avatar with initials fallback
+        if (modalAvatarContainer) {
+            if (post.profile_picture) {
+                modalAvatarContainer.innerHTML = '<img src="' + post.profile_picture + '" alt="User" style="width:100%;height:100%;object-fit:cover;">';
+            } else {
+                const fn = (post.first_name || '')[0] || '';
+                const ln = (post.last_name || '')[0] || '';
+                const n = (post.first_name || '') + (post.last_name || '');
+                let h = 0;
+                for (let i = 0; i < n.length; i++) { h = (h * 31 + n.charCodeAt(i)) & 0x7FFFFFFF; }
+                const colors = ['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50'];
+                const bg = colors[h % colors.length];
+                modalAvatarContainer.innerHTML = '<div style="width:100%;height:100%;background:' + bg + ';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;font-family:Poppins,sans-serif;">' + (fn + ln).toUpperCase() + '</div>';
+            }
+        }
         modalAuthor.textContent = `${post.first_name || ''} ${post.last_name || ''}`.trim();
         modalUsername.textContent = post.username || '';
         modalCreatedAt.textContent = formatDate(post.created_at);
