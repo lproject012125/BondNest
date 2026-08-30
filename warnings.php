@@ -952,12 +952,15 @@ if (isset($_GET['notification_id'])) {
                                 <?php
                                 if ($warning_data) {
                                     // Use data from warnings table
-                                    $profile_pic = !empty($warning_data['profile_picture'])
+                                    $has_profile_pic = !empty($warning_data['profile_picture']);
+                                    $profile_pic = $has_profile_pic
                                         ? htmlspecialchars($warning_data['profile_picture'])
-                                        : './web-images/default_profile.png';
+                                        : '';
                                     
-                                    $author_name = !empty($warning_data['first_name']) && !empty($warning_data['last_name'])
-                                        ? htmlspecialchars($warning_data['first_name'] . ' ' . $warning_data['last_name'])
+                                    $author_first = $warning_data['first_name'] ?? '';
+                                    $author_last = $warning_data['last_name'] ?? '';
+                                    $author_name = !empty($author_first) && !empty($author_last)
+                                        ? htmlspecialchars($author_first . ' ' . $author_last)
                                         : 'Your Post';
                                     
                                     $post_content = $warning_data['content'] ?? '';
@@ -968,10 +971,13 @@ if (isset($_GET['notification_id'])) {
                                     $post_warned = $warning_data['warned_at'] ?? $selected_notification['created_at'];
                                 } else {
                                     // Fallback to old method of parsing from notification message
-                                    $profile_pic = isset($post_data['profile_picture']) && !empty($post_data['profile_picture'])
+                                    $has_profile_pic = isset($post_data['profile_picture']) && !empty($post_data['profile_picture']);
+                                    $profile_pic = $has_profile_pic
                                         ? htmlspecialchars($post_data['profile_picture'])
-                                        : './web-images/default_profile.png';
+                                        : '';
                                     
+                                    $author_first = $post_data['first_name'] ?? '';
+                                    $author_last = $post_data['last_name'] ?? '';
                                     $author_name = '';
                                     if (isset($post_data['first_name']) && isset($post_data['last_name'])) {
                                         $author_name = htmlspecialchars($post_data['first_name'] . ' ' . $post_data['last_name']);
@@ -987,7 +993,11 @@ if (isset($_GET['notification_id'])) {
                                     $post_warned = $selected_notification['created_at'];
                                 }
                                 ?>
-                                <img src="<?php echo $profile_pic; ?>" alt="Profile Picture" class="avatar">
+                                <?php if ($has_profile_pic): ?>
+                                    <img src="<?php echo $profile_pic; ?>" alt="Profile Picture" class="avatar">
+                                <?php else: ?>
+                                    <?php echo getInitialsHtml($author_first ?? '', $author_last ?? '', 48); ?>
+                                <?php endif; ?>
                                 <div>
                                     <strong><?php echo $author_name; ?></strong>
                                     <div class="post-meta">

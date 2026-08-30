@@ -886,12 +886,15 @@ if (isset($_GET['notification_id'])) {
                                 <?php 
                                 if ($deleted_post_data) {
                                     // Use data from deleted_posts table
-                                    $profile_pic = !empty($deleted_post_data['profile_picture']) 
-                                        ? htmlspecialchars($deleted_post_data['profile_picture']) 
-                                        : './web-images/default_profile.png';
+                                    $has_profile_pic = !empty($deleted_post_data['profile_picture']);
+                                    $profile_pic = $has_profile_pic
+                                        ? htmlspecialchars($deleted_post_data['profile_picture'])
+                                        : '';
                                     
-                                    $author_name = !empty($deleted_post_data['first_name']) && !empty($deleted_post_data['last_name']) 
-                                        ? htmlspecialchars($deleted_post_data['first_name'] . ' ' . $deleted_post_data['last_name']) 
+                                    $author_first = $deleted_post_data['first_name'] ?? '';
+                                    $author_last = $deleted_post_data['last_name'] ?? '';
+                                    $author_name = !empty($author_first) && !empty($author_last)
+                                        ? htmlspecialchars($author_first . ' ' . $author_last)
                                         : 'Your Post';
                                     
                                     $post_content = $deleted_post_data['content'] ?? '';
@@ -903,10 +906,13 @@ if (isset($_GET['notification_id'])) {
                                     $post_deleted = $deleted_post_data['deleted_at'] ?? $selected_notification['created_at'];
                                 } else {
                                     // Fallback to old method of parsing from notification message
-                                    $profile_pic = isset($post_data['profile_picture']) && !empty($post_data['profile_picture']) 
-                                        ? htmlspecialchars($post_data['profile_picture']) 
-                                        : './web-images/default_profile.png';
+                                    $has_profile_pic = isset($post_data['profile_picture']) && !empty($post_data['profile_picture']);
+                                    $profile_pic = $has_profile_pic
+                                        ? htmlspecialchars($post_data['profile_picture'])
+                                        : '';
                                     
+                                    $author_first = $post_data['first_name'] ?? '';
+                                    $author_last = $post_data['last_name'] ?? '';
                                     $author_name = '';
                                     if (isset($post_data['first_name']) && isset($post_data['last_name'])) {
                                         $author_name = htmlspecialchars($post_data['first_name'] . ' ' . $post_data['last_name']);
@@ -922,7 +928,11 @@ if (isset($_GET['notification_id'])) {
                                     $post_deleted = $selected_notification['created_at'];
                                 }
                                 ?>
-                                <img src="<?php echo $profile_pic; ?>" alt="Profile Picture" class="avatar">
+                                <?php if ($has_profile_pic): ?>
+                                    <img src="<?php echo $profile_pic; ?>" alt="Profile Picture" class="avatar">
+                                <?php else: ?>
+                                    <?php echo getInitialsHtml($author_first ?? '', $author_last ?? '', 48); ?>
+                                <?php endif; ?>
                                 <div>
                                     <strong><?php echo $author_name; ?></strong>
                                     <div class="post-meta">
