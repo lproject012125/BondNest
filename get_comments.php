@@ -96,10 +96,34 @@ try {
 
     ob_end_clean();
 
-    die(json_encode([
+    $response = [
         'success' => true,
         'comments' => array_values($result)
-    ]));
+    ];
+
+    if (isset($_GET['debug'])) {
+        $response['_debug'] = [
+            'total_rows' => count($all_comments),
+            'all_comments_raw' => array_map(function($c) {
+                return [
+                    'id' => $c['id'],
+                    'user_id' => $c['user_id'],
+                    'content' => $c['content'],
+                    'parent_id' => $c['parent_id'],
+                    'created_at' => $c['created_at'],
+                    'user' => ($c['first_name'] ?? '') . ' ' . ($c['last_name'] ?? ''),
+                ];
+            }, $all_comments),
+            'top_level_ids' => array_keys($top_level),
+            'replies_map' => array_map(function($replies) {
+                return array_map(function($r) {
+                    return ['id' => $r['id'], 'parent_id' => $r['parent_id'], 'content' => $r['content']];
+                }, $replies);
+            }, $replies_map),
+        ];
+    }
+
+    die(json_encode($response));
 
 } catch (Throwable $e) {
     ob_end_clean();
