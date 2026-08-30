@@ -2485,13 +2485,12 @@ function loadComments(postId) {
             return response.json();
         })
         .then(data => {
-            console.log('Comment data received:', data);
+            console.log('DEBUG: total_db_comments:', data.total_db_comments, 'debug_raw:', data.debug_raw, 'grouped:', data.comments);
             
             if (data.error) {
                 throw new Error(data.error);
             }
             
-            // Clear the list completely before adding new comments
             commentList.innerHTML = '';
             clearReply();
             
@@ -2500,9 +2499,11 @@ function loadComments(postId) {
                 return;
             }
             
-            console.log(`Adding ${data.comments.length} comments to the list`);
+            const debugBar = document.createElement('div');
+            debugBar.style.cssText = 'background:#ffeeba;color:#856404;padding:6px 12px;font-size:11px;border-radius:4px;margin-bottom:8px;font-family:monospace;';
+            debugBar.textContent = `DB: ${data.total_db_comments} total | Grouped: ${data.comments.length} top-level | Raw: ${JSON.stringify(data.debug_raw.map(d => d.id+'#'+d.parent_id+' '+d.content))}`;
+            commentList.appendChild(debugBar);
             
-            // Force commentList to have correct styling
             commentList.style.maxHeight = '400px';
             commentList.style.overflowY = 'auto';
             commentList.style.padding = '0 15px';

@@ -3543,12 +3543,16 @@ function loadComments(postId) {
             if (data.error) throw new Error(data.error);
             commentList.innerHTML = '';
             clearReply();
-            console.log('Comments loaded:', data.comments);
-            data.comments.forEach(c => console.log('Comment', c.id, '- replies:', c.replies?.length || 0));
+            console.log('DEBUG: total_db_comments:', data.total_db_comments, 'debug_raw:', data.debug_raw, 'grouped:', data.comments);
+            data.comments.forEach(c => console.log('Top-level:', c.id, '- replies:', c.replies?.length || 0));
             if (!data.comments || data.comments.length === 0) {
                 commentList.innerHTML = '<div class="no-comments" style="text-align: center; padding: 40px; color: #888;">No comments yet. Be the first to comment!</div>';
                 return;
             }
+            const debugBar = document.createElement('div');
+            debugBar.style.cssText = 'background:#ffeeba;color:#856404;padding:6px 12px;font-size:11px;border-radius:4px;margin-bottom:8px;font-family:monospace;';
+            debugBar.textContent = `DB: ${data.total_db_comments} total | Grouped: ${data.comments.length} top-level | Raw: ${JSON.stringify(data.debug_raw.map(d => d.id+'#'+d.parent_id+' '+d.content))}`;
+            commentList.appendChild(debugBar);
             commentList.style.maxHeight = '400px';
             commentList.style.overflowY = 'auto';
             commentList.style.padding = '0 15px';

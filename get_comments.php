@@ -98,30 +98,17 @@ try {
 
     $response = [
         'success' => true,
-        'comments' => array_values($result)
+        'comments' => array_values($result),
+        'total_db_comments' => count($all_comments),
+        'debug_raw' => array_map(function($c) {
+            return [
+                'id' => $c['id'],
+                'parent_id' => $c['parent_id'],
+                'content' => substr($c['content'], 0, 30),
+                'user' => trim(($c['first_name'] ?? '') . ' ' . ($c['last_name'] ?? '')),
+            ];
+        }, $all_comments),
     ];
-
-    if (isset($_GET['debug'])) {
-        $response['_debug'] = [
-            'total_rows' => count($all_comments),
-            'all_comments_raw' => array_map(function($c) {
-                return [
-                    'id' => $c['id'],
-                    'user_id' => $c['user_id'],
-                    'content' => $c['content'],
-                    'parent_id' => $c['parent_id'],
-                    'created_at' => $c['created_at'],
-                    'user' => ($c['first_name'] ?? '') . ' ' . ($c['last_name'] ?? ''),
-                ];
-            }, $all_comments),
-            'top_level_ids' => array_keys($top_level),
-            'replies_map' => array_map(function($replies) {
-                return array_map(function($r) {
-                    return ['id' => $r['id'], 'parent_id' => $r['parent_id'], 'content' => $r['content']];
-                }, $replies);
-            }, $replies_map),
-        ];
-    }
 
     die(json_encode($response));
 
