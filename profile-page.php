@@ -5415,8 +5415,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // Keep profile-feed controls independent from the legacy duplicate scripts above.
 (function () {
-    let activePostId = null;
-
     function updateLike(button, liked, count) {
         const icon = button.querySelector('i');
         const label = button.querySelector('span');
@@ -5477,53 +5475,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, true);
 
-    document.addEventListener('click', function (event) {
-        const trigger = event.target.closest('.comment-trigger');
-        if (!trigger) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        activePostId = trigger.dataset.postId;
-        const modal = document.getElementById('commentModal');
-        const postIdInput = modal?.querySelector('input[name="post_id"]');
-        if (!modal) return;
-        if (postIdInput) postIdInput.value = activePostId;
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        if (typeof window.loadComments === 'function') window.loadComments(activePostId);
-    }, true);
 
-    const commentForm = document.getElementById('commentForm');
-    if (commentForm) {
-        commentForm.addEventListener('submit', async function (event) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            const textarea = commentForm.querySelector('textarea[name="comment-content"]');
-            const content = textarea?.value.trim();
-            if (!activePostId || !content) return;
-            const button = commentForm.querySelector('button[type="submit"]');
-            if (button) button.disabled = true;
-            try {
-                const formData = new FormData();
-                formData.append('post_id', activePostId);
-                formData.append('content', content);
-                if (currentReplyToId) {
-                    formData.append('parent_id', currentReplyToId);
-                }
-                const response = await fetch('add_comment.php', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (!response.ok || !data.success) throw new Error(data.error || 'Unable to add comment.');
-                if (textarea) textarea.value = '';
-                const count = document.querySelector(`.comment-trigger[data-post-id="${activePostId}"] .comment-count`);
-                if (count) count.textContent = data.new_count;
-                clearReply();
-                if (typeof window.loadComments === 'function') window.loadComments(activePostId);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                if (button) button.disabled = false;
-            }
-        }, true);
-    }
 })();
 </script>
 </body>
