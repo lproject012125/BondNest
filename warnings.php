@@ -193,6 +193,13 @@ function time_elapsed_string($datetime, $full = false) {
     return $string ? implode(', ', $string) . ' ago' : 'just now';
 }
 
+function formatManilaTime($utcDatetime) {
+    if (empty($utcDatetime)) return '';
+    $dt = new DateTime($utcDatetime, new DateTimeZone('UTC'));
+    $dt->setTimezone(new DateTimeZone('Asia/Manila'));
+    return $dt->format('F j, Y, g:i a');
+}
+
 // Count total notifications
 $stmt = $pdo->prepare("
     SELECT COUNT(*) as count FROM notifications 
@@ -984,7 +991,7 @@ if (isset($_GET['notification_id'])) {
                                 <div>
                                     <strong><?php echo $author_name; ?></strong>
                                     <div class="post-meta">
-                                        <span><i class="bi bi-clock"></i> <?php echo date('F j, Y, g:i a', strtotime($post_created)); ?></span>
+                                        <span><i class="bi bi-clock"></i> <?php echo formatManilaTime($post_created); ?></span>
                                     </div>
                                 </div>
                             </div>

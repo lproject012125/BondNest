@@ -3,6 +3,20 @@ session_start();
 require_once 'db_connection.php';
 date_default_timezone_set('Asia/Manila');
 
+if (!function_exists('getInitialsHtml')) {
+    function getInitialsHtml($first, $last, $size = 44) {
+        $f = mb_strtoupper(mb_substr(trim($first), 0, 1));
+        $l = mb_strtoupper(mb_substr(trim($last), 0, 1));
+        $initials = $f . $l;
+        $colors = ['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50'];
+        $hash = 0;
+        $name = trim($first . $last);
+        for ($i = 0; $i < mb_strlen($name); $i++) { $hash = ($hash * 31 + mb_ord(mb_substr($name, $i, 1))) & 0x7FFFFFFF; }
+        $bg = $colors[$hash % count($colors)];
+        return '<div class="initials-avatar" style="width:'.$size.'px;height:'.$size.'px;border-radius:50%;background:'.$bg.';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:'.($size * 0.38).'px;font-family:Poppins,sans-serif;flex-shrink:0;">'.$initials.'</div>';
+    }
+}
+
 // Redirect if not logged in or not an admin
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
     header("Location: index.php");
@@ -247,7 +261,10 @@ $percent_changes['today_actions'] = ($yesterday_actions > 0) ? round((($today_ac
 
 // Format date function
 function formatDate($date) {
-    return date('Y-m-d H:i:s', strtotime($date));
+    if (empty($date)) return '';
+    $dt = new DateTime($date, new DateTimeZone('UTC'));
+    $dt->setTimezone(new DateTimeZone('Asia/Manila'));
+    return $dt->format('M j, Y, g:i a');
 }
 ?>
 
@@ -1746,7 +1763,11 @@ function formatDate($date) {
                                         <td><?php echo $post['id']; ?></td>
                                         <td>
                                             <div class="user-cell">
-                                                <img src="<?php echo htmlspecialchars($post['profile_picture'] ?? './web-images/default_profile.png'); ?>" alt="User" class="user-avatar">
+                                                <?php if (!empty($post['profile_picture'])): ?>
+                                                    <img src="<?php echo htmlspecialchars($post['profile_picture']); ?>" alt="User" class="user-avatar">
+                                                <?php else: ?>
+                                                    <?php echo getInitialsHtml($post['first_name'] ?? '', $post['last_name'] ?? '', 40); ?>
+                                                <?php endif; ?>
                                                 <div class="user-info">
                                                     <div class="user-name"><?php echo htmlspecialchars($post['first_name'] . ' ' . $post['last_name']); ?></div>
                                                     <div class="username">@<?php echo htmlspecialchars($post['username']); ?></div>
@@ -1901,7 +1922,7 @@ function formatDate($date) {
             </div>
             <div class="modal-body">
                 <div class="post-header">
-                    <img src="./web-images/default_profile.png" alt="User" class="post-avatar" id="modalAvatar">
+                    <div class="post-avatar" id="modalAvatarContainer" style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;"></div>
                     <div class="post-user-info">
                         <h3 id="modalAuthor"></h3>
                         <p>
@@ -2214,7 +2235,19 @@ function formatDate($date) {
                     currentOpenModalPostId = post.id;
                 
                     // Set modal content
-                    modalAvatar.src = post.profile_picture || './web-images/default_profile.png';
+                    const avatarContainer = document.getElementById('modalAvatarContainer');
+                    if (post.profile_picture) {
+                        avatarContainer.innerHTML = '<img src="' + post.profile_picture + '" alt="User" style="width:100%;height:100%;object-fit:cover;">';
+                    } else {
+                        const fn = (post.first_name || '')[0] || '';
+                        const ln = (post.last_name || '')[0] || '';
+                        const n = (post.first_name || '') + (post.last_name || '');
+                        let h = 0;
+                        for (let i = 0; i < n.length; i++) { h = (h * 31 + n.charCodeAt(i)) & 0x7FFFFFFF; }
+                        const colors = ['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50'];
+                        const bg = colors[h % colors.length];
+                        avatarContainer.innerHTML = '<div style="width:100%;height:100%;background:' + bg + ';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;font-family:Poppins,sans-serif;">' + (fn + ln).toUpperCase() + '</div>';
+                    }
                     modalAuthor.textContent = post.first_name + ' ' + post.last_name;
                     modalUsername.textContent = post.username;
                     modalCreatedAt.textContent = formatDate(post.created_at);
@@ -2269,13 +2302,18 @@ function formatDate($date) {
             
             // Format date function for JavaScript
             function formatDate(dateString) {
-                const date = new Date(dateString);
+                let dStr = dateString;
+                if (dStr && !dStr.includes('Z') && !dStr.includes('+') && !dStr.match(/T.*[+-]/)) {
+                    dStr = dStr.replace(' ', 'T') + 'Z';
+                }
+                const date = new Date(dStr);
                 const options = { 
                     year: 'numeric', 
                     month: 'short', 
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    timeZone: 'Asia/Manila'
                 };
                 return date.toLocaleDateString('en-US', options);
             }
@@ -2687,14 +2725,16 @@ function formatDate($date) {
                                           post.content) : '';
                     
                     // Format profile picture
-                    const profilePic = post.profile_picture || './web-images/default_profile.png';
+                    const profilePicHtml = post.profile_picture
+                        ? `<img src="${post.profile_picture}" alt="User" class="user-avatar">`
+                        : (() => { const fn=(post.first_name||'')[0]||''; const ln=(post.last_name||'')[0]||''; const n=(post.first_name||'')+(post.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="user-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(fn+ln).toUpperCase()}</div>`; })()
                     
                     return `
                     <tr class="${animate ? 'animate-new-row' : ''}" data-post-id="${post.id}">
                         <td>${post.id}</td>
                         <td>
                             <div class="user-cell">
-                                <img src="${profilePic}" alt="User" class="user-avatar">
+                                ${profilePicHtml}
                                 <div class="user-info">
                                     <div class="user-name">${post.first_name} ${post.last_name}</div>
                                     <div class="username">@${post.username}</div>
@@ -3182,7 +3222,9 @@ function formatDate($date) {
                                           post.content) : '';
                     
                     // Format profile picture
-                    const profilePic = post.profile_picture || './web-images/default_profile.png';
+                    const profilePicHtml = post.profile_picture
+                        ? `<img src="${post.profile_picture}" alt="User" class="user-avatar">`
+                        : (() => { const fn=(post.first_name||'')[0]||''; const ln=(post.last_name||'')[0]||''; const n=(post.first_name||'')+(post.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="user-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(fn+ln).toUpperCase()}</div>`; })()
                     
                     // Determine if this row should be highlighted as new
                     const highlightClass = (highlightNewRows && isNewPost) ? 'highlight-new-row' : '';
@@ -3192,7 +3234,7 @@ function formatDate($date) {
                         <td>${post.id}</td>
                         <td>
                             <div class="user-cell">
-                                <img src="${profilePic}" alt="User" class="user-avatar">
+                                ${profilePicHtml}
                                 <div class="user-info">
                                     <div class="user-name">${post.first_name} ${post.last_name}</div>
                                     <div class="username">@${post.username}</div>
@@ -3262,13 +3304,18 @@ function formatDate($date) {
             
             // Format date function
             function formatDate(dateString) {
-                const date = new Date(dateString);
+                let dStr = dateString;
+                if (dStr && !dStr.includes('Z') && !dStr.includes('+') && !dStr.match(/T.*[+-]/)) {
+                    dStr = dStr.replace(' ', 'T') + 'Z';
+                }
+                const date = new Date(dStr);
                 const options = { 
                     year: 'numeric', 
                     month: 'short', 
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    timeZone: 'Asia/Manila'
                 };
                 return date.toLocaleDateString('en-US', options);
 }
