@@ -75,6 +75,10 @@ $messages = [];
 $selected_user = null;
 
 if ($selected_user_id) {
+    // Mark messages from this user as read
+    $mark_read = $pdo->prepare("UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ? AND is_read = 0");
+    $mark_read->execute([$selected_user_id, $current_user_id]);
+
     // Get selected user info
     $sql = "SELECT id, first_name, last_name, username, profile_picture, last_activity, user_status FROM users WHERE id = ?";
     $stmt = $pdo->prepare($sql);
@@ -881,14 +885,20 @@ function formatMessageTime($timestamp) {
         text-overflow: ellipsis;
     }
 
-    .unread-indicator {
-        width: 12px;
-        height: 12px;
+    .unread-badge {
         background-color: var(--color-primary, #008080);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
         border-radius: 50%;
+        min-width: 20px;
+        height: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         flex-shrink: 0;
         margin-left: 8px;
-        animation: pulse 1.5s infinite;
+        padding: 0 4px;
     }
 
     @keyframes pulse {
@@ -1650,7 +1660,7 @@ function formatMessageTime($timestamp) {
                                     <div class="user-username">@<?php echo htmlspecialchars($conversation['username']); ?></div>
                                 </div>
                                 <?php if ($conversation['unread_count'] > 0): ?>
-                                    <span class="unread-indicator"></span>
+                                    <span class="unread-badge"><?php echo $conversation['unread_count']; ?></span>
                                 <?php endif; ?>
                             </a>
                         <?php endforeach; ?>

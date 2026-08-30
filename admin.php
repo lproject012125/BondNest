@@ -2172,12 +2172,12 @@ function formatDate($date) {
             // You can manually refresh the page to update stats
             
             // Post modal functionality
+            let currentOpenModalPostId = null;
             const viewButtons = document.querySelectorAll('.view-btn, .warn-btn');
             const modal = document.getElementById('postModal');
             const closeModal = document.querySelector('.close-modal');
             
             // Get modal elements
-            const modalAvatar = document.getElementById('modalAvatar');
             const modalAuthor = document.getElementById('modalAuthor');
             const modalUsername = document.getElementById('modalUsername');
             const modalCreatedAt = document.getElementById('modalCreatedAt');
