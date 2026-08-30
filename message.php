@@ -55,17 +55,18 @@ if (isset($_GET['search'])) {
     }
 }
 
-// Get all conversations for the current user
+// Get all conversations for the current user with unread message counts
 $conversations = [];
 $sql = "SELECT u.id, u.first_name, u.last_name, u.username, u.profile_picture, 
-               MAX(m.created_at) as last_message_time
+               MAX(m.created_at) as last_message_time,
+               SUM(CASE WHEN m.receiver_id = ? AND m.is_read = 0 THEN 1 ELSE 0 END) as unread_count
         FROM messages m
         JOIN users u ON (m.sender_id = u.id OR m.receiver_id = u.id) AND u.id != ?
         WHERE ? IN (m.sender_id, m.receiver_id)
-        GROUP BY u.id
+        GROUP BY u.id, u.first_name, u.last_name, u.username, u.profile_picture
         ORDER BY last_message_time DESC";
 $stmt = $pdo->prepare($sql);
-$stmt->execute([$current_user_id, $current_user_id]);
+$stmt->execute([$current_user_id, $current_user_id, $current_user_id]);
 $conversations = $stmt->fetchAll();
 
 // Get messages for selected conversation
@@ -880,6 +881,22 @@ function formatMessageTime($timestamp) {
         text-overflow: ellipsis;
     }
 
+    .unread-indicator {
+        width: 12px;
+        height: 12px;
+        background-color: var(--color-primary, #008080);
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-left: 8px;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
     .no-conversations {
         text-align: center;
         color: var(--color-gray);
@@ -1632,6 +1649,9 @@ function formatMessageTime($timestamp) {
                                     <div class="user-name"><?php echo htmlspecialchars($conversation['first_name'] . ' ' . $conversation['last_name']); ?></div>
                                     <div class="user-username">@<?php echo htmlspecialchars($conversation['username']); ?></div>
                                 </div>
+                                <?php if ($conversation['unread_count'] > 0): ?>
+                                    <span class="unread-indicator"></span>
+                                <?php endif; ?>
                             </a>
                         <?php endforeach; ?>
                     <?php else: ?>

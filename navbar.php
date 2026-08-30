@@ -65,6 +65,7 @@ if (!function_exists('getInitialsHtml')) {
             $notification_count = 0;
             $warning_count = 0;
             $deleted_count = 0;
+            $unread_message_count = 0;
             
             if (isset($_SESSION['user_id'])) {
                 $user_id = $_SESSION['user_id'];
@@ -87,40 +88,16 @@ if (!function_exists('getInitialsHtml')) {
                 
                 // Total notification count
                 $notification_count = $warning_count + $deleted_count;
+                
+                // Count unread messages
+                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM messages WHERE receiver_id = ? AND is_read = 0");
+                $stmt->execute([$user_id]);
+                $row = $stmt->fetch();
+                if ($row) {
+                    $unread_message_count = $row['count'];
+                }
             }
             ?>
-            
-            <div class="profile-dropdown">
-                <a href="#" class="profile-link" id="profileDropdownToggle">
-                    <div class="profile-picture">
-                        <?php if (!empty($profile_picture)): ?>
-                            <img src="<?php echo $profile_picture; ?>" alt="Profile Picture">
-                        <?php else: ?>
-                            <?php echo getInitialsHtml($_SESSION['first_name'] ?? '', $_SESSION['last_name'] ?? '', 40); ?>
-                        <?php endif; ?>
-                    </div>
-                </a>
-                
-                <div class="profile-dropdown-content" id="profileDropdownContent">
-                    <a href="profile-page.php" class="profile-dropdown-item">
-                        <i class="bi bi-person"></i>
-                        <span>Profile</span>
-                    </a>
-                    <a href="message.php" class="profile-dropdown-item">
-                        <i class="bi bi-chat-dots"></i>
-                        <span>Message</span>
-                    </a>
-                    <a href="settings.php" class="profile-dropdown-item">
-                        <i class="bi bi-gear"></i>
-                        <span>Settings</span>
-                    </a>
-                    <div class="profile-dropdown-divider"></div>
-                    <a href="index.php" class="profile-dropdown-item profile-dropdown-logout" id="dropdownLogoutBtn">
-                        <i class="bi bi-box-arrow-right"></i>
-                        <span>Log out</span>
-                    </a>
-                </div>
-            </div>
             
             <div class="notification-dropdown">
                 <a href="#" class="notification-icon" id="notificationDropdownToggle">
@@ -176,6 +153,41 @@ if (!function_exists('getInitialsHtml')) {
                     </div>
                 </div>
             </div>
+            
+            <a href="message.php" class="navbar-message-link" style="position:relative;display:flex;align-items:center;justify-content:center;width:40px;height:40px;text-decoration:none;">
+                <i class="bi bi-chat-dots-fill" style="font-size:1.15rem;color:#5a6a6a;transition:color 0.2s;"></i>
+                <?php if ($unread_message_count > 0): ?>
+                    <span class="notification-badge" style="position:absolute;top:2px;right:0;min-width:16px;height:16px;font-size:0.65rem;padding:0 4px;"><?php echo $unread_message_count > 99 ? '99+' : $unread_message_count; ?></span>
+                <?php endif; ?>
+            </a>
+            
+            <div class="profile-dropdown">
+                <a href="#" class="profile-link" id="profileDropdownToggle">
+                    <div class="profile-picture">
+                        <?php if (!empty($profile_picture)): ?>
+                            <img src="<?php echo $profile_picture; ?>" alt="Profile Picture">
+                        <?php else: ?>
+                            <?php echo getInitialsHtml($_SESSION['first_name'] ?? '', $_SESSION['last_name'] ?? '', 40); ?>
+                        <?php endif; ?>
+                    </div>
+                </a>
+                
+                <div class="profile-dropdown-content" id="profileDropdownContent">
+                    <a href="profile-page.php" class="profile-dropdown-item">
+                        <i class="bi bi-person"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="settings.php" class="profile-dropdown-item">
+                        <i class="bi bi-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                    <div class="profile-dropdown-divider"></div>
+                    <a href="index.php" class="profile-dropdown-item profile-dropdown-logout" id="dropdownLogoutBtn">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Log out</span>
+                    </a>
+                </div>
+            </div>
         </div>
         
         <div class="navbar-toggle">
@@ -189,6 +201,13 @@ if (!function_exists('getInitialsHtml')) {
     <a href="profile-page.php" class="mobile-menu-item">
         <i class="bi bi-person-circle"></i>
         <span>Profile</span>
+    </a>
+    <a href="message.php" class="mobile-menu-item">
+        <i class="bi bi-chat-dots-fill"></i>
+        <span>Message</span>
+        <?php if ($unread_message_count > 0): ?>
+            <span class="notification-badge"><?php echo $unread_message_count > 99 ? '99+' : $unread_message_count; ?></span>
+        <?php endif; ?>
     </a>
     <a href="#" class="mobile-menu-item" id="mobileNotificationToggle">
         <i class="bi bi-bell-fill"></i>
@@ -597,6 +616,14 @@ if (!function_exists('getInitialsHtml')) {
         align-items: center;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         animation: pulse 1.5s infinite;
+    }
+
+    .navbar-message-link:hover i {
+        color: var(--color-primary, #008080) !important;
+    }
+    .navbar-message-link:hover {
+        background-color: var(--color-primary-light, rgba(0, 128, 128, 0.1));
+        border-radius: 50%;
     }
     
     @keyframes pulse {
