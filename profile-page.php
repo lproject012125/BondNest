@@ -3543,22 +3543,16 @@ function loadComments(postId) {
             if (data.error) throw new Error(data.error);
             commentList.innerHTML = '';
             clearReply();
-            console.log('DEBUG:', data);
             if (!data.comments || data.comments.length === 0) {
                 commentList.innerHTML = '<div class="no-comments" style="text-align: center; padding: 40px; color: #888;">No comments yet. Be the first to comment!</div>';
                 return;
             }
-            const debugBar = document.createElement('div');
-            debugBar.style.cssText = 'background:#ffeeba;color:#856404;padding:6px 12px;font-size:11px;border-radius:4px;margin-bottom:8px;font-family:monospace;white-space:pre-wrap;';
-            debugBar.textContent = `DB: ${data.total_db_comments} total | Top-level: ${data.debug_top_level?.join(' | ') || 'N/A'}`;
-            commentList.appendChild(debugBar);
             commentList.style.maxHeight = '400px';
             commentList.style.overflowY = 'auto';
             commentList.style.padding = '0 15px';
             commentList.style.marginBottom = '60px';
             commentList.style.background = 'transparent';
             data.comments.forEach(comment => {
-                console.log(`Comment ${comment.id}: ${comment.replies?.length || 0} replies`);
                 try {
                     commentList.appendChild(createCommentElement(comment));
                 } catch(err) {
@@ -3584,10 +3578,15 @@ function createCommentElement(comment) {
         ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
         : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
 
+    const replyToHtml = comment.reply_to_name 
+        ? `<div style="font-size:0.75rem;color:#008080;margin-bottom:2px;display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg> Replying to <strong>${comment.reply_to_name}</strong></div>`
+        : '';
+
     div.innerHTML = `
         <div class="comment-content">
             ${avatarHtml}
             <div class="comment-body">
+                ${replyToHtml}
                 <div style="display: flex; width: 100%; background: transparent;">
                     <h4 class="comment-author" style="background: transparent; margin: 0; padding: 0;">${comment.first_name} ${comment.last_name}</h4>
                 </div>
@@ -3689,29 +3688,26 @@ function createCommentElement(comment) {
         const repliesContainer = document.createElement('div');
         repliesContainer.className = 'replies-container';
         
-        if (comment.replies.length > 2) {
-            const firstReply = createCommentElement(comment.replies[0]);
-            repliesContainer.appendChild(firstReply);
-            
+        if (comment.replies.length > 1) {
             const hiddenReplies = document.createElement('div');
             hiddenReplies.className = 'hidden-replies';
             hiddenReplies.style.display = 'none';
-            comment.replies.slice(1).forEach(reply => {
+            comment.replies.forEach(reply => {
                 hiddenReplies.appendChild(createCommentElement(reply));
             });
             repliesContainer.appendChild(hiddenReplies);
             
             const toggleBtn = document.createElement('button');
             toggleBtn.className = 'view-replies-btn';
-            toggleBtn.textContent = `View ${comment.replies.length - 1} replies`;
-            toggleBtn.style.cssText = 'background:#e8f5f5;border:none;color:#008080;font-size:0.8rem;cursor:pointer;padding:6px 12px;margin-top:6px;font-weight:500;border-radius:16px;display:block;';
+            toggleBtn.textContent = `View ${comment.replies.length} replies`;
+            toggleBtn.style.cssText = 'background:none;border:none;color:#008080;font-size:0.8rem;cursor:pointer;padding:4px 0;margin-top:4px;font-weight:500;display:block;';
             let expanded = false;
             toggleBtn.addEventListener('click', () => {
                 expanded = !expanded;
                 hiddenReplies.style.display = expanded ? 'block' : 'none';
                 toggleBtn.textContent = expanded 
                     ? 'Hide replies' 
-                    : `View ${comment.replies.length - 1} replies`;
+                    : `View ${comment.replies.length} replies`;
             });
             repliesContainer.appendChild(toggleBtn);
         } else {

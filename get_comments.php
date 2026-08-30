@@ -115,6 +115,12 @@ try {
         }
     }
 
+    // Build author name lookup for reply-to indicators
+    $author_names = [];
+    foreach ($all_comments as $c) {
+        $author_names[(int)$c['id']] = trim(($c['first_name'] ?? '') . ' ' . ($c['last_name'] ?? ''));
+    }
+
     // Attach replies to their parents (top-level ordered DESC, replies ordered ASC)
     $result = array_reverse($top_level);
     foreach ($result as &$comment) {
@@ -125,27 +131,23 @@ try {
     }
     unset($comment);
 
+    // Add reply_to_name for each reply
+    foreach ($result as &$comment) {
+        if (!empty($comment['replies'])) {
+            foreach ($comment['replies'] as &$reply) {
+                $pid = (int)($reply['parent_id'] ?? 0);
+                $reply['reply_to_name'] = $author_names[$pid] ?? '';
+            }
+            unset($reply);
+        }
+    }
+    unset($comment);
+
     ob_end_clean();
 
-    // Debug: show reply counts per top-level
-    $debug_top = [];
-    foreach ($result as $c) {
-        $debug_top[] = $c['id'] . ': ' . count($c['replies']) . ' replies';
-    }
-    
     $response = [
         'success' => true,
         'comments' => array_values($result),
-        'total_db_comments' => count($all_comments),
-        'debug_top_level' => $debug_top,
-        'debug_raw' => array_map(function($c) {
-            return [
-                'id' => $c['id'],
-                'parent_id' => $c['parent_id'],
-                'content' => substr($c['content'], 0, 30),
-                'user' => trim(($c['first_name'] ?? '') . ' ' . ($c['last_name'] ?? '')),
-            ];
-        }, $all_comments),
     ];
 
     die(json_encode($response));

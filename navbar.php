@@ -397,6 +397,9 @@ if (!function_exists('getInitialsHtml')) {
         border: 2px solid rgba(0, 128, 128, 0.3);
         transition: box-shadow 0.25s ease, border-color 0.25s ease;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .profile-link:hover .profile-picture,
