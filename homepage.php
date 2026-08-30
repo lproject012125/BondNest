@@ -2485,7 +2485,7 @@ function loadComments(postId) {
             return response.json();
         })
         .then(data => {
-            console.log('DEBUG: total_db_comments:', data.total_db_comments, 'debug_raw:', data.debug_raw, 'grouped:', data.comments);
+            console.log('DEBUG:', data);
             
             if (data.error) {
                 throw new Error(data.error);
@@ -2500,8 +2500,8 @@ function loadComments(postId) {
             }
             
             const debugBar = document.createElement('div');
-            debugBar.style.cssText = 'background:#ffeeba;color:#856404;padding:6px 12px;font-size:11px;border-radius:4px;margin-bottom:8px;font-family:monospace;';
-            debugBar.textContent = `DB: ${data.total_db_comments} total | Grouped: ${data.comments.length} top-level | Raw: ${JSON.stringify(data.debug_raw.map(d => d.id+'#'+d.parent_id+' '+d.content))}`;
+            debugBar.style.cssText = 'background:#ffeeba;color:#856404;padding:6px 12px;font-size:11px;border-radius:4px;margin-bottom:8px;font-family:monospace;white-space:pre-wrap;';
+            debugBar.textContent = `DB: ${data.total_db_comments} total | Top-level: ${data.debug_top_level?.join(' | ') || 'N/A'}`;
             commentList.appendChild(debugBar);
             
             commentList.style.maxHeight = '400px';

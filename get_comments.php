@@ -74,29 +74,45 @@ try {
         $parent_map[$c['id']] = !empty($c['parent_id']) ? (int)$c['parent_id'] : null;
     }
 
-    // Walk up the parent chain to find the top-level ancestor
-    function getTopLevelAncestor($id, $parentMap, $depth = 0) {
-        if ($depth > 20) return $id; // safety against infinite loops
-        $pid = $parentMap[$id] ?? null;
-        if ($pid === null || !isset($parentMap[$pid])) return $id;
-        return getTopLevelAncestor($pid, $parentMap, $depth + 1);
+    // Find top-level ancestor for each comment using iterative loop
+    $ancestor_cache = [];
+    foreach ($all_comments as $c) {
+        $id = $c['id'];
+        $current = $id;
+        $parent_id = $parent_map[$id] ?? null;
+        
+        if ($parent_id === null) {
+            // This is a top-level comment
+            $ancestor_cache[$id] = $id;
+        } else {
+            // Walk up the chain to find the top-level ancestor
+            $visited = [];
+            $current = $id;
+            while (isset($parent_map[$current]) && $parent_map[$current] !== null && !isset($visited[$current])) {
+                $visited[$current] = true;
+                $current = $parent_map[$current];
+            }
+            $ancestor_cache[$id] = $current;
+        }
     }
-
+    
     // Group ALL comments under their top-level ancestor (flatten nested replies)
     $top_level = [];
     $replies_map = [];
 
     foreach ($all_comments as $c) {
         $c['replies'] = [];
-        $ancestor = getTopLevelAncestor($c['id'], $parent_map);
-        if ($ancestor === $c['id'] && $parent_map[$c['id']] === null) {
+        $ancestor = $ancestor_cache[$c['id']];
+        
+        if ($ancestor == $c['id'] && ($parent_map[$c['id']] ?? null) === null) {
+            // This is a top-level comment
             $top_level[$c['id']] = $c;
         } else {
-            $pid = $ancestor;
-            if (!isset($replies_map[$pid])) {
-                $replies_map[$pid] = [];
+            // This is a reply - add to ancestor's replies
+            if (!isset($replies_map[$ancestor])) {
+                $replies_map[$ancestor] = [];
             }
-            $replies_map[$pid][] = $c;
+            $replies_map[$ancestor][] = $c;
         }
     }
 
@@ -111,10 +127,17 @@ try {
 
     ob_end_clean();
 
+    // Debug: show reply counts per top-level
+    $debug_top = [];
+    foreach ($result as $c) {
+        $debug_top[] = $c['id'] . ': ' . count($c['replies']) . ' replies';
+    }
+    
     $response = [
         'success' => true,
         'comments' => array_values($result),
         'total_db_comments' => count($all_comments),
+        'debug_top_level' => $debug_top,
         'debug_raw' => array_map(function($c) {
             return [
                 'id' => $c['id'],
