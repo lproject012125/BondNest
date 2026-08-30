@@ -3561,6 +3561,8 @@ function loadComments(postId) {
             if (data.error) throw new Error(data.error);
             commentList.innerHTML = '';
             clearReply();
+            console.log('Comments loaded:', data.comments);
+            data.comments.forEach(c => console.log('Comment', c.id, '- replies:', c.replies?.length || 0));
             if (!data.comments || data.comments.length === 0) {
                 commentList.innerHTML = '<div class="no-comments" style="text-align: center; padding: 40px; color: #888;">No comments yet. Be the first to comment!</div>';
                 return;
@@ -3571,7 +3573,12 @@ function loadComments(postId) {
             commentList.style.marginBottom = '60px';
             commentList.style.background = 'transparent';
             data.comments.forEach(comment => {
-                commentList.appendChild(createCommentElement(comment));
+                console.log(`Comment ${comment.id}: ${comment.replies?.length || 0} replies`);
+                try {
+                    commentList.appendChild(createCommentElement(comment));
+                } catch(err) {
+                    console.error('Error rendering comment', comment.id, err);
+                }
             });
         })
         .catch(error => {
@@ -3712,7 +3719,7 @@ function createCommentElement(comment) {
             const toggleBtn = document.createElement('button');
             toggleBtn.className = 'view-replies-btn';
             toggleBtn.textContent = `View ${comment.replies.length - 1} replies`;
-            toggleBtn.style.cssText = 'background:none;border:none;color:#008080;font-size:0.8rem;cursor:pointer;padding:4px 8px;margin-top:4px;font-weight:500;';
+            toggleBtn.style.cssText = 'background:#e8f5f5;border:none;color:#008080;font-size:0.8rem;cursor:pointer;padding:6px 12px;margin-top:6px;font-weight:500;border-radius:16px;display:block;';
             let expanded = false;
             toggleBtn.addEventListener('click', () => {
                 expanded = !expanded;

@@ -57,7 +57,7 @@ try {
     $sql = "SELECT c.id, c.post_id, c.user_id, c.content, c.parent_id, c.created_at, c.updated_at,
                    u.first_name, u.last_name, u.profile_picture
             FROM comments c
-            JOIN users u ON c.user_id = u.id
+            LEFT JOIN users u ON c.user_id = u.id
             WHERE c.post_id = ?
             ORDER BY c.created_at ASC";
     $stmt = $pdo->prepare($sql);

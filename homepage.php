@@ -2533,8 +2533,13 @@ function loadComments(postId) {
             
             // Add the comments to the list
             data.comments.forEach(comment => {
-                const commentElement = createCommentElement(comment);
-                commentList.appendChild(commentElement);
+                console.log(`Comment ${comment.id}: ${comment.replies?.length || 0} replies`);
+                try {
+                    const commentElement = createCommentElement(comment);
+                    commentList.appendChild(commentElement);
+                } catch(err) {
+                    console.error('Error rendering comment', comment.id, err);
+                }
             });
             
             console.log('Comments loaded successfully');
@@ -2739,7 +2744,7 @@ function createCommentElement(comment) {
             const toggleBtn = document.createElement('button');
             toggleBtn.className = 'view-replies-btn';
             toggleBtn.textContent = `View ${comment.replies.length - 1} replies`;
-            toggleBtn.style.cssText = 'background:none;border:none;color:#008080;font-size:0.8rem;cursor:pointer;padding:4px 8px;margin-top:4px;font-weight:500;';
+            toggleBtn.style.cssText = 'background:#e8f5f5;border:none;color:#008080;font-size:0.8rem;cursor:pointer;padding:6px 12px;margin-top:6px;font-weight:500;border-radius:16px;display:block;';
             let expanded = false;
             toggleBtn.addEventListener('click', () => {
                 expanded = !expanded;
