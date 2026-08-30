@@ -68,28 +68,28 @@ try {
     $stmt->execute([$post_id]);
     $all_comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Build parent lookup to find ultimate top-level ancestor for each comment
+    // Build parent lookup — cast everything to int to avoid string/int mismatches
     $parent_map = [];
     foreach ($all_comments as $c) {
-        $parent_map[$c['id']] = !empty($c['parent_id']) ? (int)$c['parent_id'] : null;
+        $id = (int)$c['id'];
+        $parent_map[$id] = !empty($c['parent_id']) ? (int)$c['parent_id'] : null;
+        $c['id'] = $id;
+        $c['user_id'] = (int)$c['user_id'];
+        $c['post_id'] = (int)$c['post_id'];
+        if (!empty($c['parent_id'])) $c['parent_id'] = (int)$c['parent_id'];
     }
 
     // Find top-level ancestor for each comment using iterative loop
     $ancestor_cache = [];
     foreach ($all_comments as $c) {
-        $id = $c['id'];
-        $current = $id;
-        $parent_id = $parent_map[$id] ?? null;
+        $id = (int)$c['id'];
+        $pid = $parent_map[$id] ?? null;
         
-        if ($parent_id === null) {
-            // This is a top-level comment
+        if ($pid === null) {
             $ancestor_cache[$id] = $id;
         } else {
-            // Walk up the chain to find the top-level ancestor
-            $visited = [];
             $current = $id;
-            while (isset($parent_map[$current]) && $parent_map[$current] !== null && !isset($visited[$current])) {
-                $visited[$current] = true;
+            while (isset($parent_map[$current]) && $parent_map[$current] !== null) {
                 $current = $parent_map[$current];
             }
             $ancestor_cache[$id] = $current;
@@ -102,13 +102,12 @@ try {
 
     foreach ($all_comments as $c) {
         $c['replies'] = [];
-        $ancestor = $ancestor_cache[$c['id']];
+        $id = (int)$c['id'];
+        $ancestor = $ancestor_cache[$id];
         
-        if ($ancestor == $c['id'] && ($parent_map[$c['id']] ?? null) === null) {
-            // This is a top-level comment
-            $top_level[$c['id']] = $c;
+        if ($ancestor === $id && $parent_map[$id] === null) {
+            $top_level[$id] = $c;
         } else {
-            // This is a reply - add to ancestor's replies
             if (!isset($replies_map[$ancestor])) {
                 $replies_map[$ancestor] = [];
             }
@@ -119,8 +118,9 @@ try {
     // Attach replies to their parents (top-level ordered DESC, replies ordered ASC)
     $result = array_reverse($top_level);
     foreach ($result as &$comment) {
-        if (isset($replies_map[$comment['id']])) {
-            $comment['replies'] = $replies_map[$comment['id']];
+        $cid = (int)$comment['id'];
+        if (isset($replies_map[$cid])) {
+            $comment['replies'] = $replies_map[$cid];
         }
     }
     unset($comment);
