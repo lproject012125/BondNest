@@ -2024,6 +2024,72 @@ unset($_SESSION['form_data']);
             to { opacity: 1; transform: translateX(0); }
         }
 
+        /* Reply styles */
+        .reply-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 2px 8px;
+            margin-left: 4px;
+            border-radius: 12px;
+            transition: background-color 0.2s, color 0.2s;
+            font-weight: 500;
+        }
+        .reply-btn:hover {
+            background: rgba(0, 128, 128, 0.1);
+            color: #008080;
+        }
+        .reply-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #e8f5f5;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+        .reply-indicator .cancel-reply {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+            margin-left: auto;
+        }
+        .reply-indicator .cancel-reply:hover {
+            color: #e74c3c;
+        }
+        .replies-container {
+            margin-left: 44px;
+            margin-top: 4px;
+            padding-left: 12px;
+            border-left: 2px solid #e0e0e0;
+        }
+        .replies-container .comment-item {
+            padding: 6px 0;
+        }
+        .replies-container .comment-avatar {
+            width: 28px !important;
+            height: 28px !important;
+        }
+        .replies-container .comment-text {
+            font-size: 0.9rem !important;
+        }
+        .replies-container .comment-author {
+            font-size: 0.85rem !important;
+        }
+        .comment-time-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
         .comment-item .comment-actions {
             opacity: 0;
             transition: opacity 0.2s ease;
@@ -2853,6 +2919,11 @@ unset($_SESSION['form_data']);
         <div class="comments-container">
             <div class="comment-list" id="commentList"></div>
             <form id="commentForm" method="POST" class="comment-form-fixed">
+                <div class="reply-indicator" id="replyIndicator" style="display: none;">
+                    <span>Replying to <strong id="replyToName"></strong></span>
+                    <button type="button" class="cancel-reply" id="cancelReply">&times;</button>
+                </div>
+                <input type="hidden" name="parent_id" id="replyParentId" value="">
                 <input type="hidden" name="post_id" value="">
                 <textarea class="comment-input" placeholder="Write a comment..." name="comment-content" required rows="2" maxlength="1000"></textarea>
                 <button type="submit" class="btn btn-primary">Post Comment</button>
@@ -3381,6 +3452,27 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// Reply state
+let currentReplyToId = null;
+let currentReplyToName = null;
+
+function setReplyTo(commentId, authorName) {
+    currentReplyToId = commentId;
+    currentReplyToName = authorName;
+    document.getElementById('replyIndicator').style.display = 'flex';
+    document.getElementById('replyToName').textContent = authorName;
+    document.getElementById('replyParentId').value = commentId;
+}
+
+function clearReply() {
+    currentReplyToId = null;
+    currentReplyToName = null;
+    document.getElementById('replyIndicator').style.display = 'none';
+    document.getElementById('replyParentId').value = '';
+}
+
+document.getElementById('cancelReply')?.addEventListener('click', clearReply);
+
 // Comment form submit - post to add_comment.php
 document.getElementById('commentForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -3392,6 +3484,9 @@ document.getElementById('commentForm').addEventListener('submit', async (e) => {
     const formData = new FormData();
     formData.append('post_id', currentPostId);
     formData.append('content', content);
+    if (currentReplyToId) {
+        formData.append('parent_id', currentReplyToId);
+    }
 
     const submitBtn = form.querySelector('button[type="submit"]');
     const origText = submitBtn.textContent;
@@ -3406,7 +3501,23 @@ document.getElementById('commentForm').addEventListener('submit', async (e) => {
             if (textarea) textarea.value = '';
             const commentList = document.getElementById('commentList');
             const newComment = createCommentElement(data.comment);
-            commentList.insertBefore(newComment, commentList.firstChild);
+
+            if (currentReplyToId) {
+                const parentEl = commentList.querySelector(`[data-comment-id="${currentReplyToId}"]`);
+                if (parentEl) {
+                    let repliesContainer = parentEl.querySelector('.replies-container');
+                    if (!repliesContainer) {
+                        repliesContainer = document.createElement('div');
+                        repliesContainer.className = 'replies-container';
+                        parentEl.appendChild(repliesContainer);
+                    }
+                    repliesContainer.appendChild(newComment);
+                }
+                clearReply();
+            } else {
+                commentList.insertBefore(newComment, commentList.firstChild);
+            }
+
             newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             const commentCountElement = document.querySelector(`[data-post-id="${currentPostId}"] .comment-count`);
             if (commentCountElement) commentCountElement.textContent = data.new_count;
@@ -3437,6 +3548,7 @@ function loadComments(postId) {
         .then(data => {
             if (data.error) throw new Error(data.error);
             commentList.innerHTML = '';
+            clearReply();
             if (!data.comments || data.comments.length === 0) {
                 commentList.innerHTML = '<div class="no-comments" style="text-align: center; padding: 40px; color: #888;">No comments yet. Be the first to comment!</div>';
                 return;
@@ -3464,18 +3576,22 @@ function createCommentElement(comment) {
     div.className = 'comment-item new-comment';
     div.dataset.commentId = comment.id;
 
+    const avatarHtml = comment.profile_picture
+        ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
+        : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
+
     div.innerHTML = `
         <div class="comment-content">
-            ${comment.profile_picture
-                ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
-                : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
-            }
+            ${avatarHtml}
             <div class="comment-body">
                 <div style="display: flex; width: 100%; background: transparent;">
                     <h4 class="comment-author" style="background: transparent; margin: 0; padding: 0;">${comment.first_name} ${comment.last_name}</h4>
                 </div>
                 <p class="comment-text">${formattedContent}</p>
-                <small class="comment-time" style="font-size: 0.75rem; color: #999; display: block; margin-top: 2px;" data-timestamp="${comment.created_at}">${formatTimeAgo(comment.created_at)}</small>
+                <div class="comment-time-row">
+                    <small class="comment-time" style="font-size: 0.75rem; color: #999;" data-timestamp="${comment.created_at}">${formatTimeAgo(comment.created_at)}</small>
+                    <button class="reply-btn" data-comment-id="${comment.id}" data-author="${comment.first_name} ${comment.last_name}">Reply</button>
+                </div>
             </div>
             ${isCommentAuthor ? `
             <div class="comment-actions" style="position: absolute; right: 5px; top: 5px; z-index: 100;">
@@ -3497,6 +3613,16 @@ function createCommentElement(comment) {
     const commentBody = div.querySelector('.comment-body');
     if (commentBody) {
         commentBody.style.cssText = `flex: 1 !important; max-width: calc(100% - 50px) !important; display: flex !important; flex-direction: column !important; background: transparent !important;`;
+    }
+
+    // Reply button click
+    const replyBtn = div.querySelector('.reply-btn');
+    if (replyBtn) {
+        replyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setReplyTo(comment.id, comment.first_name + ' ' + comment.last_name);
+            document.querySelector('#commentForm textarea')?.focus();
+        });
     }
 
     const menuTrigger = div.querySelector('.comment-menu-trigger');
@@ -3553,6 +3679,17 @@ function createCommentElement(comment) {
             }, 100);
         });
     }
+
+    // If this comment has replies, render them nested
+    if (comment.replies && comment.replies.length > 0) {
+        const repliesContainer = document.createElement('div');
+        repliesContainer.className = 'replies-container';
+        comment.replies.forEach(reply => {
+            repliesContainer.appendChild(createCommentElement(reply));
+        });
+        div.appendChild(repliesContainer);
+    }
+
     return div;
 }
 
@@ -5321,12 +5458,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData();
                 formData.append('post_id', activePostId);
                 formData.append('content', content);
+                if (currentReplyToId) {
+                    formData.append('parent_id', currentReplyToId);
+                }
                 const response = await fetch('add_comment.php', { method: 'POST', body: formData });
                 const data = await response.json();
                 if (!response.ok || !data.success) throw new Error(data.error || 'Unable to add comment.');
                 if (textarea) textarea.value = '';
                 const count = document.querySelector(`.comment-trigger[data-post-id="${activePostId}"] .comment-count`);
                 if (count) count.textContent = data.new_count;
+                clearReply();
                 if (typeof window.loadComments === 'function') window.loadComments(activePostId);
             } catch (error) {
                 console.error(error);

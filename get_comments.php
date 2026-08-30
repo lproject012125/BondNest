@@ -24,45 +24,81 @@ $post_id = intval($_GET['post_id']);
 
 try {
     global $db_driver;
+    // Ensure comments table exists with parent_id column
     if ($db_driver === 'pgsql') {
         $pdo->exec("CREATE TABLE IF NOT EXISTS comments (
             id SERIAL PRIMARY KEY,
             post_id INTEGER NOT NULL,
             user_id INTEGER NOT NULL,
             content TEXT NOT NULL,
+            parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )");
+        $pdo->exec("ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE");
     } else {
         $pdo->exec("CREATE TABLE IF NOT EXISTS comments (
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
             post_id INT(11) NOT NULL,
             user_id INT(11) NOT NULL,
             content TEXT NOT NULL,
+            parent_id INT(11) DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        // Add parent_id if missing
+        $check = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME='comments' AND COLUMN_NAME='parent_id'");
+        $exists = $check && $check->fetch();
+        if (!$exists) {
+            $pdo->exec("ALTER TABLE comments ADD COLUMN parent_id INT(11) DEFAULT NULL");
+        }
     }
 
-    $sql = "SELECT c.id, c.post_id, c.user_id, c.content, c.created_at, c.updated_at,
+    $sql = "SELECT c.id, c.post_id, c.user_id, c.content, c.parent_id, c.created_at, c.updated_at,
                    u.first_name, u.last_name, u.profile_picture
             FROM comments c
             JOIN users u ON c.user_id = u.id
             WHERE c.post_id = ?
-            ORDER BY c.created_at DESC";
+            ORDER BY c.created_at ASC";
     $stmt = $pdo->prepare($sql);
     if (!$stmt) {
         throw new Exception("Prepare failed: " . implode(' ', $pdo->errorInfo()));
     }
 
     $stmt->execute([$post_id]);
-    $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $all_comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Group: top-level comments with replies nested
+    $top_level = [];
+    $replies_map = [];
+
+    foreach ($all_comments as $c) {
+        $c['replies'] = [];
+        if (empty($c['parent_id'])) {
+            $top_level[$c['id']] = $c;
+        } else {
+            $pid = $c['parent_id'];
+            if (!isset($replies_map[$pid])) {
+                $replies_map[$pid] = [];
+            }
+            $replies_map[$pid][] = $c;
+        }
+    }
+
+    // Attach replies to their parents (top-level ordered DESC, replies ordered ASC)
+    $result = array_reverse($top_level);
+    foreach ($result as &$comment) {
+        if (isset($replies_map[$comment['id']])) {
+            $comment['replies'] = $replies_map[$comment['id']];
+        }
+    }
+    unset($comment);
 
     ob_end_clean();
 
     die(json_encode([
         'success' => true,
-        'comments' => $comments
+        'comments' => array_values($result)
     ]));
 
 } catch (Throwable $e) {

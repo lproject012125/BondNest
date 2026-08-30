@@ -26,6 +26,7 @@ if (!isset($_POST['post_id']) || !isset($_POST['content']) || empty(trim($_POST[
 $post_id = (int)$_POST['post_id'];
 $user_id = $_SESSION['user_id'];
 $content = trim($_POST['content']);
+$parent_id = isset($_POST['parent_id']) && $_POST['parent_id'] !== '' ? (int)$_POST['parent_id'] : null;
 
 // Sanitize content to prevent XSS
 $content = htmlspecialchars($content, ENT_QUOTES, 'UTF-8');
@@ -46,13 +47,13 @@ try {
     }
     
     // Insert comment
-    $insert_stmt = $pdo->prepare("INSERT INTO comments (post_id, user_id, content, created_at) VALUES (?, ?, ?, ?)");
+    $insert_stmt = $pdo->prepare("INSERT INTO comments (post_id, user_id, content, parent_id, created_at) VALUES (?, ?, ?, ?, ?)");
     if (!$insert_stmt) {
         error_log('Insert prepare failed');
         throw new Exception('Insert prepare failed');
     }
     
-    $insert_stmt->execute([$post_id, $user_id, $content, gmdate('Y-m-d H:i:s')]);
+    $insert_stmt->execute([$post_id, $user_id, $content, $parent_id, gmdate('Y-m-d H:i:s')]);
     
     $comment_id = $pdo->lastInsertId();
     

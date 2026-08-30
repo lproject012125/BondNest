@@ -349,4 +349,19 @@ function runMigration($pdo) {
     } catch (PDOException $e) {
         error_log("Migration messages image_path: " . $e->getMessage());
     }
+
+    // Add parent_id column to comments table for reply feature
+    try {
+        if ($isPg) {
+            $pdo->exec("ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE");
+        } else {
+            $check = $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME='comments' AND COLUMN_NAME='parent_id'");
+            $exists = $check && $check->fetch();
+            if (!$exists) {
+                $pdo->exec("ALTER TABLE comments ADD COLUMN parent_id INT(11) DEFAULT NULL");
+            }
+        }
+    } catch (PDOException $e) {
+        error_log("Migration comments parent_id: " . $e->getMessage());
+    }
 }

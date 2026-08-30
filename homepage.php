@@ -55,10 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment-content'])) {
     $content = htmlspecialchars($_POST['comment-content'], ENT_QUOTES, 'UTF-8');
     $post_id = $_POST['post_id'];
     $user_id = $_SESSION['user_id'];
+    $parent_id = isset($_POST['parent_id']) && $_POST['parent_id'] !== '' ? (int)$_POST['parent_id'] : null;
     
-    $sql = "INSERT INTO comments (post_id, user_id, content, created_at) VALUES (?, ?, ?, ?)";
+    $sql = "INSERT INTO comments (post_id, user_id, content, parent_id, created_at) VALUES (?, ?, ?, ?, ?)";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$post_id, $user_id, $content, gmdate('Y-m-d H:i:s')]);
+    $stmt->execute([$post_id, $user_id, $content, $parent_id, gmdate('Y-m-d H:i:s')]);
     
     // Get the newly inserted comment with user info
     $new_comment_id = $pdo->lastInsertId();
@@ -648,6 +649,72 @@ main {
 
 .comment-item.new-comment {
     animation: fadeIn 0.3s ease-out forwards !important;
+}
+
+/* Reply styles */
+.reply-btn {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 2px 8px;
+    margin-left: 4px;
+    border-radius: 12px;
+    transition: background-color 0.2s, color 0.2s;
+    font-weight: 500;
+}
+.reply-btn:hover {
+    background: rgba(0, 128, 128, 0.1);
+    color: #008080;
+}
+.reply-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #e8f5f5;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: #555;
+}
+.reply-indicator .cancel-reply {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 4px;
+    margin-left: auto;
+}
+.reply-indicator .cancel-reply:hover {
+    color: #e74c3c;
+}
+.replies-container {
+    margin-left: 44px;
+    margin-top: 4px;
+    padding-left: 12px;
+    border-left: 2px solid #e0e0e0;
+}
+.replies-container .comment-item {
+    padding: 6px 0;
+}
+.replies-container .comment-avatar {
+    width: 28px !important;
+    height: 28px !important;
+}
+.replies-container .comment-text {
+    font-size: 0.9rem !important;
+}
+.replies-container .comment-author {
+    font-size: 0.85rem !important;
+}
+.comment-time-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
 }
 
 /* Comment menu styles */
@@ -1791,6 +1858,11 @@ if (menuTrigger) {
             
             <!-- Fixed comment form at bottom -->
             <form id="commentForm" method="POST" class="comment-form-fixed">
+                <div class="reply-indicator" id="replyIndicator" style="display: none;">
+                    <span>Replying to <strong id="replyToName"></strong></span>
+                    <button type="button" class="cancel-reply" id="cancelReply">&times;</button>
+                </div>
+                <input type="hidden" name="parent_id" id="replyParentId" value="">
                 <textarea class="comment-input" placeholder="Write a comment..." name="comment-content" required rows="2" maxlength="1000"></textarea>
                 <button type="submit" class="btn btn-primary">Post Comment</button>
             </form>
@@ -2304,6 +2376,29 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// Reply state
+let currentReplyToId = null;
+let currentReplyToName = null;
+
+function setReplyTo(commentId, authorName) {
+    currentReplyToId = commentId;
+    currentReplyToName = authorName;
+    document.getElementById('replyIndicator').style.display = 'flex';
+    document.getElementById('replyToName').textContent = authorName;
+    document.getElementById('replyParentId').value = commentId;
+    document.getElementById('messageInput')?.focus();
+}
+
+function clearReply() {
+    currentReplyToId = null;
+    currentReplyToName = null;
+    document.getElementById('replyIndicator').style.display = 'none';
+    document.getElementById('replyParentId').value = '';
+}
+
+// Cancel reply button
+document.getElementById('cancelReply')?.addEventListener('click', clearReply);
+
 // Handle comment submission
 commentForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2325,20 +2420,31 @@ commentForm.addEventListener('submit', async (e) => {
         const data = await response.json();
         
         if (data.success) {
-            // Clear the comment input
             form.querySelector('textarea').value = '';
             
-            // Add new comment to the top of the list
             const commentList = document.getElementById('commentList');
             const newComment = createCommentElement(data.comment);
             
-            // No need for additional styling since createCommentElement now handles it all
-            commentList.insertBefore(newComment, commentList.firstChild);
+            if (currentReplyToId) {
+                // It's a reply — find parent and append
+                const parentEl = commentList.querySelector(`[data-comment-id="${currentReplyToId}"]`);
+                if (parentEl) {
+                    let repliesContainer = parentEl.querySelector('.replies-container');
+                    if (!repliesContainer) {
+                        repliesContainer = document.createElement('div');
+                        repliesContainer.className = 'replies-container';
+                        parentEl.appendChild(repliesContainer);
+                    }
+                    repliesContainer.appendChild(newComment);
+                }
+                clearReply();
+            } else {
+                // Top-level comment
+                commentList.insertBefore(newComment, commentList.firstChild);
+            }
             
-            // Scroll to the new comment
             newComment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             
-            // Update comment count in the post
             const commentCountElement = document.querySelector(`[data-post-id="${currentPostId}"] .comment-count`);
             if (commentCountElement) {
                 commentCountElement.textContent = data.new_count;
@@ -2392,6 +2498,7 @@ function loadComments(postId) {
             
             // Clear the list completely before adding new comments
             commentList.innerHTML = '';
+            clearReply();
             
             if (!data.comments || data.comments.length === 0) {
                 commentList.innerHTML = '<div class="no-comments" style="text-align: center; padding: 40px; color: #888;">No comments yet. Be the first to comment!</div>';
@@ -2428,31 +2535,29 @@ function loadComments(postId) {
 
 // Function to create a comment element
 function createCommentElement(comment) {
-    // Format the comment content by replacing newlines with <br> tags
     const formattedContent = comment.content.replace(/\r\n|\r|\n/g, '<br>');
-    
-    // Debug output to console
-    console.log('Creating comment element for:', comment);
-    
-    // Check if current user is the comment author
     const isCommentAuthor = <?php echo $_SESSION['user_id']; ?> === parseInt(comment.user_id);
     
     const div = document.createElement('div');
     div.className = 'comment-item new-comment';
     div.dataset.commentId = comment.id;
     
+    const avatarHtml = comment.profile_picture 
+        ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
+        : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
+    
     div.innerHTML = `
         <div class="comment-content">
-            ${comment.profile_picture 
-                ? `<img src="${comment.profile_picture}" class="comment-avatar" alt="User avatar">`
-                : (() => { const f = (comment.first_name||'')[0]||''; const l = (comment.last_name||'')[0]||''; const n = (comment.first_name||'')+(comment.last_name||''); let h=0; for(let i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))&0x7FFFFFFF;} const c=['#2B9E9E','#3CB5A6','#E67E22','#3498DB','#9B59B6','#E74C3C','#1ABC9C','#2C3E50']; return `<div class="comment-avatar initials-avatar" style="background:${c[h%c.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;font-family:Poppins,sans-serif;">${(f+l).toUpperCase()}</div>`; })()
-            }
+            ${avatarHtml}
             <div class="comment-body">
                 <div style="display: flex; width: 100%; background: transparent;">
                     <h4 class="comment-author" style="background: transparent; margin: 0; padding: 0;">${comment.first_name} ${comment.last_name}</h4>
                 </div>
                 <p class="comment-text">${formattedContent}</p>
-                <small class="comment-time" style="font-size: 0.75rem; color: #999; display: block; margin-top: 2px;" data-timestamp="${comment.created_at}">${formatTimeAgo(comment.created_at)}</small>
+                <div class="comment-time-row">
+                    <small class="comment-time" style="font-size: 0.75rem; color: #999;" data-timestamp="${comment.created_at}">${formatTimeAgo(comment.created_at)}</small>
+                    <button class="reply-btn" data-comment-id="${comment.id}" data-author="${comment.first_name} ${comment.last_name}">Reply</button>
+                </div>
             </div>
             ${isCommentAuthor ? `
             <div class="comment-actions" style="position: absolute; right: 5px; top: 5px; z-index: 100;">
@@ -2462,7 +2567,6 @@ function createCommentElement(comment) {
         </div>
     `;
     
-    // Apply styles directly to ensure they're applied
     const commentText = div.querySelector('.comment-text');
     if (commentText) {
         commentText.style.cssText = `
@@ -2480,7 +2584,6 @@ function createCommentElement(comment) {
         `;
     }
     
-    // Ensure the comment content is properly styled with position relative
     const commentContent = div.querySelector('.comment-content');
     if (commentContent) {
         commentContent.style.cssText = `
@@ -2492,10 +2595,8 @@ function createCommentElement(comment) {
         `;
     }
     
-    // Ensure comment item has transparent background
     div.style.background = 'transparent';
     
-    // Ensure comment body is styled correctly
     const commentBody = div.querySelector('.comment-body');
     if (commentBody) {
         commentBody.style.cssText = `
@@ -2507,7 +2608,17 @@ function createCommentElement(comment) {
         `;
     }
     
-    // Apply hover effect to the menu trigger icon
+    // Reply button click
+    const replyBtn = div.querySelector('.reply-btn');
+    if (replyBtn) {
+        replyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setReplyTo(comment.id, comment.first_name + ' ' + comment.last_name);
+            commentForm.querySelector('textarea').focus();
+        });
+    }
+    
+    // Menu trigger
     const menuTrigger = div.querySelector('.comment-menu-trigger');
     if (menuTrigger) {
         menuTrigger.addEventListener('mouseenter', () => {
@@ -2517,21 +2628,17 @@ function createCommentElement(comment) {
             menuTrigger.style.backgroundColor = 'transparent';
         });
         
-        // Add click event to show the floating menu
         menuTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            // Close all existing menus first
             document.querySelectorAll('.floating-comment-menu').forEach(menu => {
                 document.body.removeChild(menu);
             });
             
-            // Create floating menu
             const floatingMenu = document.createElement('div');
             floatingMenu.className = 'floating-comment-menu';
             floatingMenu.dataset.commentId = comment.id;
             
-            // Set menu styles
             floatingMenu.style.cssText = `
                 position: fixed;
                 background: white;
@@ -2542,7 +2649,6 @@ function createCommentElement(comment) {
                 padding: 5px 0;
             `;
             
-            // Add menu items
             floatingMenu.innerHTML = `
                 <div class="comment-menu-item edit-comment" data-comment-id="${comment.id}" style="color: var(--color-primary); padding: 10px 15px; cursor: pointer; display: flex; align-items: center;">
                     <i class="bi bi-pencil-fill" style="margin-right: 8px; font-size: 14px;"></i> Edit Comment
@@ -2552,25 +2658,19 @@ function createCommentElement(comment) {
                 </div>
             `;
             
-            // Position the menu at the right location
             const triggerRect = menuTrigger.getBoundingClientRect();
             floatingMenu.style.top = (triggerRect.bottom + 5) + 'px';
 
-            // Ensure the menu doesn't go off-screen to the left
             const rightEdgeOffset = window.innerWidth - triggerRect.right;
             if (rightEdgeOffset < 180) {
-                // Position to the left of the trigger
                 floatingMenu.style.right = (rightEdgeOffset + 10) + 'px';
                 floatingMenu.style.left = 'auto';
             } else {
-                // Position to the right of the trigger
                 floatingMenu.style.left = triggerRect.right + 'px';
             }
             
-            // Add to document
             document.body.appendChild(floatingMenu);
             
-            // Add event listeners to menu items
             floatingMenu.querySelector('.edit-comment').addEventListener('click', () => {
                 const editEvent = new CustomEvent('edit-comment-clicked', {
                     detail: { commentId: comment.id }
@@ -2587,11 +2687,12 @@ function createCommentElement(comment) {
                 document.body.removeChild(floatingMenu);
             });
             
-            // Close menu when clicking outside
             setTimeout(() => {
                 const closeMenu = (e) => {
                     if (!floatingMenu.contains(e.target) && e.target !== menuTrigger) {
-                        document.body.removeChild(floatingMenu);
+                        if (document.body.contains(floatingMenu)) {
+                            document.body.removeChild(floatingMenu);
+                        }
                         document.removeEventListener('click', closeMenu);
                     }
                 };
@@ -2600,7 +2701,16 @@ function createCommentElement(comment) {
         });
     }
     
-    console.log('Comment element created:', div);
+    // If this comment has replies, render them nested
+    if (comment.replies && comment.replies.length > 0) {
+        const repliesContainer = document.createElement('div');
+        repliesContainer.className = 'replies-container';
+        comment.replies.forEach(reply => {
+            repliesContainer.appendChild(createCommentElement(reply));
+        });
+        div.appendChild(repliesContainer);
+    }
+    
     return div;
 }
 
