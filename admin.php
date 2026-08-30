@@ -2196,13 +2196,8 @@ function formatDate($date) {
             
             // Function to open modal with post data
             function openPostModal(postId, action = null) {
-                // First try to find post in the currentPosts array (which is kept updated via AJAX)
-                let post = currentPosts.find(p => p.id == postId);
-                
-                // If not found in currentPosts, look in the original posts array
-                if (!post) {
-                    post = posts.find(p => p.id == postId);
-                }
+                // Find post in the posts array
+                let post = posts.find(p => p.id == postId);
                 
                 // If still not found, fetch the post data directly
                 if (!post) {

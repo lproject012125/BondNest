@@ -391,11 +391,13 @@ if (!function_exists('getInitialsHtml')) {
         align-items: center;
         gap: 4px;
         margin-left: auto;
-        margin-right: 180px;
+        margin-right: 20px;
     }
 
     .profile-dropdown {
         position: relative;
+        flex-shrink: 0;
+        width: 40px;
     }
 
     .profile-link {
@@ -577,6 +579,8 @@ if (!function_exists('getInitialsHtml')) {
     /* Notification dropdown styles */
     .notification-dropdown {
         position: relative;
+        flex-shrink: 0;
+        width: 40px;
     }
     
     .notification-icon {
