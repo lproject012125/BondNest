@@ -68,16 +68,31 @@ try {
     $stmt->execute([$post_id]);
     $all_comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Group: top-level comments with replies nested
+    // Build parent lookup to find ultimate top-level ancestor for each comment
+    $parent_map = [];
+    foreach ($all_comments as $c) {
+        $parent_map[$c['id']] = !empty($c['parent_id']) ? (int)$c['parent_id'] : null;
+    }
+
+    // Walk up the parent chain to find the top-level ancestor
+    function getTopLevelAncestor($id, $parentMap, $depth = 0) {
+        if ($depth > 20) return $id; // safety against infinite loops
+        $pid = $parentMap[$id] ?? null;
+        if ($pid === null || !isset($parentMap[$pid])) return $id;
+        return getTopLevelAncestor($pid, $parentMap, $depth + 1);
+    }
+
+    // Group ALL comments under their top-level ancestor (flatten nested replies)
     $top_level = [];
     $replies_map = [];
 
     foreach ($all_comments as $c) {
         $c['replies'] = [];
-        if (empty($c['parent_id'])) {
+        $ancestor = getTopLevelAncestor($c['id'], $parent_map);
+        if ($ancestor === $c['id'] && $parent_map[$c['id']] === null) {
             $top_level[$c['id']] = $c;
         } else {
-            $pid = $c['parent_id'];
+            $pid = $ancestor;
             if (!isset($replies_map[$pid])) {
                 $replies_map[$pid] = [];
             }
