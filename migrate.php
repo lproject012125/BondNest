@@ -226,7 +226,7 @@ function runMigration($pdo) {
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
             admin_id INT(11) NOT NULL,
             post_id INT(11) DEFAULT NULL,
-            action_type ENUM('view','warn','delete','approve') NOT NULL,
+            action_type ENUM('view','warn','delete','approve','hold') NOT NULL,
             comment TEXT DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
