@@ -954,11 +954,16 @@ function formatMessageTime($timestamp) {
     #searchResults {
         background: white;
         border-radius: 8px;
-        max-height: calc(100vh - 250px);
+        max-height: 300px;
         overflow-y: auto;
         display: none;
         z-index: 100;
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        width: calc(100% - 20px);
         border: 1px solid var(--color-primary);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     }
 
     #searchResults .user-item {
@@ -2056,6 +2061,14 @@ function formatMessageTime($timestamp) {
                     e.preventDefault();
                 });
                 
+                // Position search results overlay below the search header
+                function positionSearchResults() {
+                    const searchHeader = document.querySelector('.search-header');
+                    if (searchHeader && searchResults) {
+                        searchResults.style.top = searchHeader.offsetHeight + 'px';
+                    }
+                }
+                
                 // Add real-time search functionality
                 let searchTimeout = null;
                 searchInput.addEventListener('input', function() {
@@ -2067,14 +2080,12 @@ function formatMessageTime($timestamp) {
                     }
                     
                     if (query.length > 0) {
-                        // Hide conversation list, show search results area
-                        if (userList) userList.style.display = 'none';
-                        
                         // Add a small delay to avoid too many requests
                         searchTimeout = setTimeout(() => {
                             // Show loading state
                             searchResults.innerHTML = '<div class="no-conversations"><p>Searching...</p></div>';
                             searchResults.style.display = 'block';
+                            positionSearchResults();
                             
                             // Fetch users based on the input
                             fetch('message.php?search=' + encodeURIComponent(query), {
@@ -2089,10 +2100,6 @@ function formatMessageTime($timestamp) {
                                 } else {
                                     searchResults.innerHTML = html;
                                 }
-                                
-                                if (defaultMessage) {
-                                    defaultMessage.style.display = 'none';
-                                }
                             })
                             .catch(error => {
                                 console.error('Error fetching search results:', error);
@@ -2103,13 +2110,6 @@ function formatMessageTime($timestamp) {
                         // Clear search results when input is empty
                         searchResults.innerHTML = '';
                         searchResults.style.display = 'none';
-                        
-                        // Show conversation list again
-                        if (userList) userList.style.display = '';
-                        
-                        if (defaultMessage) {
-                            defaultMessage.style.display = 'block';
-                        }
                     }
                 });
                 
@@ -2117,7 +2117,6 @@ function formatMessageTime($timestamp) {
                 document.addEventListener('click', function(e) {
                     if (searchResults && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
                         searchResults.style.display = 'none';
-                        if (userList) userList.style.display = '';
                     }
                 });
             }

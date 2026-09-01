@@ -154,7 +154,7 @@ if (!function_exists('getInitialsHtml')) {
                 </div>
             </div>
             
-            <a href="message.php" class="navbar-message-link" style="display:inline-flex;position:relative;align-items:center;justify-content:center;padding:8px;border-radius:50%;text-decoration:none;cursor:pointer;transition:background-color 0.25s ease,color 0.25s ease,transform 0.25s ease;">
+            <a href="message.php" class="navbar-message-link" style="display:inline-flex;position:relative;align-items:center;justify-content:center;padding:8px;border-radius:50%;width:38px;height:38px;text-decoration:none;cursor:pointer;transition:background-color 0.25s ease,color 0.25s ease,transform 0.25s ease;">
                 <i class="bi bi-chat-dots-fill" style="font-size:1.4rem;color:#5a6a6a;transition:color 0.2s;"></i>
                 <?php if ($unread_message_count > 0): ?>
                     <span class="notification-badge"><?php echo $unread_message_count > 99 ? '99+' : $unread_message_count; ?></span>
@@ -590,6 +590,10 @@ if (!function_exists('getInitialsHtml')) {
         cursor: pointer;
         padding: 8px;
         border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
         transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
     }
 
