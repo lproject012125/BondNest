@@ -579,7 +579,7 @@ if (!function_exists('getInitialsHtml')) {
         position: relative;
         display: inline-flex;
         align-items: center;
-        margin-right: -12px;
+        margin-right: -16px;
     }
 
     .notification-icon {
