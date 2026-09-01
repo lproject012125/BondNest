@@ -389,7 +389,7 @@ if (!function_exists('getInitialsHtml')) {
     .navbar-right {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 16px;
         margin-left: auto;
         margin-right: 180px;
     }
@@ -577,6 +577,7 @@ if (!function_exists('getInitialsHtml')) {
     /* Notification dropdown styles */
     .notification-dropdown {
         position: relative;
+        margin-right: -8px;
     }
     
     .notification-icon {
