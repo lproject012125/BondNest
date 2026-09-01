@@ -2120,6 +2120,7 @@ function formatMessageTime($timestamp) {
                         if (userList) userList.style.display = '';
                     }
                 });
+            }
 
             // Handle message menu clicks
             document.addEventListener('click', function(e) {
