@@ -52,7 +52,7 @@ if (isset($_GET['search'])) {
                     <?php if (!empty($user['profile_picture'])): ?>
                         <img src="<?php echo $user['profile_picture']; ?>" class="result-avatar">
                     <?php else: ?>
-                        <?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?>
+                        <div class="result-avatar" style="display:flex;align-items:center;justify-content:center;flex-shrink:0;"><?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?></div>
                     <?php endif; ?>
                     <div class="result-details">
                         <div class="result-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></div>

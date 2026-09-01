@@ -41,7 +41,7 @@ if (isset($_GET['search'])) {
                 <?php if (!empty($user['profile_picture'])): ?>
                     <img src="<?php echo $user['profile_picture']; ?>" class="user-avatar">
                 <?php else: ?>
-                    <div class="user-avatar"><?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?></div>
+                    <div class="user-avatar" style="display:flex;align-items:center;justify-content:center;flex-shrink:0;"><?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?></div>
                 <?php endif; ?>
                 <div class="user-details">
                     <div class="user-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></div>
@@ -853,6 +853,7 @@ function formatMessageTime($timestamp) {
     .user-avatar {
         width: 44px;
         height: 44px;
+        min-width: 44px;
         border-radius: 50%;
         object-fit: cover;
         margin-right: 12px;
@@ -964,12 +965,21 @@ function formatMessageTime($timestamp) {
     }
 
     #searchResults .user-item {
-        border-bottom: 1px solid rgba(0, 128, 128, 0.05);
+        border-bottom: 1px solid rgba(0, 128, 128, 0.08);
         margin: 0;
+        padding: 12px 15px;
     }
 
     #searchResults .user-item:last-child {
         border-bottom: none;
+    }
+
+    #searchResults .user-name {
+        color: #333;
+    }
+
+    #searchResults .user-username {
+        color: #888;
     }
 
     #searchResults .no-conversations {
@@ -1638,7 +1648,7 @@ function formatMessageTime($timestamp) {
                                 <?php if (!empty($user['profile_picture'])): ?>
                                     <img src="<?php echo $user['profile_picture']; ?>" class="user-avatar">
                                 <?php else: ?>
-                                    <div class="user-avatar"><?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?></div>
+                                    <div class="user-avatar" style="display:flex;align-items:center;justify-content:center;flex-shrink:0;"><?php echo getInitialsHtml($user['first_name'], $user['last_name'], 40); ?></div>
                                 <?php endif; ?>
                                 <div class="user-details">
                                     <div class="user-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></div>
