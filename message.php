@@ -1683,6 +1683,14 @@ function formatMessageTime($timestamp) {
     <script>
         // Message handling functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Remove unread badge when a conversation is clicked
+            document.querySelectorAll('.user-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    var badge = this.querySelector('.unread-badge');
+                    if (badge) badge.remove();
+                });
+            });
+
             const sendButton = document.getElementById('sendButton');
             const messageInput = document.getElementById('messageInput');
             const chatMessages = document.getElementById('chatMessages');
