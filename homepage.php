@@ -1316,7 +1316,8 @@ if (menuTrigger) {
     display: none;
     justify-content: center;
     align-items: flex-start;
-    padding-top: 50px;
+    top: 74px;
+    padding-top: 10px;
 }
 
 #editPostModal, #editCommentModal {
@@ -1328,7 +1329,7 @@ if (menuTrigger) {
 #postForm {
     position: relative;
     z-index: 1001;
-    margin: auto;
+    margin: 0 auto;
     width: 90%;
     max-width: 500px;
 }
