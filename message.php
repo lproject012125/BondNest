@@ -738,12 +738,12 @@ function formatMessageTime($timestamp) {
         background-color: #ffffff;
         border-radius: 12px;
         padding: 0;
-        overflow-y: auto;
-        height: calc(100vh - 100px); /* Adjust height to be closer to navbar */
+        overflow: visible;
+        height: calc(100vh - 100px);
         position: relative;
         border: 1px solid var(--color-primary);
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        margin-top: 0; /* Ensure no top margin */
+        margin-top: 0;
     }
 
     .search-header {
@@ -810,6 +810,8 @@ function formatMessageTime($timestamp) {
 
     .user-list {
         padding: 0 10px 10px;
+        overflow-y: auto;
+        max-height: calc(100vh - 200px);
     }
 
     .user-list h4 {
@@ -2063,9 +2065,9 @@ function formatMessageTime($timestamp) {
                 
                 // Position search results overlay below the search header
                 function positionSearchResults() {
-                    const searchHeader = document.querySelector('.search-header');
+                    const searchHeader = document.querySelector('.right-search .search-header');
                     if (searchHeader && searchResults) {
-                        searchResults.style.top = searchHeader.offsetHeight + 'px';
+                        searchResults.style.top = (searchHeader.offsetHeight + 5) + 'px';
                     }
                 }
                 
