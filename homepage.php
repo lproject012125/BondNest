@@ -1315,7 +1315,8 @@ if (menuTrigger) {
     /* Keep display:none by default - will be set to flex when opened */
     display: none;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 50px;
 }
 
 #editPostModal, #editCommentModal {
@@ -1348,16 +1349,6 @@ if (menuTrigger) {
     max-width: 500px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
     animation: modal-in 0.3s forwards;
-    
-    /* 
-    * POSITION ADJUSTMENT: 
-    * Negative value moves UP, positive value moves DOWN
-    * Adjust this value to find the perfect position:
-    * -50px = slight upward shift
-    * -100px = medium upward shift  
-    * -150px = large upward shift
-    */
-    margin-top: 50px; 
 }
 
 /* Image preview styling improvements */
