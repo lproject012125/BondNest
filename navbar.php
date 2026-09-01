@@ -65,6 +65,8 @@ if (!function_exists('getInitialsHtml')) {
             $notification_count = 0;
             $warning_count = 0;
             $deleted_count = 0;
+            $hold_count = 0;
+            $approved_count = 0;
             $unread_message_count = 0;
             
             if (isset($_SESSION['user_id'])) {
@@ -86,8 +88,24 @@ if (!function_exists('getInitialsHtml')) {
                     $deleted_count = $row['count'];
                 }
                 
+                // Count unread held post notifications
+                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND type = 'post_on_hold' AND is_read = 0");
+                $stmt->execute([$user_id]);
+                $row = $stmt->fetch();
+                if ($row) {
+                    $hold_count = $row['count'];
+                }
+                
+                // Count unread approved post notifications
+                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND type = 'post_approved' AND is_read = 0");
+                $stmt->execute([$user_id]);
+                $row = $stmt->fetch();
+                if ($row) {
+                    $approved_count = $row['count'];
+                }
+                
                 // Total notification count
-                $notification_count = $warning_count + $deleted_count;
+                $notification_count = $warning_count + $deleted_count + $hold_count + $approved_count;
                 
                 // Count unread messages
                 $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM messages WHERE receiver_id = ? AND is_read = 0");
@@ -95,6 +113,38 @@ if (!function_exists('getInitialsHtml')) {
                 $row = $stmt->fetch();
                 if ($row) {
                     $unread_message_count = $row['count'];
+                }
+
+                // Fetch recent notifications for dropdown (all 4 types, paginated)
+                $notif_per_page = 5;
+                $notif_page = isset($_GET['notif_page']) ? max(1, intval($_GET['notif_page'])) : 1;
+                $notif_offset = ($notif_page - 1) * $notif_per_page;
+
+                // Count total notifications
+                $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND type IN ('post_warning','post_deleted','post_on_hold','post_approved')");
+                $stmt->execute([$user_id]);
+                $notif_total = $stmt->fetch()['count'];
+                $notif_total_pages = max(1, ceil($notif_total / $notif_per_page));
+
+                // Fetch page of notifications
+                $stmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? AND type IN ('post_warning','post_deleted','post_on_hold','post_approved') ORDER BY created_at DESC LIMIT ? OFFSET ?");
+                $stmt->execute([$user_id, $notif_per_page, $notif_offset]);
+                $recent_notifications = $stmt->fetchAll();
+
+                // Mark displayed notifications as read
+                if (!empty($recent_notifications)) {
+                    $n_ids = array_map(fn($n) => $n['id'], $recent_notifications);
+                    $unread_ids = array_filter($n_ids, function($id) use ($pdo) {
+                        $s = $pdo->prepare("SELECT is_read FROM notifications WHERE id = ?");
+                        $s->execute([$id]);
+                        return $s->fetch()['is_read'] == 0;
+                    });
+                    if (!empty($unread_ids)) {
+                        $ph = implode(',', array_fill(0, count($unread_ids), '?'));
+                        $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id IN ($ph)")->execute(array_values($unread_ids));
+                        // Update counts after marking as read
+                        $notification_count = max(0, $notification_count - count($unread_ids));
+                    }
                 }
             }
             ?>
@@ -116,41 +166,72 @@ if (!function_exists('getInitialsHtml')) {
                     </div>
                     
                     <div class="notification-body">
-                        <?php if ($warning_count > 0): ?>
-                            <a href="warnings.php" class="notification-item warning">
-                                <div class="notification-icon">
-                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                </div>
-                                <div class="notification-text">
-                                    <p>You have <?php echo $warning_count; ?> post warning<?php echo $warning_count > 1 ? 's' : ''; ?>.</p>
-                                    <span class="notification-time">Click to view</span>
-                                </div>
-                            </a>
-                        <?php endif; ?>
-                        
-                        <?php if ($deleted_count > 0): ?>
-                            <a href="deleted_posts.php" class="notification-item deleted">
-                                <div class="notification-icon">
-                                    <i class="bi bi-trash-fill"></i>
-                                </div>
-                                <div class="notification-text">
-                                    <p>You have <?php echo $deleted_count; ?> deleted post notification<?php echo $deleted_count > 1 ? 's' : ''; ?>.</p>
-                                    <span class="notification-time">Click to view</span>
-                                </div>
-                            </a>
-                        <?php endif; ?>
-                        
-                        <?php if ($notification_count == 0): ?>
+                        <?php if (!empty($recent_notifications)): ?>
+                            <?php foreach ($recent_notifications as $notif): ?>
+                                <?php
+                                $type = $notif['type'];
+                                $type_url = match($type) {
+                                    'post_warning' => 'warnings.php',
+                                    'post_deleted' => 'deleted_posts.php',
+                                    'post_on_hold' => 'held_posts.php',
+                                    'post_approved' => 'approved_posts.php',
+                                    default => '#'
+                                };
+                                $type_class = match($type) {
+                                    'post_warning' => 'warning',
+                                    'post_deleted' => 'deleted',
+                                    'post_on_hold' => 'hold',
+                                    'post_approved' => 'approved',
+                                    default => ''
+                                };
+                                $type_icon = match($type) {
+                                    'post_warning' => 'bi-exclamation-triangle-fill',
+                                    'post_deleted' => 'bi-trash-fill',
+                                    'post_on_hold' => 'bi-pause-circle-fill',
+                                    'post_approved' => 'bi-check-circle-fill',
+                                    default => 'bi-bell'
+                                };
+                                // Strip JSON data from message for clean display
+                                $clean_msg = preg_replace('/Post data: \{.*\}/s', '', $notif['message']);
+                                $clean_msg = trim($clean_msg);
+                                ?>
+                                <a href="<?php echo $type_url; ?>?notification_id=<?php echo $notif['id']; ?>" class="notification-item <?php echo $type_class; ?>">
+                                    <div class="notification-icon">
+                                        <i class="bi <?php echo $type_icon; ?>"></i>
+                                    </div>
+                                    <div class="notification-text">
+                                        <p><?php echo htmlspecialchars($clean_msg); ?></p>
+                                        <span class="notification-time"><?php
+                                            $nz = new DateTimeZone('UTC');
+                                            $nn = new DateTime('now', $nz);
+                                            $na = new DateTime($notif['created_at'], $nz);
+                                            $nd = $nn->diff($na);
+                                            if ($nd->d > 0) echo $nd->d . ' day' . ($nd->d > 1 ? 's' : '') . ' ago';
+                                            elseif ($nd->h > 0) echo $nd->h . ' hour' . ($nd->h > 1 ? 's' : '') . ' ago';
+                                            elseif ($nd->i > 0) echo $nd->i . ' min' . ($nd->i > 1 ? 's' : '') . ' ago';
+                                            else echo 'just now';
+                                        ?></span>
+                                    </div>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php else: ?>
                             <div class="notification-empty">
                                 <p>No new notifications</p>
                             </div>
                         <?php endif; ?>
                     </div>
                     
-                    <div class="notification-footer">
-                        <a href="warnings.php">View all warnings</a>
-                        <a href="deleted_posts.php">View all deleted posts</a>
+                    <?php if ($notif_total_pages > 1): ?>
+                    <div class="notification-pagination">
+                        <button class="notif-page-btn" onclick="notifGotoPage(<?php echo max(1, $notif_page - 1); ?>)" <?php echo $notif_page <= 1 ? 'disabled' : ''; ?>>
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <span class="notif-page-info">Page <?php echo $notif_page; ?> of <?php echo $notif_total_pages; ?></span>
+                        <button class="notif-page-btn" onclick="notifGotoPage(<?php echo min($notif_total_pages, $notif_page + 1); ?>)" <?php echo $notif_page >= $notif_total_pages ? 'disabled' : ''; ?>>
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
                     </div>
+                    <?php endif; ?>
                 </div>
             </div>
             
@@ -725,6 +806,14 @@ if (!function_exists('getInitialsHtml')) {
         color: #d62839;
     }
     
+    .notification-item.hold .notification-icon i {
+        color: #f59f0b;
+    }
+    
+    .notification-item.approved .notification-icon i {
+        color: #28a745;
+    }
+    
     .notification-icon {
         margin-right: 15px;
         font-size: 1.2rem;
@@ -765,6 +854,41 @@ if (!function_exists('getInitialsHtml')) {
     .notification-footer a:hover {
         color: #00cccc;
         text-decoration: underline;
+    }
+    
+    .notification-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #eee;
+        gap: 12px;
+    }
+    
+    .notif-page-btn {
+        background: none;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 4px 8px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: #333;
+        transition: background-color 0.2s;
+    }
+    
+    .notif-page-btn:hover:not(:disabled) {
+        background-color: #e9ecef;
+    }
+    
+    .notif-page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    
+    .notif-page-info {
+        font-size: 0.8rem;
+        color: #666;
     }
     
     /* Navbar search results styles */
@@ -1027,6 +1151,13 @@ document.addEventListener('DOMContentLoaded', function() {
         notificationContent.addEventListener('click', function(e) {
             e.stopPropagation();
         });
+    }
+
+    // Notification pagination - notif_page param persists across refreshes naturally via URL
+    function notifGotoPage(page) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('notif_page', page);
+        window.location.href = url.toString();
     }
 
     // Close both dropdowns when clicking outside
