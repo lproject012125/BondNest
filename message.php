@@ -954,16 +954,10 @@ function formatMessageTime($timestamp) {
     #searchResults {
         background: white;
         border-radius: 8px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-        max-height: 300px;
+        max-height: calc(100vh - 250px);
         overflow-y: auto;
         display: none;
         z-index: 100;
-        position: absolute;
-        top: 120px;
-        left: 20px;
-        right: 20px;
-        width: calc(100% - 40px);
         border: 1px solid var(--color-primary);
     }
 
@@ -2057,15 +2051,9 @@ function formatMessageTime($timestamp) {
             const defaultMessage = document.getElementById('defaultMessage');
             
             if (searchInput) {
-                // Handle normal form submission
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const searchForm = searchInput.closest('form');
-                        if (searchForm) {
-                            searchForm.submit();
-                        }
-                    }
+                // Prevent form submission - use AJAX only
+                searchInput.closest('form').addEventListener('submit', function(e) {
+                    e.preventDefault();
                 });
                 
                 // Add real-time search functionality
@@ -2079,14 +2067,14 @@ function formatMessageTime($timestamp) {
                     }
                     
                     if (query.length > 0) {
+                        // Hide conversation list, show search results area
+                        if (userList) userList.style.display = 'none';
+                        
                         // Add a small delay to avoid too many requests
                         searchTimeout = setTimeout(() => {
                             // Show loading state
                             searchResults.innerHTML = '<div class="no-conversations"><p>Searching...</p></div>';
                             searchResults.style.display = 'block';
-                            
-                            // Position the search results dropdown
-                            positionSearchResults();
                             
                             // Fetch users based on the input
                             fetch('message.php?search=' + encodeURIComponent(query), {
@@ -2116,42 +2104,22 @@ function formatMessageTime($timestamp) {
                         searchResults.innerHTML = '';
                         searchResults.style.display = 'none';
                         
+                        // Show conversation list again
+                        if (userList) userList.style.display = '';
+                        
                         if (defaultMessage) {
                             defaultMessage.style.display = 'block';
                         }
                     }
                 });
                 
-                // Function to position search results correctly
-                function positionSearchResults() {
-                    const searchBar = document.querySelector('.search-bar');
-                    const searchHeader = document.querySelector('.search-header');
-                    
-                    if (searchBar && searchResults && searchHeader) {
-                        // Position below the search header (which contains the search bar)
-                        // with increased spacing to move it further down
-                        const searchHeaderHeight = searchHeader.offsetHeight;
-                        searchResults.style.top = (searchHeaderHeight + 35) + 'px'; // Increased from 10px to 35px
-                    }
-                }
-                
-                // Reposition on window resize
-                window.addEventListener('resize', function() {
-                    if (searchResults && searchResults.style.display === 'block') {
-                        positionSearchResults();
+                // Handle clicks outside the search results to close dropdown
+                document.addEventListener('click', function(e) {
+                    if (searchResults && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                        searchResults.style.display = 'none';
+                        if (userList) userList.style.display = '';
                     }
                 });
-                
-                // Auto-focus search input when page loads
-                searchInput.focus();
-            }
-            
-            // Handle clicks outside the search results to close dropdown
-            document.addEventListener('click', function(e) {
-                if (searchResults && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                    searchResults.style.display = 'none';
-                }
-            });
 
             // Handle message menu clicks
             document.addEventListener('click', function(e) {
