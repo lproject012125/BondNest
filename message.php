@@ -55,6 +55,13 @@ if (isset($_GET['search'])) {
     }
 }
 
+// Mark messages as read BEFORE fetching conversations so unread counts are accurate
+$selected_user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
+if ($selected_user_id) {
+    $mark_read = $pdo->prepare("UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ? AND is_read = 0");
+    $mark_read->execute([$selected_user_id, $current_user_id]);
+}
+
 // Get all conversations for the current user with unread message counts
 $conversations = [];
 $sql = "SELECT u.id, u.first_name, u.last_name, u.username, u.profile_picture, 
@@ -70,14 +77,10 @@ $stmt->execute([$current_user_id, $current_user_id, $current_user_id]);
 $conversations = $stmt->fetchAll();
 
 // Get messages for selected conversation
-$selected_user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
 $messages = [];
 $selected_user = null;
 
 if ($selected_user_id) {
-    // Mark messages from this user as read
-    $mark_read = $pdo->prepare("UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ? AND is_read = 0");
-    $mark_read->execute([$selected_user_id, $current_user_id]);
 
     // Get selected user info
     $sql = "SELECT id, first_name, last_name, username, profile_picture, last_activity, user_status FROM users WHERE id = ?";
