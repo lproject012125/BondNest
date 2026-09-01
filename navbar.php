@@ -389,7 +389,7 @@ if (!function_exists('getInitialsHtml')) {
     .navbar-right {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 8px;
         margin-left: auto;
         margin-right: 180px;
     }
